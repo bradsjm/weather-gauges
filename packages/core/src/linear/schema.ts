@@ -1,0 +1,71 @@
+import { z } from 'zod'
+
+import { sharedGaugeConfigSchema } from '../schemas/shared.js'
+
+export const linearScaleSchema = z
+  .object({
+    majorTickCount: z.number().int().min(2).default(7),
+    minorTicksPerMajor: z.number().int().min(0).default(2),
+    vertical: z.boolean().default(true)
+  })
+  .strict()
+
+export const linearSegmentSchema = z
+  .object({
+    from: z.number().finite(),
+    to: z.number().finite(),
+    color: z.string().trim().min(1)
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.to <= value.from) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['to'],
+        message: 'to must be greater than from'
+      })
+    }
+  })
+
+export const linearThresholdSchema = z
+  .object({
+    value: z.number().finite(),
+    show: z.boolean().default(true)
+  })
+  .strict()
+
+export const linearAlertSchema = z
+  .object({
+    id: z.string().trim().min(1),
+    value: z.number().finite(),
+    message: z.string().trim().min(1),
+    severity: z.enum(['info', 'warning', 'critical']).default('warning')
+  })
+  .strict()
+
+export const linearIndicatorsSchema = z
+  .object({
+    threshold: linearThresholdSchema.optional(),
+    alerts: z.array(linearAlertSchema).default([])
+  })
+  .strict()
+  .default({ alerts: [] })
+
+export const linearGaugeConfigSchema = sharedGaugeConfigSchema
+  .extend({
+    scale: linearScaleSchema.default(() => ({
+      majorTickCount: 7,
+      minorTicksPerMajor: 2,
+      vertical: true
+    })),
+    segments: z.array(linearSegmentSchema).default([]),
+    indicators: linearIndicatorsSchema
+  })
+  .strict()
+
+export type LinearScale = z.infer<typeof linearScaleSchema>
+export type LinearSegment = z.infer<typeof linearSegmentSchema>
+export type LinearThreshold = z.infer<typeof linearThresholdSchema>
+export type LinearAlert = z.infer<typeof linearAlertSchema>
+export type LinearIndicators = z.infer<typeof linearIndicatorsSchema>
+export type LinearGaugeConfig = z.infer<typeof linearGaugeConfigSchema>
