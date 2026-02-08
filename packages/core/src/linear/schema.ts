@@ -40,7 +40,24 @@ export const linearBackgroundColorSchema = z.enum([
 export const linearStyleSchema = z
   .object({
     frameDesign: linearFrameDesignSchema.default('metal'),
-    backgroundColor: linearBackgroundColorSchema.default('DARK_GRAY')
+    backgroundColor: linearBackgroundColorSchema.default('DARK_GRAY'),
+    valueColor: z
+      .enum([
+        'RED',
+        'GREEN',
+        'BLUE',
+        'ORANGE',
+        'YELLOW',
+        'CYAN',
+        'MAGENTA',
+        'WHITE',
+        'GRAY',
+        'BLACK',
+        'RAITH',
+        'GREEN_LCD',
+        'JUG_GREEN'
+      ])
+      .default('RED')
   })
   .strict()
 
@@ -102,7 +119,8 @@ export const linearGaugeConfigSchema = sharedGaugeConfigSchema
     })),
     style: linearStyleSchema.default({
       frameDesign: 'metal',
-      backgroundColor: 'DARK_GRAY'
+      backgroundColor: 'DARK_GRAY',
+      valueColor: 'RED'
     }),
     segments: z.array(linearSegmentSchema).default([]),
     indicators: linearIndicatorsSchema

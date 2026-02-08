@@ -39,11 +39,28 @@ export const radialBackgroundColorSchema = z.enum([
 
 export const radialForegroundTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
 
+export const radialPointerColorSchema = z.enum([
+  'RED',
+  'GREEN',
+  'BLUE',
+  'ORANGE',
+  'YELLOW',
+  'CYAN',
+  'MAGENTA',
+  'WHITE',
+  'GRAY',
+  'BLACK',
+  'RAITH',
+  'GREEN_LCD',
+  'JUG_GREEN'
+])
+
 export const radialStyleSchema = z
   .object({
     frameDesign: radialFrameDesignSchema.default('metal'),
     backgroundColor: radialBackgroundColorSchema.default('DARK_GRAY'),
-    foregroundType: radialForegroundTypeSchema.default('type1')
+    foregroundType: radialForegroundTypeSchema.default('type1'),
+    pointerColor: radialPointerColorSchema.default('RED')
   })
   .strict()
 
@@ -114,7 +131,8 @@ export const radialGaugeConfigSchema = sharedGaugeConfigSchema
     style: radialStyleSchema.default({
       frameDesign: 'metal',
       backgroundColor: 'DARK_GRAY',
-      foregroundType: 'type1'
+      foregroundType: 'type1',
+      pointerColor: 'RED'
     }),
     segments: z.array(radialSegmentSchema).default([]),
     indicators: radialIndicatorsSchema
@@ -129,5 +147,6 @@ export type RadialIndicators = z.infer<typeof radialIndicatorsSchema>
 export type RadialFrameDesign = z.infer<typeof radialFrameDesignSchema>
 export type RadialBackgroundColorName = z.infer<typeof radialBackgroundColorSchema>
 export type RadialForegroundType = z.infer<typeof radialForegroundTypeSchema>
+export type RadialPointerColorName = z.infer<typeof radialPointerColorSchema>
 export type RadialStyle = z.infer<typeof radialStyleSchema>
 export type RadialGaugeConfig = z.infer<typeof radialGaugeConfigSchema>

@@ -15,7 +15,8 @@ import type {
   RadialAlert,
   RadialBackgroundColorName,
   RadialGaugeConfig,
-  RadialFrameDesign
+  RadialFrameDesign,
+  RadialPointerColorName
 } from './schema.js'
 
 export type RadialDrawContext = CanvasRenderingContext2D
@@ -104,6 +105,28 @@ const resolveLegacyPaint = (config: RadialGaugeConfig, paint: ThemePaint): Theme
     backgroundColor,
     frameColor: isChromeLikeFrame(config.style.frameDesign) ? '#d0d0d0' : '#c8c8c8'
   }
+}
+
+type PointerColor = {
+  light: string
+  medium: string
+  dark: string
+}
+
+const LEGACY_POINTER_COLORS: Record<RadialPointerColorName, PointerColor> = {
+  RED: { dark: 'rgb(82, 0, 0)', medium: 'rgb(213, 0, 25)', light: 'rgb(255, 171, 173)' },
+  GREEN: { dark: 'rgb(8, 54, 4)', medium: 'rgb(15, 148, 0)', light: 'rgb(190, 231, 141)' },
+  BLUE: { dark: 'rgb(0, 11, 68)', medium: 'rgb(0, 108, 201)', light: 'rgb(122, 200, 255)' },
+  ORANGE: { dark: 'rgb(118, 83, 30)', medium: 'rgb(240, 117, 0)', light: 'rgb(255, 255, 128)' },
+  YELLOW: { dark: 'rgb(41, 41, 0)', medium: 'rgb(177, 165, 0)', light: 'rgb(255, 250, 153)' },
+  CYAN: { dark: 'rgb(15, 109, 109)', medium: 'rgb(0, 144, 191)', light: 'rgb(153, 223, 249)' },
+  MAGENTA: { dark: 'rgb(98, 0, 114)', medium: 'rgb(191, 36, 107)', light: 'rgb(255, 172, 210)' },
+  WHITE: { dark: 'rgb(210, 210, 210)', medium: 'rgb(235, 235, 235)', light: 'rgb(255, 255, 255)' },
+  GRAY: { dark: 'rgb(25, 25, 25)', medium: 'rgb(76, 76, 76)', light: 'rgb(204, 204, 204)' },
+  BLACK: { dark: 'rgb(0, 0, 0)', medium: 'rgb(10, 10, 10)', light: 'rgb(20, 20, 20)' },
+  RAITH: { dark: 'rgb(0, 32, 65)', medium: 'rgb(0, 106, 172)', light: 'rgb(148, 203, 242)' },
+  GREEN_LCD: { dark: 'rgb(0, 55, 45)', medium: 'rgb(0, 185, 165)', light: 'rgb(153, 255, 227)' },
+  JUG_GREEN: { dark: 'rgb(0, 56, 0)', medium: 'rgb(50, 161, 0)', light: 'rgb(190, 231, 141)' }
 }
 
 const createLinearGradientSafe = (
@@ -212,7 +235,6 @@ const drawSegments = (
 const drawTicks = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
-  paint: ThemePaint,
   centerX: number,
   centerY: number,
   radius: number
@@ -275,7 +297,6 @@ const drawTicks = (
 const drawThreshold = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
-  paint: ThemePaint,
   centerX: number,
   centerY: number,
   radius: number
@@ -291,41 +312,53 @@ const drawThreshold = (
     config.scale.startAngle,
     config.scale.endAngle
   )
-  const line = createTickLine(centerX, centerY, radius * 0.56, radius * 0.82, angle)
+  const tip = createTickLine(centerX, centerY, radius * 0.84, radius * 0.84, angle).start
+  const left = createTickLine(
+    centerX,
+    centerY,
+    radius * 0.76,
+    radius * 0.82,
+    angle - 0.02 * Math.PI
+  ).end
+  const right = createTickLine(
+    centerX,
+    centerY,
+    radius * 0.76,
+    radius * 0.82,
+    angle + 0.02 * Math.PI
+  ).end
 
   context.beginPath()
-  context.strokeStyle = paint.warningColor
-  context.lineWidth = Math.max(2, radius * 0.013)
-  context.moveTo(line.start.x, line.start.y)
-  context.lineTo(line.end.x, line.end.y)
+  context.moveTo(tip.x, tip.y)
+  context.lineTo(left.x, left.y)
+  context.lineTo(right.x, right.y)
+  closePathSafe(context)
+  context.fillStyle = '#e60000'
+  context.fill()
+  context.strokeStyle = '#600000'
+  context.lineWidth = Math.max(1, radius * 0.004)
   context.stroke()
 }
 
 const drawNeedle = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
-  paint: ThemePaint,
   value: number,
   centerX: number,
   centerY: number,
-  radius: number,
-  tone: 'accent' | 'warning' | 'danger'
+  radius: number
 ): void => {
   const angle = valueToAngle(value, config.value, config.scale.startAngle, config.scale.endAngle)
-  const needleColor =
-    tone === 'danger'
-      ? paint.dangerColor
-      : tone === 'warning'
-        ? paint.warningColor
-        : paint.accentColor
+  const pointerColor = LEGACY_POINTER_COLORS[config.style.pointerColor]
 
   if (typeof context.translate === 'function' && typeof context.rotate === 'function') {
     context.save()
     context.translate(centerX, centerY)
     context.rotate(angle + Math.PI / 2)
-    context.shadowColor = 'rgba(0,0,0,0.4)'
-    context.shadowBlur = radius * 0.025
-    context.shadowOffsetY = radius * 0.01
+    context.shadowColor = 'rgba(0, 0, 0, 0.8)'
+    context.shadowBlur = radius * 0.012
+    context.shadowOffsetX = radius * 0.006
+    context.shadowOffsetY = radius * 0.006
 
     context.beginPath()
     context.moveTo(0, -radius * 0.56)
@@ -340,12 +373,12 @@ const drawNeedle = (
       -radius * 0.56,
       0,
       radius * 0.11,
-      needleColor
+      pointerColor.medium
     )
     if (typeof needleGradient !== 'string') {
-      needleGradient.addColorStop(0, needleColor)
-      needleGradient.addColorStop(0.6, '#f2f2f2')
-      needleGradient.addColorStop(1, '#4f4f4f')
+      needleGradient.addColorStop(0, pointerColor.light)
+      needleGradient.addColorStop(0.47, pointerColor.medium)
+      needleGradient.addColorStop(1, pointerColor.dark)
     }
     context.fillStyle = needleGradient
     context.fill()
@@ -356,7 +389,7 @@ const drawNeedle = (
     context.lineTo(0, radius * 0.11)
     context.lineTo(-radius * 0.025, radius * 0.05)
     closePathSafe(context)
-    context.strokeStyle = 'rgba(0,0,0,0.35)'
+    context.strokeStyle = pointerColor.dark
     context.lineWidth = Math.max(1, radius * 0.005)
     context.stroke()
 
@@ -364,7 +397,7 @@ const drawNeedle = (
   } else {
     const line = createTickLine(centerX, centerY, 0, radius * 0.56, angle)
     context.beginPath()
-    context.strokeStyle = needleColor
+    context.strokeStyle = pointerColor.medium
     context.lineWidth = Math.max(2, radius * 0.016)
     context.moveTo(line.start.x, line.start.y)
     context.lineTo(line.end.x, line.end.y)
@@ -377,9 +410,7 @@ const drawNeedle = (
 const drawLabels = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
-  paint: ThemePaint,
   value: number,
-  activeAlerts: RadialAlert[],
   centerX: number,
   centerY: number,
   radius: number
@@ -413,16 +444,6 @@ const drawLabels = (
   } else {
     context.font = `${Math.max(14, Math.round(radius * 0.16))}px serif`
     context.fillText(`${value.toFixed(2)}`, centerX, centerY + radius * 0.32)
-  }
-
-  if (activeAlerts.length > 0) {
-    const [primaryAlert] = activeAlerts
-    if (!primaryAlert) {
-      return
-    }
-
-    context.font = `${Math.max(9, Math.round(radius * 0.07))}px serif`
-    context.fillText(primaryAlert.message, centerX, centerY + radius * 0.46)
   }
 }
 
@@ -466,10 +487,10 @@ export const renderRadialGauge = (
 
   drawBackground(context, config, paint, centerX, centerY, radius)
   drawSegments(context, config, centerX, centerY, radius)
-  drawTicks(context, config, paint, centerX, centerY, radius)
-  drawThreshold(context, config, paint, centerX, centerY, radius)
-  drawNeedle(context, config, paint, value, centerX, centerY, radius, tone)
-  drawLabels(context, config, paint, value, activeAlerts, centerX, centerY, radius)
+  drawTicks(context, config, centerX, centerY, radius)
+  drawThreshold(context, config, centerX, centerY, radius)
+  drawNeedle(context, config, value, centerX, centerY, radius)
+  drawLabels(context, config, value, centerX, centerY, radius)
   drawForeground(context, config, centerX, centerY, radius)
 
   return {

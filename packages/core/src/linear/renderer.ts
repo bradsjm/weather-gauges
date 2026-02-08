@@ -98,6 +98,28 @@ const resolveLegacyPaint = (config: LinearGaugeConfig, paint: ThemePaint): Theme
   frameColor: isChromeLikeFrame(config.style.frameDesign) ? '#d0d0d0' : '#c8c8c8'
 })
 
+type ValueColor = {
+  light: string
+  medium: string
+  dark: string
+}
+
+const LEGACY_VALUE_COLORS: Record<LinearGaugeConfig['style']['valueColor'], ValueColor> = {
+  RED: { dark: 'rgb(82, 0, 0)', medium: 'rgb(213, 0, 25)', light: 'rgb(255, 171, 173)' },
+  GREEN: { dark: 'rgb(8, 54, 4)', medium: 'rgb(15, 148, 0)', light: 'rgb(190, 231, 141)' },
+  BLUE: { dark: 'rgb(0, 11, 68)', medium: 'rgb(0, 108, 201)', light: 'rgb(122, 200, 255)' },
+  ORANGE: { dark: 'rgb(118, 83, 30)', medium: 'rgb(240, 117, 0)', light: 'rgb(255, 255, 128)' },
+  YELLOW: { dark: 'rgb(41, 41, 0)', medium: 'rgb(177, 165, 0)', light: 'rgb(255, 250, 153)' },
+  CYAN: { dark: 'rgb(15, 109, 109)', medium: 'rgb(0, 144, 191)', light: 'rgb(153, 223, 249)' },
+  MAGENTA: { dark: 'rgb(98, 0, 114)', medium: 'rgb(191, 36, 107)', light: 'rgb(255, 172, 210)' },
+  WHITE: { dark: 'rgb(210, 210, 210)', medium: 'rgb(235, 235, 235)', light: 'rgb(255, 255, 255)' },
+  GRAY: { dark: 'rgb(25, 25, 25)', medium: 'rgb(76, 76, 76)', light: 'rgb(204, 204, 204)' },
+  BLACK: { dark: 'rgb(0, 0, 0)', medium: 'rgb(10, 10, 10)', light: 'rgb(20, 20, 20)' },
+  RAITH: { dark: 'rgb(0, 32, 65)', medium: 'rgb(0, 106, 172)', light: 'rgb(148, 203, 242)' },
+  GREEN_LCD: { dark: 'rgb(0, 55, 45)', medium: 'rgb(0, 185, 165)', light: 'rgb(153, 255, 227)' },
+  JUG_GREEN: { dark: 'rgb(0, 56, 0)', medium: 'rgb(50, 161, 0)', light: 'rgb(190, 231, 141)' }
+}
+
 const createLinearGradientSafe = (
   context: LinearDrawContext,
   x0: number,
@@ -256,7 +278,6 @@ const drawSegments = (
 const drawTicks = (
   context: LinearDrawContext,
   config: LinearGaugeConfig,
-  paint: ThemePaint,
   area: LinearRenderArea
 ): void => {
   const textColor = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
@@ -308,7 +329,6 @@ const drawTicks = (
 const drawThreshold = (
   context: LinearDrawContext,
   config: LinearGaugeConfig,
-  paint: ThemePaint,
   area: LinearRenderArea
 ): void => {
   const threshold = config.indicators.threshold
@@ -323,39 +343,37 @@ const drawThreshold = (
     { clampInput: true }
   )
 
-  context.strokeStyle = paint.warningColor
-  context.lineWidth = 3
+  context.fillStyle = '#e60000'
+  context.strokeStyle = '#600000'
+  context.lineWidth = 1
   context.beginPath()
 
   if (config.scale.vertical) {
     const y = area.innerY + area.innerHeight * (0.88 - thresholdUnit * 0.76)
-    context.moveTo(area.innerX + area.innerWidth * 0.08, y)
-    context.lineTo(area.innerX + area.innerWidth * 0.92, y)
+    context.moveTo(area.innerX + area.innerWidth * 0.05, y)
+    context.lineTo(area.innerX + area.innerWidth * 0.16, y - area.innerHeight * 0.02)
+    context.lineTo(area.innerX + area.innerWidth * 0.16, y + area.innerHeight * 0.02)
   } else {
     const x = area.innerX + area.innerWidth * (0.12 + thresholdUnit * 0.76)
-    context.moveTo(x, area.innerY + area.innerHeight * 0.08)
-    context.lineTo(x, area.innerY + area.innerHeight * 0.92)
+    context.moveTo(x, area.innerY + area.innerHeight * 0.95)
+    context.lineTo(x - area.innerWidth * 0.02, area.innerY + area.innerHeight * 0.84)
+    context.lineTo(x + area.innerWidth * 0.02, area.innerY + area.innerHeight * 0.84)
   }
 
+  context.closePath()
+  context.fill()
   context.stroke()
 }
 
 const drawPointer = (
   context: LinearDrawContext,
   config: LinearGaugeConfig,
-  paint: ThemePaint,
   value: number,
-  tone: 'accent' | 'warning' | 'danger',
   area: LinearRenderArea
 ): void => {
   const pointerUnit = mapRange(value, config.value, { min: 0, max: 1 }, { clampInput: true })
-  const pointerColor =
-    tone === 'danger'
-      ? paint.dangerColor
-      : tone === 'warning'
-        ? paint.warningColor
-        : paint.accentColor
-  context.fillStyle = pointerColor
+  const pointerColor = LEGACY_VALUE_COLORS[config.style.valueColor]
+  context.fillStyle = pointerColor.medium
 
   if (config.scale.vertical) {
     const y = area.innerY + area.innerHeight * (0.88 - pointerUnit * 0.76)
@@ -368,12 +386,12 @@ const drawPointer = (
       y - markerHeight / 2,
       x,
       y + markerHeight / 2,
-      pointerColor
+      pointerColor.medium
     )
     if (typeof gradient !== 'string') {
-      gradient.addColorStop(0, '#f2f2f2')
-      gradient.addColorStop(0.55, pointerColor)
-      gradient.addColorStop(1, '#3f3f3f')
+      gradient.addColorStop(0, pointerColor.light)
+      gradient.addColorStop(0.55, pointerColor.medium)
+      gradient.addColorStop(1, pointerColor.dark)
     }
     context.fillStyle = gradient
     context.fillRect(x, y - markerHeight / 2, markerWidth, markerHeight)
@@ -388,12 +406,12 @@ const drawPointer = (
       y,
       x + markerWidth / 2,
       y,
-      pointerColor
+      pointerColor.medium
     )
     if (typeof gradient !== 'string') {
-      gradient.addColorStop(0, '#f2f2f2')
-      gradient.addColorStop(0.55, pointerColor)
-      gradient.addColorStop(1, '#3f3f3f')
+      gradient.addColorStop(0, pointerColor.light)
+      gradient.addColorStop(0.55, pointerColor.medium)
+      gradient.addColorStop(1, pointerColor.dark)
     }
     context.fillStyle = gradient
     context.fillRect(x - markerWidth / 2, y, markerWidth, markerHeight)
@@ -403,9 +421,7 @@ const drawPointer = (
 const drawLabels = (
   context: LinearDrawContext,
   config: LinearGaugeConfig,
-  paint: ThemePaint,
   value: number,
-  activeAlerts: LinearAlert[],
   width: number,
   height: number,
   area: LinearRenderArea
@@ -444,12 +460,6 @@ const drawLabels = (
     const unitSuffix = config.text.unit ? ` ${config.text.unit}` : ''
     context.fillText(`${value.toFixed(2)}${unitSuffix}`, width / 2, height * 0.94)
   }
-
-  const [primaryAlert] = activeAlerts
-  if (primaryAlert) {
-    context.font = `${Math.max(10, Math.round(width * 0.075))}px serif`
-    context.fillText(primaryAlert.message, width / 2, height * 0.18)
-  }
 }
 
 export const renderLinearGauge = (
@@ -476,10 +486,10 @@ export const renderLinearGauge = (
   context.clearRect(0, 0, width, height)
   const area = drawFrame(context, config, paint, width, height)
   drawSegments(context, config, area)
-  drawTicks(context, config, paint, area)
-  drawThreshold(context, config, paint, area)
-  drawPointer(context, config, paint, value, tone, area)
-  drawLabels(context, config, paint, value, activeAlerts, width, height, area)
+  drawTicks(context, config, area)
+  drawThreshold(context, config, area)
+  drawPointer(context, config, value, area)
+  drawLabels(context, config, value, width, height, area)
   if (config.visibility.showForeground) {
     drawLegacyLinearForeground(context, area.frame)
   }

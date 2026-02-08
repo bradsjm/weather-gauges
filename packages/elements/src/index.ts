@@ -111,6 +111,22 @@ export class SteelseriesRadialV3Element extends LitElement {
   @property({ type: String, attribute: 'foreground-type' })
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
+  @property({ type: String, attribute: 'pointer-color' })
+  pointerColor:
+    | 'RED'
+    | 'GREEN'
+    | 'BLUE'
+    | 'ORANGE'
+    | 'YELLOW'
+    | 'CYAN'
+    | 'MAGENTA'
+    | 'WHITE'
+    | 'GRAY'
+    | 'BLACK'
+    | 'RAITH'
+    | 'GREEN_LCD'
+    | 'JUG_GREEN' = 'RED'
+
   @property({
     type: Boolean,
     attribute: 'animate-value',
@@ -184,7 +200,8 @@ export class SteelseriesRadialV3Element extends LitElement {
       style: {
         frameDesign: this.frameDesign,
         backgroundColor: this.backgroundColor,
-        foregroundType: this.foregroundType
+        foregroundType: this.foregroundType,
+        pointerColor: this.pointerColor
       },
       indicators: {
         threshold: {
@@ -384,6 +401,22 @@ export class SteelseriesLinearV3Element extends LitElement {
     | 'BRUSHED_STAINLESS'
     | 'TURNED' = 'DARK_GRAY'
 
+  @property({ type: String, attribute: 'value-color' })
+  valueColor:
+    | 'RED'
+    | 'GREEN'
+    | 'BLUE'
+    | 'ORANGE'
+    | 'YELLOW'
+    | 'CYAN'
+    | 'MAGENTA'
+    | 'WHITE'
+    | 'GRAY'
+    | 'BLACK'
+    | 'RAITH'
+    | 'GREEN_LCD'
+    | 'JUG_GREEN' = 'RED'
+
   @property({
     type: Boolean,
     attribute: 'animate-value',
@@ -452,7 +485,8 @@ export class SteelseriesLinearV3Element extends LitElement {
       },
       style: {
         frameDesign: this.frameDesign,
-        backgroundColor: this.backgroundColor
+        backgroundColor: this.backgroundColor,
+        valueColor: this.valueColor
       },
       indicators: {
         threshold: {

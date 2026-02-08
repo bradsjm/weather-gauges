@@ -28,6 +28,9 @@ if (app) {
         : undefined,
       searchParams.get('radialForegroundType')
         ? `foreground-type="${searchParams.get('radialForegroundType')}"`
+        : undefined,
+      searchParams.get('radialPointerColor')
+        ? `pointer-color="${searchParams.get('radialPointerColor')}"`
         : undefined
     ]
       .filter((value): value is string => value !== undefined)
@@ -39,6 +42,9 @@ if (app) {
         : undefined,
       searchParams.get('linearBackgroundColor')
         ? `background-color="${searchParams.get('linearBackgroundColor')}"`
+        : undefined,
+      searchParams.get('linearValueColor')
+        ? `value-color="${searchParams.get('linearValueColor')}"`
         : undefined
     ]
       .filter((value): value is string => value !== undefined)
