@@ -30,6 +30,7 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 | P1-02 | Complete | Math and scale primitives are implemented in `packages/core/src/math` with edge-case tests in `packages/core/test/math-primitives.test.ts`. |
 | P1-03 | Complete | Animation timeline, easing, and scheduler modules are implemented in `packages/core/src/animation` with fake-timer transition tests.        |
 | P1-04 | Complete | Render context abstraction is implemented in `packages/core/src/render/context.ts` with canvas/offscreen strategy and deterministic tests.  |
+| P1-05 | Complete | Theme resolution pipeline is implemented in `packages/core/src/theme/tokens.ts` with deterministic override/default tests.                  |
 
 ## Phase 0 - Foundation
 
