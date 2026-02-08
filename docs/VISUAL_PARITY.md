@@ -34,6 +34,13 @@ Legacy SteelSeries JavaScript implementation is the primary source of truth for 
 - Port shared material and depth techniques to linear after radial stabilization.
 - Port compass rose/ring/pointer behavior after linear acceptance.
 
+### Approved UX Divergence (Current Pass)
+
+- Compass center heading text remains default-on for modern UX readability.
+- All other compass defaults should follow legacy source behavior first (mode logic, rose geometry, pointer profile, and layering).
+- Degree labels and ordinal markers should be treated as alternate modes by default, not concurrent baseline rendering.
+- Any additional modern UX behavior must be opt-in and documented in PR rationale with before/after screenshots.
+
 ### Legacy Code References (authoritative)
 
 Use these legacy modules from `nicolas-van/steelseries` as the implementation source:
