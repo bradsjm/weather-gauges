@@ -12,22 +12,7 @@ Primary outcomes:
 - Themeability through CSS custom properties
 - Reliable quality via unit, integration, and visual regression testing
 
-## 2) Scope
-
-This document defines architecture for the monorepo and implementation direction, with execution scope focused on phases 0-3:
-
-- Phase 0: repo/platform foundation
-- Phase 1: core rendering engine foundation
-- Phase 2: radial gauge vertical slice
-- Phase 3: linear and compass gauges + API consistency hardening
-
-Out-of-scope for phases 0-3:
-
-- Full Home Assistant card editor UX
-- Complete gauge catalog parity with legacy
-- Legacy runtime compatibility layer
-
-## 3) Design Principles
+## 2) Design Principles
 
 - **Visual fidelity first:** maintain high-quality visuals and behavior
 - **Source-driven visuals:** derive painter behavior from legacy renderer code before screenshot validation
@@ -153,7 +138,6 @@ Variant schemas are validated with zod and composed from shared primitives.
 
 Implementation direction for the visual fidelity pass:
 
-- Execute renderer fidelity work in strict sequence: radial -> linear -> compass.
 - Use legacy modules (`drawFrame`, `drawBackground`, `drawForeground`, `drawLinear*`, `drawRoseImage`, `Compass`) as the behavior source.
 - Preserve gauge-specific algorithm structure while expressing it in modern TypeScript modules (typed inputs, pure helpers, testable composition).
 - Use screenshots to validate composition, layering, and positioning after source-based implementation.
@@ -218,7 +202,6 @@ CI gates required for merge:
 
 Additional controls:
 
-- API report diff in PRs for public-package changes
 - Bundle size budgets for `core` and `elements`
 - Semver managed with changesets
 
@@ -235,16 +218,3 @@ Additional controls:
 
 4. **HA coupling leaking into core**
    - Mitigation: strict package dependency boundaries
-
-## 12) Deliverables by End of Phase 3
-
-- Stable alpha-level packages for:
-  - `@bradsjm/steelseries-v3-core`
-  - `@bradsjm/steelseries-v3-elements`
-- Implemented gauges:
-  - Radial
-  - Linear
-  - Compass
-- Documented CSS token contract
-- Migration guidance (legacy concepts to v3 clean-break model)
-- CI-enforced quality gates and reproducible visual baselines

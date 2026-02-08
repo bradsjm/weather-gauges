@@ -456,11 +456,7 @@ This approach lets v3 remain modern and maintainable while preserving the excell
 
 For the current visual fidelity pass, implement gauges in strict sequence: radial -> linear -> compass.
 
-## 21) Visual Analysis from `docs/gauges-v2.gif`
-
-Reference asset: `docs/gauges-v2.gif`
-
-The GIF shows an 8-gauge dashboard on a light gray page background, arranged in a 4x2 grid. The visual style is highly cohesive and should be treated as the baseline look-and-feel target for v3 parity tests.
+## 21) Visual Analysis
 
 ### 21.1 Composition and layout cues
 
@@ -469,22 +465,6 @@ The GIF shows an 8-gauge dashboard on a light gray page background, arranged in 
 - Most gauges use neutral metal/charcoal palettes, with red as primary accent and cyan/blue as secondary accent.
 - Numeric LCD areas have muted green-gray backgrounds with dark text.
 - Overall visual density is high but balanced through clear contrast hierarchy.
-
-### 21.2 Gauge set visible in the GIF
-
-Top row (left to right):
-
-1. Compass variant with rose background and red/white needle.
-2. Second compass variant (different heading state, same visual family).
-3. Wind direction style with dual needles and dual LCD readouts (`Latest` / `Average`).
-4. Wind direction style (alternate state, same component family).
-
-Bottom row (left to right):
-
-1. Altimeter-like dial with large central numeric readout and red index markers.
-2. Horizon/attitude indicator with sky/ground split and angled pitch lines.
-3. Dark analog clock with red second hand.
-4. Stopwatch/clock style dial with numeric scale and center elapsed text.
 
 ### 21.3 Material and lighting characteristics
 
@@ -513,28 +493,3 @@ From frame-to-frame context in the GIF snapshot:
 - Horizon indicator implies coupled transformations (roll + pitch translation).
 
 These observations support preserving the D3-style interpolation approach in v3 animation architecture.
-
-### 21.6 Parity checklist derived from GIF
-
-For each v3 gauge parity fixture, verify:
-
-1. Frame depth and ring contrast match legacy silhouette.
-2. Dial background material and gradients match tone and texture.
-3. Major/minor ticks match density, placement, and contrast.
-4. Needle shape, color, and center hub rendering match legacy identity.
-5. Foreground glass highlight overlays are present and similarly positioned.
-6. LCD panel style, typography, and value alignment match legacy.
-7. Animation speed/easing feels consistent with legacy transitions.
-8. Multi-value gauges preserve independent pointer behavior and text labels.
-
-### 21.7 Immediate development implications
-
-- Prioritize porting shared visual primitives before expanding gauge count.
-- Create screenshot fixtures from representative states shown in this GIF:
-  - compass cardinal-heavy state
-  - wind dual-value state
-  - dark clock with red second hand
-  - horizon tilted state
-- Add a "visual identity regression" test group so frame/background/foreground changes are caught quickly.
-
-The GIF should be treated as a first-class artifact in v3 validation, alongside code-based fixture tests.
