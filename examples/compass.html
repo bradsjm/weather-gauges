@@ -36,6 +36,10 @@
         out.textContent = String(heading)
       }
 
+      if (gauge) {
+        gauge.showHeadingReadout = false
+      }
+
       headingInput.addEventListener('input', sync)
 
       gauge.addEventListener('ss3-value-change', (event) => {
@@ -44,13 +48,6 @@
       gauge.addEventListener('ss3-error', (event) => {
         write(`error ${JSON.stringify(event.detail)}`)
       })
-
-      let autoHeading = 0
-      window.setInterval(() => {
-        autoHeading = (autoHeading + 12) % 360
-        headingInput.value = String(autoHeading)
-        sync()
-      }, 900)
 
       sync()
     </script>
@@ -61,20 +58,18 @@
       <a href="./index.html">Back to index</a>
     </header>
     <main class="container">
-      <p class="lead">Animated heading updates aligned with the original Steelseries demo style.</p>
+      <p class="lead">Compass settings follow the original reference style.</p>
 
       <div class="card" style="max-width: 430px">
         <steelseries-compass-v3
           class="legacy-theme"
-          title="Bearing"
-          unit="deg"
-          heading="90"
-          size="260"
+          heading="300"
+          size="240"
         ></steelseries-compass-v3>
         <div class="controls">
           <label>Heading</label>
-          <input id="heading" type="range" min="0" max="359" value="90" />
-          <div>Current: <strong id="out">90</strong></div>
+          <input id="heading" type="range" min="0" max="360" value="300" />
+          <div>Current: <strong id="out">300</strong></div>
         </div>
         <pre id="log" class="event-log"></pre>
       </div>

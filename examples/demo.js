@@ -53,6 +53,10 @@ const radial = document.getElementById('radial-main')
 const linear = document.getElementById('linear-main')
 const compass = document.getElementById('compass-main')
 
+if (compass) {
+  compass.showHeadingReadout = false
+}
+
 wireRange('radial-value', 'radial-value-out', (value) => {
   radial?.setAttribute('value', String(value))
 })
