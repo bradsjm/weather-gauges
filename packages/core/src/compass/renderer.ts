@@ -4,9 +4,9 @@ import { clamp } from '../math/range.js'
 import {
   drawLegacyCenterKnob,
   drawLegacyCompassRose,
-  drawLegacyRadialBackground,
+  drawLegacyRadialBackgroundDark,
   drawLegacyRadialForeground,
-  drawLegacyRadialFrame
+  drawLegacyRadialFrameMetal
 } from '../render/legacy-materials.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { CompassAlert, CompassGaugeConfig } from './schema.js'
@@ -98,11 +98,11 @@ const drawRose = (
   radius: number
 ): void => {
   if (config.visibility.showFrame) {
-    drawLegacyRadialFrame(context, centerX, centerY, radius)
+    drawLegacyRadialFrameMetal(context, centerX, centerY, radius)
   }
 
   if (config.visibility.showBackground) {
-    drawLegacyRadialBackground(context, paint, centerX, centerY, radius)
+    drawLegacyRadialBackgroundDark(context, centerX, centerY, radius)
     drawLegacyCompassRose(context, centerX, centerY, radius)
   }
 

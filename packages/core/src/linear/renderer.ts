@@ -1,7 +1,12 @@
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
 import { clamp, mapRange } from '../math/range.js'
 import { generateTicks } from '../math/ticks.js'
-import { drawLegacyLinearBackground, drawLegacyLinearFrame } from '../render/legacy-materials.js'
+import {
+  drawLegacyLinearBackground,
+  drawLegacyLinearForeground,
+  drawLegacyLinearFrame,
+  type LinearMaterialFrame
+} from '../render/legacy-materials.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { LinearAlert, LinearGaugeConfig } from './schema.js'
 
@@ -76,13 +81,21 @@ const resolveTone = (
   return 'accent'
 }
 
+type LinearRenderArea = {
+  innerX: number
+  innerY: number
+  innerWidth: number
+  innerHeight: number
+  frame: LinearMaterialFrame
+}
+
 const drawFrame = (
   context: LinearDrawContext,
   config: LinearGaugeConfig,
   paint: ThemePaint,
   width: number,
   height: number
-): { innerX: number; innerY: number; innerWidth: number; innerHeight: number } => {
+): LinearRenderArea => {
   const fallbackFrameWidth = Math.ceil(
     Math.min(
       0.04 * Math.sqrt(width * width + height * height),
@@ -100,7 +113,15 @@ const drawFrame = (
       innerX: fallbackFrameWidth,
       innerY: fallbackFrameWidth,
       innerWidth: width - fallbackFrameWidth * 2,
-      innerHeight: height - fallbackFrameWidth * 2
+      innerHeight: height - fallbackFrameWidth * 2,
+      frame: {
+        frameWidth: fallbackFrameWidth,
+        innerX: fallbackFrameWidth,
+        innerY: fallbackFrameWidth,
+        innerWidth: width - fallbackFrameWidth * 2,
+        innerHeight: height - fallbackFrameWidth * 2,
+        cornerRadius: Math.max(1, Math.ceil(0.05 * (config.scale.vertical ? width : height)))
+      }
     }
   }
 
@@ -113,14 +134,15 @@ const drawFrame = (
     innerX: frame.innerX,
     innerY: frame.innerY,
     innerWidth: frame.innerWidth,
-    innerHeight: frame.innerHeight
+    innerHeight: frame.innerHeight,
+    frame
   }
 }
 
 const drawSegments = (
   context: LinearDrawContext,
   config: LinearGaugeConfig,
-  area: { innerX: number; innerY: number; innerWidth: number; innerHeight: number }
+  area: LinearRenderArea
 ): void => {
   const channelX = area.innerX + area.innerWidth * 0.24
   const channelY = area.innerY + area.innerHeight * 0.12
@@ -145,14 +167,14 @@ const drawSegments = (
         'rgba(0,0,0,0.2)'
       )
   if (typeof channelGradient !== 'string') {
-    channelGradient.addColorStop(0, 'rgba(0,0,0,0.16)')
-    channelGradient.addColorStop(0.14, 'rgba(255,255,255,0.24)')
-    channelGradient.addColorStop(1, 'rgba(0,0,0,0.26)')
+    channelGradient.addColorStop(0, 'rgba(0,0,0,0.22)')
+    channelGradient.addColorStop(0.18, 'rgba(255,255,255,0.12)')
+    channelGradient.addColorStop(1, 'rgba(0,0,0,0.34)')
   }
   context.fillStyle = channelGradient
   context.fillRect(channelX, channelY, channelWidth, channelHeight)
 
-  context.fillStyle = 'rgba(255,255,255,0.06)'
+  context.fillStyle = 'rgba(255,255,255,0.03)'
   context.fillRect(channelX, channelY, channelWidth, channelHeight)
 
   for (const segment of config.segments) {
@@ -176,7 +198,7 @@ const drawTicks = (
   context: LinearDrawContext,
   config: LinearGaugeConfig,
   paint: ThemePaint,
-  area: { innerX: number; innerY: number; innerWidth: number; innerHeight: number }
+  area: LinearRenderArea
 ): void => {
   const ticks = generateTicks(config.value, {
     majorTickCount: config.scale.majorTickCount,
@@ -234,7 +256,7 @@ const drawThreshold = (
   context: LinearDrawContext,
   config: LinearGaugeConfig,
   paint: ThemePaint,
-  area: { innerX: number; innerY: number; innerWidth: number; innerHeight: number }
+  area: LinearRenderArea
 ): void => {
   const threshold = config.indicators.threshold
   if (!threshold || !threshold.show) {
@@ -271,7 +293,7 @@ const drawPointer = (
   paint: ThemePaint,
   value: number,
   tone: 'accent' | 'warning' | 'danger',
-  area: { innerX: number; innerY: number; innerWidth: number; innerHeight: number }
+  area: LinearRenderArea
 ): void => {
   const pointerUnit = mapRange(value, config.value, { min: 0, max: 1 }, { clampInput: true })
   const pointerColor =
@@ -332,7 +354,8 @@ const drawLabels = (
   value: number,
   activeAlerts: LinearAlert[],
   width: number,
-  height: number
+  height: number,
+  area: LinearRenderArea
 ): void => {
   context.fillStyle = paint.textColor
   context.textAlign = 'center'
@@ -343,9 +366,31 @@ const drawLabels = (
     context.fillText(config.text.title, width / 2, height * 0.08)
   }
 
-  context.font = `700 ${Math.max(12, Math.round(width * 0.11))}px ${paint.fontFamily}`
-  const unitSuffix = config.text.unit ? ` ${config.text.unit}` : ''
-  context.fillText(`${value.toFixed(1)}${unitSuffix}`, width / 2, height * 0.94)
+  if (config.visibility.showLcd && typeof context.fillRect === 'function') {
+    const lcdWidth = area.innerWidth * 0.62
+    const lcdHeight = area.innerHeight * 0.11
+    const lcdX = area.innerX + (area.innerWidth - lcdWidth) / 2
+    const lcdY = area.innerY + area.innerHeight * 0.82
+    context.fillStyle = '#b4c0ae'
+    context.fillRect(lcdX, lcdY, lcdWidth, lcdHeight)
+    if (typeof context.strokeRect === 'function') {
+      context.strokeStyle = 'rgba(20,20,20,0.45)'
+      context.lineWidth = 1
+      context.strokeRect(lcdX, lcdY, lcdWidth, lcdHeight)
+    }
+    context.fillStyle = '#1f2933'
+    context.font = `700 ${Math.max(11, Math.round(width * 0.11))}px ${paint.fontFamily}`
+    context.fillText(`${value.toFixed(2)}`, width / 2, lcdY + lcdHeight * 0.58)
+    if (config.text.unit) {
+      context.fillStyle = paint.textColor
+      context.font = `500 ${Math.max(9, Math.round(width * 0.075))}px ${paint.fontFamily}`
+      context.fillText(config.text.unit, width / 2, lcdY + lcdHeight + height * 0.03)
+    }
+  } else {
+    context.font = `700 ${Math.max(12, Math.round(width * 0.11))}px ${paint.fontFamily}`
+    const unitSuffix = config.text.unit ? ` ${config.text.unit}` : ''
+    context.fillText(`${value.toFixed(2)}${unitSuffix}`, width / 2, height * 0.94)
+  }
 
   const [primaryAlert] = activeAlerts
   if (primaryAlert) {
@@ -381,7 +426,10 @@ export const renderLinearGauge = (
   drawTicks(context, config, paint, area)
   drawThreshold(context, config, paint, area)
   drawPointer(context, config, paint, value, tone, area)
-  drawLabels(context, config, paint, value, activeAlerts, width, height)
+  drawLabels(context, config, paint, value, activeAlerts, width, height, area)
+  if (config.visibility.showForeground) {
+    drawLegacyLinearForeground(context, area.frame)
+  }
 
   return {
     value,
