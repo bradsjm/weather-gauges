@@ -21,6 +21,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:api": "vitest run test/public-api-contract.test.ts",
+    "test:api:rc": "vitest run test/phase3-rc-contract.test.ts",
     "bench:radial": "vitest run test/radial-performance.test.ts",
     "test:visual": "vitest run --passWithNoTests",
     "clean": "rm -rf dist"
