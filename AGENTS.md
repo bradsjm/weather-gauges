@@ -6,7 +6,6 @@ Guidance for agentic coding tools working in this repository.
 - TypeScript strict mode, ESM modules, browser-first targets
 - Architecture reference document `docs/ARCHITECTURE.md`
 - Primary implementation reference in `docs/RESEARCH.md`
-- Legacy SteelSeries v2 configuration/property patterns in `docs/MAPPING.md`
 - Legacy SteelSeries v2 reference repository at `https://github.com/nicolas-van/steelseries/`
 - Packages:
   - `@bradsjm/steelseries-v3-core`
