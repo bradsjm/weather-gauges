@@ -8,6 +8,7 @@ import {
   gaugeVisibilitySchema,
   sharedGaugeConfigSchema
 } from './schemas/shared.js'
+import { radialGaugeConfigSchema } from './radial/schema.js'
 
 export * from './schemas/primitives.js'
 export * from './schemas/shared.js'
@@ -21,8 +22,8 @@ export * from './animation/scheduler.js'
 export * from './render/context.js'
 export * from './theme/tokens.js'
 export * from './extensions/interfaces.js'
-
-export const radialGaugeConfigSchema = sharedGaugeConfigSchema
+export * from './radial/schema.js'
+export * from './radial/renderer.js'
 
 export const linearGaugeConfigSchema = sharedGaugeConfigSchema
 

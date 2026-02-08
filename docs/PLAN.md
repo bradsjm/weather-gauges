@@ -33,6 +33,7 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 | P1-05 | Complete | Theme resolution pipeline is implemented in `packages/core/src/theme/tokens.ts` with deterministic override/default tests.                  |
 | P1-06 | Complete | Extension interfaces and registry are implemented in `packages/core/src/extensions/interfaces.ts` with sample compile/use tests.            |
 | P1-07 | Complete | Core alpha API contract is reviewed and frozen via `docs/CORE_ALPHA_CONTRACT.md` and `packages/core/test/public-api-contract.test.ts`.      |
+| P2-01 | Complete | Radial renderer pipeline is implemented in `packages/core/src/radial` with ticks, segments, threshold, alerts, and animation support.       |
 
 ## Phase 0 - Foundation
 
