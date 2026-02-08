@@ -1,6 +1,7 @@
 import {
   animateCompassGauge,
   animateLinearGauge,
+  animateRadialBargraphGauge,
   animateRadialGauge,
   compassGaugeConfigSchema,
   createStyleTokenSource,
@@ -8,6 +9,8 @@ import {
   linearGaugeConfigSchema,
   renderCompassGauge,
   renderLinearGauge,
+  radialBargraphGaugeConfigSchema,
+  renderRadialBargraphGauge,
   radialGaugeConfigSchema,
   renderRadialGauge,
   resolveThemePaint,
@@ -19,6 +22,9 @@ import {
   type LinearDrawContext,
   type LinearGaugeConfig,
   type LinearRenderResult,
+  type RadialBargraphDrawContext,
+  type RadialBargraphGaugeConfig,
+  type RadialBargraphRenderResult,
   type RadialDrawContext,
   type RadialGaugeConfig,
   type RadialRenderResult,
@@ -26,6 +32,19 @@ import {
 } from '@bradsjm/steelseries-v3-core'
 import { LitElement, css, html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
+
+const booleanAttributeConverter = {
+  fromAttribute: (value: string | null) => value !== null && value !== 'false'
+}
+
+const readCssCustomPropertyColor = (
+  element: Element,
+  propertyName: string,
+  fallback: string
+): string => {
+  const value = getComputedStyle(element).getPropertyValue(propertyName).trim()
+  return value.length > 0 ? value : fallback
+}
 
 @customElement('steelseries-radial-v3')
 export class SteelseriesRadialV3Element extends LitElement {
@@ -336,6 +355,405 @@ export class SteelseriesRadialV3Element extends LitElement {
         height=${this.size}
         role="img"
         aria-label="${this.title || 'Radial Gauge'}"
+      ></canvas>
+    `
+  }
+}
+
+@customElement('steelseries-radial-bargraph-v3')
+export class SteelseriesRadialBargraphV3Element extends LitElement {
+  @query('canvas')
+  private canvasElement?: HTMLCanvasElement
+
+  private currentValue = 0
+  private animationHandle: AnimationRunHandle | undefined
+
+  static override styles = css`
+    :host {
+      --ss3-font-family: system-ui, sans-serif;
+      --ss3-text-color: #eceff3;
+      --ss3-accent-color: #c5162e;
+      --ss3-warning-color: #d97706;
+      --ss3-danger-color: #ef4444;
+      display: inline-block;
+      font-family: var(--ss3-font-family);
+      color: var(--ss3-text-color);
+    }
+
+    canvas {
+      display: block;
+    }
+  `
+
+  @property({ type: Number })
+  value = 0
+
+  @property({ type: Number, attribute: 'min-value' })
+  minValue = 0
+
+  @property({ type: Number, attribute: 'max-value' })
+  maxValue = 100
+
+  @property({ type: Number })
+  size = 220
+
+  @property({ type: String })
+  override title = 'Radial Bargraph'
+
+  @property({ type: String })
+  unit = ''
+
+  @property({ type: Number })
+  threshold = 80
+
+  @property({ type: Number, attribute: 'lcd-decimals' })
+  lcdDecimals = 2
+
+  @property({ type: String, attribute: 'frame-design' })
+  frameDesign:
+    | 'blackMetal'
+    | 'metal'
+    | 'shinyMetal'
+    | 'brass'
+    | 'steel'
+    | 'chrome'
+    | 'gold'
+    | 'anthracite'
+    | 'tiltedGray'
+    | 'tiltedBlack'
+    | 'glossyMetal' = 'metal'
+
+  @property({ type: String, attribute: 'background-color' })
+  backgroundColor:
+    | 'DARK_GRAY'
+    | 'SATIN_GRAY'
+    | 'LIGHT_GRAY'
+    | 'WHITE'
+    | 'BLACK'
+    | 'BEIGE'
+    | 'BROWN'
+    | 'RED'
+    | 'GREEN'
+    | 'BLUE'
+    | 'ANTHRACITE'
+    | 'MUD'
+    | 'PUNCHED_SHEET'
+    | 'CARBON'
+    | 'STAINLESS'
+    | 'BRUSHED_METAL'
+    | 'BRUSHED_STAINLESS'
+    | 'TURNED' = 'DARK_GRAY'
+
+  @property({ type: String, attribute: 'foreground-type' })
+  foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
+
+  @property({ type: String, attribute: 'gauge-type' })
+  gaugeType: 'type1' | 'type2' | 'type3' | 'type4' = 'type4'
+
+  @property({ type: String, attribute: 'value-color' })
+  valueColor:
+    | 'RED'
+    | 'GREEN'
+    | 'BLUE'
+    | 'ORANGE'
+    | 'YELLOW'
+    | 'CYAN'
+    | 'MAGENTA'
+    | 'WHITE'
+    | 'GRAY'
+    | 'BLACK'
+    | 'RAITH'
+    | 'GREEN_LCD'
+    | 'JUG_GREEN' = 'RED'
+
+  @property({ type: String, attribute: 'lcd-color' })
+  lcdColor:
+    | 'STANDARD'
+    | 'STANDARD_GREEN'
+    | 'BLUE'
+    | 'ORANGE'
+    | 'RED'
+    | 'YELLOW'
+    | 'WHITE'
+    | 'GRAY'
+    | 'BLACK' = 'STANDARD'
+
+  @property({ type: String, attribute: 'label-number-format' })
+  labelNumberFormat: 'standard' | 'fractional' | 'scientific' = 'standard'
+
+  @property({ type: String, attribute: 'tick-label-orientation' })
+  tickLabelOrientation?: 'horizontal' | 'tangent' | 'normal'
+
+  @property({ type: Number, attribute: 'fractional-scale-decimals' })
+  fractionalScaleDecimals = 1
+
+  @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
+  showFrame = true
+
+  @property({ type: Boolean, attribute: 'show-background', converter: booleanAttributeConverter })
+  showBackground = true
+
+  @property({ type: Boolean, attribute: 'show-foreground', converter: booleanAttributeConverter })
+  showForeground = true
+
+  @property({ type: Boolean, attribute: 'show-lcd', converter: booleanAttributeConverter })
+  showLcd = true
+
+  @property({ type: Boolean, attribute: 'led-visible', converter: booleanAttributeConverter })
+  ledVisible = false
+
+  @property({ type: Boolean, attribute: 'user-led-visible', converter: booleanAttributeConverter })
+  userLedVisible = false
+
+  @property({ type: Boolean, attribute: 'trend-visible', converter: booleanAttributeConverter })
+  trendVisible = false
+
+  @property({ type: String, attribute: 'trend-state' })
+  trendState: 'up' | 'steady' | 'down' | 'off' = 'off'
+
+  @property({ type: Boolean, attribute: 'digital-font', converter: booleanAttributeConverter })
+  digitalFont = false
+
+  @property({
+    type: Boolean,
+    attribute: 'use-section-colors',
+    converter: booleanAttributeConverter
+  })
+  useSectionColors = false
+
+  @property({
+    type: Boolean,
+    attribute: 'use-value-gradient',
+    converter: booleanAttributeConverter
+  })
+  useValueGradient = false
+
+  @property({
+    type: Boolean,
+    attribute: 'animate-value',
+    converter: booleanAttributeConverter
+  })
+  animateValue = true
+
+  override firstUpdated() {
+    this.currentValue = this.value
+    this.renderGauge(false)
+  }
+
+  override disconnectedCallback() {
+    this.animationHandle?.cancel()
+    this.animationHandle = undefined
+    super.disconnectedCallback()
+  }
+
+  override updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.size === 0) {
+      return
+    }
+
+    const valueChanged = changedProperties.has('value')
+    const onlyValueChanged = valueChanged && changedProperties.size === 1
+    this.renderGauge(onlyValueChanged && this.animateValue)
+  }
+
+  private getThemePaint(): ThemePaint {
+    const computedStyle = getComputedStyle(this)
+    return resolveThemePaint({
+      source: createStyleTokenSource(computedStyle)
+    })
+  }
+
+  private getDrawContext(): RadialBargraphDrawContext | undefined {
+    const canvas = this.renderRoot.querySelector('canvas')
+    if (!(canvas instanceof HTMLCanvasElement)) {
+      return undefined
+    }
+
+    const drawContext = canvas.getContext('2d')
+    if (!drawContext) {
+      return undefined
+    }
+
+    return drawContext as RadialBargraphDrawContext
+  }
+
+  private buildConfig(current: number): RadialBargraphGaugeConfig {
+    const accentColor = readCssCustomPropertyColor(this, '--ss3-accent-color', '#c5162e')
+    const warningColor = readCssCustomPropertyColor(this, '--ss3-warning-color', '#d97706')
+    const dangerColor = readCssCustomPropertyColor(this, '--ss3-danger-color', '#ef4444')
+
+    const sections = this.useSectionColors
+      ? [
+          {
+            from: this.minValue,
+            to: this.threshold,
+            color: accentColor
+          },
+          {
+            from: this.threshold,
+            to: this.maxValue,
+            color: warningColor
+          }
+        ]
+      : []
+
+    const valueGradientStops = this.useValueGradient
+      ? [
+          { fraction: 0, color: accentColor },
+          { fraction: 0.75, color: warningColor },
+          { fraction: 1, color: dangerColor }
+        ]
+      : []
+
+    const defaultTickLabelOrientation = this.gaugeType === 'type1' ? 'tangent' : 'normal'
+
+    return radialBargraphGaugeConfigSchema.parse({
+      value: {
+        min: this.minValue,
+        max: this.maxValue,
+        current
+      },
+      size: {
+        width: this.size,
+        height: this.size
+      },
+      text: {
+        ...(this.title ? { title: this.title } : {}),
+        ...(this.unit ? { unit: this.unit } : {})
+      },
+      visibility: {
+        showFrame: this.showFrame,
+        showBackground: this.showBackground,
+        showForeground: this.showForeground,
+        showLcd: this.showLcd
+      },
+      scale: {
+        niceScale: true,
+        maxNoOfMajorTicks: 10,
+        maxNoOfMinorTicks: 10,
+        fractionalScaleDecimals: this.fractionalScaleDecimals
+      },
+      style: {
+        frameDesign: this.frameDesign,
+        backgroundColor: this.backgroundColor,
+        foregroundType: this.foregroundType,
+        gaugeType: this.gaugeType,
+        valueColor: this.valueColor,
+        lcdColor: this.lcdColor,
+        digitalFont: this.digitalFont,
+        labelNumberFormat: this.labelNumberFormat,
+        tickLabelOrientation: this.tickLabelOrientation ?? defaultTickLabelOrientation,
+        useSectionColors: this.useSectionColors,
+        useValueGradient: this.useValueGradient
+      },
+      sections,
+      valueGradientStops,
+      lcdDecimals: this.lcdDecimals,
+      indicators: {
+        threshold: {
+          value: this.threshold,
+          show: true
+        },
+        alerts: [
+          {
+            id: 'critical',
+            value: this.maxValue * 0.95,
+            message: 'critical',
+            severity: 'critical'
+          },
+          {
+            id: 'warning',
+            value: this.threshold,
+            message: 'warning',
+            severity: 'warning'
+          }
+        ],
+        ledVisible: this.ledVisible,
+        userLedVisible: this.userLedVisible,
+        trendVisible: this.trendVisible,
+        trendState: this.trendState
+      }
+    })
+  }
+
+  private emitValueChange(result: RadialBargraphRenderResult): void {
+    this.dispatchEvent(
+      new CustomEvent(gaugeContract.valueChangeEvent, {
+        detail: toGaugeContractState('radial-bargraph', result),
+        bubbles: true,
+        composed: true
+      })
+    )
+  }
+
+  private emitError(error: unknown): void {
+    this.dispatchEvent(
+      new CustomEvent(gaugeContract.errorEvent, {
+        detail: {
+          kind: 'radial-bargraph',
+          message:
+            error instanceof Error ? error.message : 'Unknown radial bargraph rendering error'
+        },
+        bubbles: true,
+        composed: true
+      })
+    )
+  }
+
+  private renderGauge(animateValue: boolean): void {
+    const drawContext = this.getDrawContext()
+    const canvas = this.renderRoot.querySelector('canvas')
+    if (!drawContext || !(canvas instanceof HTMLCanvasElement)) {
+      return
+    }
+
+    canvas.width = this.size
+    canvas.height = this.size
+
+    const paint = this.getThemePaint()
+    const nextValue = this.value
+    this.animationHandle?.cancel()
+
+    try {
+      if (animateValue && this.currentValue !== nextValue) {
+        const animationConfig = this.buildConfig(nextValue)
+        this.animationHandle = animateRadialBargraphGauge({
+          context: drawContext,
+          config: animationConfig,
+          from: this.currentValue,
+          to: nextValue,
+          paint,
+          onFrame: (frame) => {
+            this.currentValue = frame.value
+            this.emitValueChange(frame)
+          },
+          onComplete: (frame) => {
+            this.currentValue = frame.value
+            this.emitValueChange(frame)
+          }
+        })
+        return
+      }
+
+      const renderConfig = this.buildConfig(nextValue)
+      const result = renderRadialBargraphGauge(drawContext, renderConfig, {
+        value: nextValue,
+        paint
+      })
+      this.currentValue = nextValue
+      this.emitValueChange(result)
+    } catch (error) {
+      this.emitError(error)
+    }
+  }
+
+  override render() {
+    return html`
+      <canvas
+        width=${this.size}
+        height=${this.size}
+        role="img"
+        aria-label="${this.title || 'Radial Bargraph Gauge'}"
       ></canvas>
     `
   }
@@ -973,6 +1391,7 @@ export class SteelseriesCompassV3Element extends LitElement {
 declare global {
   interface HTMLElementTagNameMap {
     'steelseries-radial-v3': SteelseriesRadialV3Element
+    'steelseries-radial-bargraph-v3': SteelseriesRadialBargraphV3Element
     'steelseries-linear-v3': SteelseriesLinearV3Element
     'steelseries-compass-v3': SteelseriesCompassV3Element
   }

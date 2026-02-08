@@ -134,6 +134,7 @@ ESLint highlights:
 - Add tests for changed behavior in `core`
 - Update `test-assets` fixtures when render output changes
 - Run `pnpm test:visual` for visual-impacting changes
+- Visual tests are only passing when they have been viewed and visually reviewed
 
 ## 16) Release Workflow
 - Create changeset for user-visible changes: `pnpm changeset`

@@ -59,6 +59,55 @@ if (app) {
       .filter((value): value is string => value !== undefined)
       .join(' ')
 
+    const radialBargraphAttributeString = [
+      searchParams.get('frameDesign')
+        ? `frame-design="${searchParams.get('frameDesign')}"`
+        : undefined,
+      searchParams.get('radialBackgroundColor')
+        ? `background-color="${searchParams.get('radialBackgroundColor')}"`
+        : undefined,
+      searchParams.get('radialBargraphForegroundType')
+        ? `foreground-type="${searchParams.get('radialBargraphForegroundType')}"`
+        : undefined,
+      searchParams.get('radialGaugeType')
+        ? `gauge-type="${searchParams.get('radialGaugeType')}"`
+        : undefined,
+      searchParams.get('radialBargraphValueColor')
+        ? `value-color="${searchParams.get('radialBargraphValueColor')}"`
+        : undefined,
+      searchParams.get('radialBargraphLcdColor')
+        ? `lcd-color="${searchParams.get('radialBargraphLcdColor')}"`
+        : undefined,
+      searchParams.get('tickLabelOrientation')
+        ? `tick-label-orientation="${searchParams.get('tickLabelOrientation')}"`
+        : undefined,
+      searchParams.get('labelNumberFormat')
+        ? `label-number-format="${searchParams.get('labelNumberFormat')}"`
+        : undefined,
+      searchParams.get('useSectionColors')
+        ? `use-section-colors="${searchParams.get('useSectionColors')}"`
+        : undefined,
+      searchParams.get('useValueGradient')
+        ? `use-value-gradient="${searchParams.get('useValueGradient')}"`
+        : undefined,
+      searchParams.get('showLcd') ? `show-lcd="${searchParams.get('showLcd')}"` : undefined,
+      searchParams.get('digitalFont')
+        ? `digital-font="${searchParams.get('digitalFont')}"`
+        : undefined,
+      searchParams.get('ledVisible')
+        ? `led-visible="${searchParams.get('ledVisible')}"`
+        : undefined,
+      searchParams.get('userLedVisible')
+        ? `user-led-visible="${searchParams.get('userLedVisible')}"`
+        : undefined,
+      searchParams.get('trendVisible')
+        ? `trend-visible="${searchParams.get('trendVisible')}"`
+        : undefined,
+      searchParams.get('trendState') ? `trend-state="${searchParams.get('trendState')}"` : undefined
+    ]
+      .filter((value): value is string => value !== undefined)
+      .join(' ')
+
     const compassAttributeString = [
       searchParams.get('frameDesign')
         ? `frame-design="${searchParams.get('frameDesign')}"`
@@ -158,8 +207,21 @@ if (app) {
             ${linearAttributeString}
             style="${tokenStyle}"
           ></steelseries-linear-v3>`
-        : kind === 'compass'
-          ? `<steelseries-compass-v3
+        : kind === 'radial-bargraph'
+          ? `<steelseries-radial-bargraph-v3
+            title="${title}"
+            unit="${unit}"
+            value="${value}"
+            min-value="${min}"
+            max-value="${max}"
+            threshold="${threshold}"
+            size="${size}"
+            animate-value="false"
+            ${radialBargraphAttributeString}
+            style="${tokenStyle}"
+          ></steelseries-radial-bargraph-v3>`
+          : kind === 'compass'
+            ? `<steelseries-compass-v3
             title="${title}"
             unit="${unit}"
             heading="${heading}"
@@ -168,7 +230,7 @@ if (app) {
             ${compassAttributeString}
             style="${tokenStyle}"
           ></steelseries-compass-v3>`
-          : `<steelseries-radial-v3
+            : `<steelseries-radial-v3
             title="${title}"
             unit="${unit}"
             value="${value}"

@@ -17,9 +17,12 @@ export * from './linear/schema.js'
 export * from './linear/renderer.js'
 export * from './radial/schema.js'
 export * from './radial/renderer.js'
+export * from './radial-bargraph/schema.js'
+export * from './radial-bargraph/renderer.js'
 
 export type { RadialGaugeConfig } from './radial/schema.js'
 export type { LinearGaugeConfig } from './linear/schema.js'
 export type { CompassGaugeConfig } from './compass/schema.js'
+export type { RadialBargraphGaugeConfig } from './radial-bargraph/schema.js'
 
 export const version = '0.0.0'

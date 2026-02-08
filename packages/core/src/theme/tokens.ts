@@ -1,5 +1,7 @@
 export const themeTokenDefaults = {
   '--ss3-font-family': 'system-ui, sans-serif',
+  '--ss3-font-family-lcd':
+    'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
   '--ss3-text-color': '#1f2937',
   '--ss3-background-color': '#f8fafc',
   '--ss3-frame-color': '#dbe4ee',
@@ -14,6 +16,7 @@ export type ThemeTokenMap = Record<ThemeTokenName, string>
 
 export type ThemePaint = {
   fontFamily: string
+  fontFamilyLcd: string
   textColor: string
   backgroundColor: string
   frameColor: string
@@ -89,6 +92,7 @@ export const resolveThemePaint = (
 
   return {
     fontFamily: tokens['--ss3-font-family'],
+    fontFamilyLcd: tokens['--ss3-font-family-lcd'],
     textColor: tokens['--ss3-text-color'],
     backgroundColor: tokens['--ss3-background-color'],
     frameColor: tokens['--ss3-frame-color'],

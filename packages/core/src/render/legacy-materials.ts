@@ -428,6 +428,339 @@ export const drawLegacyRadialForeground = (
   context.restore()
 }
 
+export type RadialForegroundType = 'type1' | 'type2' | 'type3' | 'type4' | 'type5'
+
+export const drawLegacyRadialForegroundTyped = (
+  context: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  foregroundType: RadialForegroundType = 'type1'
+): void => {
+  const glassRadius = radius * 0.84
+
+  context.save()
+  drawCircle(context, centerX, centerY, glassRadius)
+  if (typeof context.clip === 'function') {
+    context.clip()
+  }
+
+  switch (foregroundType) {
+    case 'type1': {
+      const highlight = createLinearGradientSafe(
+        context,
+        centerX,
+        centerY - glassRadius,
+        centerX,
+        centerY + glassRadius * 0.4,
+        'rgba(255,255,255,0.08)'
+      )
+      addStops(highlight, [
+        [0, 'rgba(255,255,255,0.275)'],
+        [1, 'rgba(255,255,255,0.015)']
+      ])
+
+      context.beginPath()
+      context.moveTo(centerX - glassRadius * 0.78, centerY - glassRadius * 0.32)
+      if (typeof context.bezierCurveTo === 'function') {
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.48,
+          centerY - glassRadius * 0.72,
+          centerX + glassRadius * 0.52,
+          centerY - glassRadius * 0.72,
+          centerX + glassRadius * 0.76,
+          centerY - glassRadius * 0.3
+        )
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.41,
+          centerY - glassRadius * 0.12,
+          centerX - glassRadius * 0.44,
+          centerY - glassRadius * 0.1,
+          centerX - glassRadius * 0.78,
+          centerY - glassRadius * 0.32
+        )
+      } else {
+        context.lineTo(centerX + glassRadius * 0.76, centerY - glassRadius * 0.3)
+        context.lineTo(centerX + glassRadius * 0.45, centerY - glassRadius * 0.08)
+        context.lineTo(centerX - glassRadius * 0.42, centerY - glassRadius * 0.1)
+      }
+      safeClosePath(context)
+      context.fillStyle = highlight
+      context.fill()
+      break
+    }
+
+    case 'type2': {
+      const highlight = createLinearGradientSafe(
+        context,
+        centerX,
+        centerY - glassRadius,
+        centerX,
+        centerY + glassRadius * 0.4,
+        'rgba(255,255,255,0.08)'
+      )
+      addStops(highlight, [
+        [0, 'rgba(255,255,255,0.275)'],
+        [1, 'rgba(255,255,255,0.015)']
+      ])
+
+      context.beginPath()
+      context.moveTo(centerX - glassRadius * 0.865, centerY + glassRadius * 0.392)
+      if (typeof context.bezierCurveTo === 'function') {
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.786,
+          centerY + glassRadius * 0.284,
+          centerX - glassRadius * 0.683,
+          centerY + glassRadius * 0.196,
+          centerX - glassRadius * 0.538,
+          centerY + glassRadius * 0.121
+        )
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.388,
+          centerY + glassRadius * 0.041,
+          centerX - glassRadius * 0.267,
+          centerY + glassRadius * 0.013,
+          centerX - glassRadius * 0.127,
+          centerY + glassRadius * 0.018
+        )
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.234,
+          centerY - glassRadius * 0.192,
+          centerX - glassRadius * 0.472,
+          centerY - glassRadius * 0.281,
+          centerX - glassRadius * 0.687,
+          centerY - glassRadius * 0.174
+        )
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.902,
+          centerY - glassRadius * 0.067,
+          centerX - glassRadius * 0.972,
+          centerY + glassRadius * 0.18,
+          centerX - glassRadius * 0.865,
+          centerY + glassRadius * 0.392
+        )
+      } else {
+        context.lineTo(centerX - glassRadius * 0.538, centerY + glassRadius * 0.121)
+        context.lineTo(centerX - glassRadius * 0.127, centerY + glassRadius * 0.018)
+        context.lineTo(centerX - glassRadius * 0.472, centerY - glassRadius * 0.281)
+        context.lineTo(centerX - glassRadius * 0.865, centerY + glassRadius * 0.392)
+      }
+      safeClosePath(context)
+      context.fillStyle = highlight
+      context.fill()
+      break
+    }
+
+    case 'type3': {
+      const highlight = createLinearGradientSafe(
+        context,
+        centerX,
+        centerY - glassRadius * 0.907,
+        centerX,
+        centerY - glassRadius * 0.444,
+        'rgba(255,255,255,0.08)'
+      )
+      addStops(highlight, [
+        [0, 'rgba(255,255,255,0.275)'],
+        [1, 'rgba(255,255,255,0.015)']
+      ])
+
+      context.beginPath()
+      context.moveTo(centerX - glassRadius * 0.916, centerY + glassRadius * 0.009)
+      if (typeof context.bezierCurveTo === 'function') {
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.673,
+          centerY + glassRadius * 0.128,
+          centerX - glassRadius * 0.327,
+          centerY + glassRadius * 0.128,
+          centerX - glassRadius * 0.084,
+          centerY + glassRadius * 0.009
+        )
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.043,
+          centerY - glassRadius * 0.25,
+          centerX - glassRadius * 0.327,
+          centerY - glassRadius * 0.575,
+          centerX,
+          centerY - glassRadius * 0.916
+        )
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.327,
+          centerY - glassRadius * 0.575,
+          centerX + glassRadius * 0.043,
+          centerY - glassRadius * 0.25,
+          centerX + glassRadius * 0.916,
+          centerY + glassRadius * 0.009
+        )
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.673,
+          centerY + glassRadius * 0.128,
+          centerX + glassRadius * 0.327,
+          centerY + glassRadius * 0.128,
+          centerX + glassRadius * 0.916,
+          centerY + glassRadius * 0.009
+        )
+      } else {
+        context.lineTo(centerX - glassRadius * 0.084, centerY + glassRadius * 0.009)
+        context.lineTo(centerX, centerY - glassRadius * 0.916)
+        context.lineTo(centerX + glassRadius * 0.916, centerY + glassRadius * 0.009)
+      }
+      safeClosePath(context)
+      context.fillStyle = highlight
+      context.fill()
+      break
+    }
+
+    case 'type4': {
+      const highlight = createLinearGradientSafe(
+        context,
+        centerX - glassRadius * 0.87,
+        centerY - glassRadius * 0.631,
+        centerX - glassRadius * 0.727,
+        centerY - glassRadius * 0.588,
+        'rgba(255,255,255,0)'
+      )
+      addStops(highlight, [
+        [0, 'rgba(255,255,255,0.275)'],
+        [1, 'rgba(255,255,255,0.015)']
+      ])
+
+      const radialGradient = createRadialGradientSafe(
+        context,
+        centerX,
+        centerY,
+        glassRadius * 0.18,
+        centerX,
+        centerY,
+        glassRadius * 0.387,
+        'rgba(255,255,255,0)'
+      )
+      addStops(radialGradient, [
+        [0, 'rgba(255,255,255,0)'],
+        [0.82, 'rgba(255,255,255,0)'],
+        [0.83, 'rgba(255,255,255,0.15)'],
+        [1, 'rgba(255,255,255,0.15)']
+      ])
+
+      context.beginPath()
+      if (typeof context.bezierCurveTo === 'function') {
+        context.moveTo(centerX + glassRadius * 0.135, centerY + glassRadius * 0.696)
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.214,
+          centerY + glassRadius * 0.588,
+          centerX + glassRadius * 0.317,
+          centerY + glassRadius * 0.5,
+          centerX + glassRadius * 0.462,
+          centerY + glassRadius * 0.425
+        )
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.612,
+          centerY + glassRadius * 0.345,
+          centerX + glassRadius * 0.733,
+          centerY + glassRadius * 0.317,
+          centerX + glassRadius * 0.873,
+          centerY + glassRadius * 0.322
+        )
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.766,
+          centerY + glassRadius * 0.112,
+          centerX + glassRadius * 0.528,
+          centerY + glassRadius * 0.023,
+          centerX + glassRadius * 0.313,
+          centerY + glassRadius * 0.13
+        )
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.098,
+          centerY + glassRadius * 0.238,
+          centerX + glassRadius * 0.028,
+          centerY + glassRadius * 0.485,
+          centerX + glassRadius * 0.135,
+          centerY + glassRadius * 0.696
+        )
+        context.closePath()
+        context.fillStyle = highlight
+        context.fill()
+      }
+
+      drawCircle(context, centerX, centerY, glassRadius * 0.387)
+      context.fillStyle = radialGradient
+      context.fill()
+      break
+    }
+
+    case 'type5': {
+      const highlight = createLinearGradientSafe(
+        context,
+        centerX,
+        centerY - glassRadius * 0.916,
+        centerX,
+        centerY - glassRadius * 0.356,
+        'rgba(255,255,255,0.08)'
+      )
+      addStops(highlight, [
+        [0, 'rgba(255,255,255,0.275)'],
+        [1, 'rgba(255,255,255,0.015)']
+      ])
+
+      context.beginPath()
+      context.moveTo(centerX - glassRadius * 0.916, centerY)
+      if (typeof context.bezierCurveTo === 'function') {
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.916,
+          centerY + glassRadius * 0.009,
+          centerX - glassRadius * 0.753,
+          centerY + glassRadius * 0.031,
+          centerX - glassRadius * 0.392,
+          centerY - glassRadius * 0.043
+        )
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.094,
+          centerY + glassRadius * 0.093,
+          centerX + glassRadius * 0.155,
+          centerY - glassRadius * 0.009,
+          centerX + glassRadius * 0.5,
+          centerY - glassRadius * 0.916
+        )
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.406,
+          centerY - glassRadius * 0.331,
+          centerX + glassRadius * 0.906,
+          centerY + glassRadius * 0.411,
+          centerX + glassRadius * 0.916,
+          centerY + glassRadius * 0.537
+        )
+        context.bezierCurveTo(
+          centerX + glassRadius * 0.703,
+          centerY + glassRadius * 0.128,
+          centerX + glassRadius * 0.327,
+          centerY + glassRadius * 0.457,
+          centerX - glassRadius * 0.916,
+          centerY + glassRadius * 0.593
+        )
+        context.bezierCurveTo(
+          centerX - glassRadius * 0.916,
+          centerY + glassRadius * 0.243,
+          centerX - glassRadius * 0.916,
+          centerY + glassRadius * 0.366,
+          centerX - glassRadius * 0.916,
+          centerY
+        )
+      } else {
+        context.lineTo(centerX + glassRadius * 0.5, centerY - glassRadius * 0.916)
+        context.lineTo(centerX + glassRadius * 0.916, centerY + glassRadius * 0.537)
+        context.lineTo(centerX - glassRadius * 0.392, centerY - glassRadius * 0.043)
+        context.lineTo(centerX - glassRadius * 0.916, centerY)
+      }
+      safeClosePath(context)
+      context.fillStyle = highlight
+      context.fill()
+      break
+    }
+  }
+
+  context.restore()
+}
+
 export const drawLegacyCenterKnob = (
   context: CanvasRenderingContext2D,
   centerX: number,
