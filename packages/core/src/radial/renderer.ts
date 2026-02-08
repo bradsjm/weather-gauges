@@ -2,34 +2,16 @@ import { createAnimationScheduler, type AnimationRunHandle } from '../animation/
 import { createTickLine, valueToAngle } from '../math/geometry.js'
 import { clamp } from '../math/range.js'
 import { generateTicks } from '../math/ticks.js'
+import {
+  drawLegacyCenterKnob,
+  drawLegacyRadialBackground,
+  drawLegacyRadialForeground,
+  drawLegacyRadialFrame
+} from '../render/legacy-materials.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { RadialAlert, RadialGaugeConfig } from './schema.js'
 
-export type RadialDrawContext = {
-  clearRect: (x: number, y: number, width: number, height: number) => void
-  beginPath: () => void
-  arc: (
-    x: number,
-    y: number,
-    radius: number,
-    startAngle: number,
-    endAngle: number,
-    counterclockwise?: boolean
-  ) => void
-  stroke: () => void
-  fill: () => void
-  moveTo: (x: number, y: number) => void
-  lineTo: (x: number, y: number) => void
-  save: () => void
-  restore: () => void
-  fillText: (text: string, x: number, y: number) => void
-  strokeStyle: string | CanvasGradient | CanvasPattern
-  fillStyle: string | CanvasGradient | CanvasPattern
-  lineWidth: number
-  font: string
-  textAlign: CanvasTextAlign
-  textBaseline: CanvasTextBaseline
-}
+export type RadialDrawContext = CanvasRenderingContext2D
 
 export type RadialRenderResult = {
   value: number
@@ -56,6 +38,27 @@ const mergePaint = (paint?: Partial<ThemePaint>): ThemePaint => {
   return {
     ...resolveThemePaint(),
     ...paint
+  }
+}
+
+const createLinearGradientSafe = (
+  context: RadialDrawContext,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  fallbackColor: string
+): CanvasGradient | string => {
+  if (typeof context.createLinearGradient !== 'function') {
+    return fallbackColor
+  }
+
+  return context.createLinearGradient(x0, y0, x1, y1)
+}
+
+const closePathSafe = (context: RadialDrawContext): void => {
+  if (typeof context.closePath === 'function') {
+    context.closePath()
   }
 }
 
@@ -94,17 +97,11 @@ const drawBackground = (
   radius: number
 ): void => {
   if (config.visibility.showFrame) {
-    context.beginPath()
-    context.fillStyle = paint.frameColor
-    context.arc(centerX, centerY, radius, 0, Math.PI * 2)
-    context.fill()
+    drawLegacyRadialFrame(context, centerX, centerY, radius)
   }
 
   if (config.visibility.showBackground) {
-    context.beginPath()
-    context.fillStyle = paint.backgroundColor
-    context.arc(centerX, centerY, radius * 0.9, 0, Math.PI * 2)
-    context.fill()
+    drawLegacyRadialBackground(context, paint, centerX, centerY, radius)
   }
 }
 
@@ -150,7 +147,20 @@ const drawTicks = (
     minorTicksPerMajor: config.scale.minorTicksPerMajor
   })
 
-  context.strokeStyle = paint.textColor
+  const tickGradient = createLinearGradientSafe(
+    context,
+    centerX,
+    centerY - radius,
+    centerX,
+    centerY + radius,
+    paint.textColor
+  )
+  if (typeof tickGradient !== 'string') {
+    tickGradient.addColorStop(0, 'rgba(255,255,255,0.95)')
+    tickGradient.addColorStop(0.45, paint.textColor)
+    tickGradient.addColorStop(1, 'rgba(0,0,0,0.65)')
+  }
+  context.strokeStyle = tickGradient
 
   for (const tick of ticks) {
     const angle = valueToAngle(
@@ -163,13 +173,13 @@ const drawTicks = (
     const line = createTickLine(
       centerX,
       centerY,
-      radius * (isMajor ? 0.62 : 0.68),
-      radius * 0.78,
+      radius * (isMajor ? 0.6 : 0.67),
+      radius * 0.79,
       angle
     )
 
     context.beginPath()
-    context.lineWidth = isMajor ? 2 : 1
+    context.lineWidth = isMajor ? Math.max(2, radius * 0.011) : Math.max(1, radius * 0.006)
     context.moveTo(line.start.x, line.start.y)
     context.lineTo(line.end.x, line.end.y)
     context.stroke()
@@ -195,11 +205,11 @@ const drawThreshold = (
     config.scale.startAngle,
     config.scale.endAngle
   )
-  const line = createTickLine(centerX, centerY, radius * 0.55, radius * 0.82, angle)
+  const line = createTickLine(centerX, centerY, radius * 0.56, radius * 0.82, angle)
 
   context.beginPath()
   context.strokeStyle = paint.warningColor
-  context.lineWidth = 3
+  context.lineWidth = Math.max(2, radius * 0.013)
   context.moveTo(line.start.x, line.start.y)
   context.lineTo(line.end.x, line.end.y)
   context.stroke()
@@ -216,24 +226,66 @@ const drawNeedle = (
   tone: 'accent' | 'warning' | 'danger'
 ): void => {
   const angle = valueToAngle(value, config.value, config.scale.startAngle, config.scale.endAngle)
-  const line = createTickLine(centerX, centerY, 0, radius * 0.56, angle)
-
-  context.beginPath()
-  context.strokeStyle =
+  const needleColor =
     tone === 'danger'
       ? paint.dangerColor
       : tone === 'warning'
         ? paint.warningColor
         : paint.accentColor
-  context.lineWidth = 4
-  context.moveTo(line.start.x, line.start.y)
-  context.lineTo(line.end.x, line.end.y)
-  context.stroke()
 
-  context.beginPath()
-  context.fillStyle = paint.textColor
-  context.arc(centerX, centerY, radius * 0.05, 0, Math.PI * 2)
-  context.fill()
+  if (typeof context.translate === 'function' && typeof context.rotate === 'function') {
+    context.save()
+    context.translate(centerX, centerY)
+    context.rotate(angle + Math.PI / 2)
+    context.shadowColor = 'rgba(0,0,0,0.4)'
+    context.shadowBlur = radius * 0.025
+    context.shadowOffsetY = radius * 0.01
+
+    context.beginPath()
+    context.moveTo(0, -radius * 0.56)
+    context.lineTo(radius * 0.025, radius * 0.05)
+    context.lineTo(0, radius * 0.11)
+    context.lineTo(-radius * 0.025, radius * 0.05)
+    closePathSafe(context)
+
+    const needleGradient = createLinearGradientSafe(
+      context,
+      0,
+      -radius * 0.56,
+      0,
+      radius * 0.11,
+      needleColor
+    )
+    if (typeof needleGradient !== 'string') {
+      needleGradient.addColorStop(0, needleColor)
+      needleGradient.addColorStop(0.6, '#f2f2f2')
+      needleGradient.addColorStop(1, '#4f4f4f')
+    }
+    context.fillStyle = needleGradient
+    context.fill()
+
+    context.beginPath()
+    context.moveTo(0, -radius * 0.56)
+    context.lineTo(radius * 0.025, radius * 0.05)
+    context.lineTo(0, radius * 0.11)
+    context.lineTo(-radius * 0.025, radius * 0.05)
+    closePathSafe(context)
+    context.strokeStyle = 'rgba(0,0,0,0.35)'
+    context.lineWidth = Math.max(1, radius * 0.005)
+    context.stroke()
+
+    context.restore()
+  } else {
+    const line = createTickLine(centerX, centerY, 0, radius * 0.56, angle)
+    context.beginPath()
+    context.strokeStyle = needleColor
+    context.lineWidth = Math.max(2, radius * 0.016)
+    context.moveTo(line.start.x, line.start.y)
+    context.lineTo(line.end.x, line.end.y)
+    context.stroke()
+  }
+
+  drawLegacyCenterKnob(context, centerX, centerY, radius)
 }
 
 const drawLabels = (
@@ -250,8 +302,8 @@ const drawLabels = (
   context.textAlign = 'center'
   context.textBaseline = 'middle'
 
-  const titleSize = Math.max(12, Math.round(radius * 0.12))
-  const valueSize = Math.max(16, Math.round(radius * 0.18))
+  const titleSize = Math.max(12, Math.round(radius * 0.11))
+  const valueSize = Math.max(16, Math.round(radius * 0.17))
 
   if (config.text.title) {
     context.font = `600 ${titleSize}px ${paint.fontFamily}`
@@ -271,6 +323,20 @@ const drawLabels = (
     context.font = `500 ${Math.max(10, Math.round(radius * 0.09))}px ${paint.fontFamily}`
     context.fillText(primaryAlert.message, centerX, centerY + radius * 0.25)
   }
+}
+
+const drawForeground = (
+  context: RadialDrawContext,
+  config: RadialGaugeConfig,
+  centerX: number,
+  centerY: number,
+  radius: number
+): void => {
+  if (!config.visibility.showForeground) {
+    return
+  }
+
+  drawLegacyRadialForeground(context, centerX, centerY, radius)
 }
 
 export const renderRadialGauge = (
@@ -303,6 +369,7 @@ export const renderRadialGauge = (
   drawThreshold(context, config, paint, centerX, centerY, radius)
   drawNeedle(context, config, paint, value, centerX, centerY, radius, tone)
   drawLabels(context, config, paint, value, activeAlerts, centerX, centerY, radius)
+  drawForeground(context, config, centerX, centerY, radius)
 
   return {
     value,

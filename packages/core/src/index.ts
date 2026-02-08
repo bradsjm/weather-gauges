@@ -1,9 +1,3 @@
-import { z } from 'zod'
-
-import { compassGaugeConfigSchema } from './compass/schema.js'
-import { linearGaugeConfigSchema } from './linear/schema.js'
-import { radialGaugeConfigSchema } from './radial/schema.js'
-
 export * from './schemas/primitives.js'
 export * from './schemas/shared.js'
 export * from './schemas/validation.js'
@@ -24,8 +18,8 @@ export * from './linear/renderer.js'
 export * from './radial/schema.js'
 export * from './radial/renderer.js'
 
-export type RadialGaugeConfig = z.infer<typeof radialGaugeConfigSchema>
-export type LinearGaugeConfig = z.infer<typeof linearGaugeConfigSchema>
-export type CompassGaugeConfig = z.infer<typeof compassGaugeConfigSchema>
+export type { RadialGaugeConfig } from './radial/schema.js'
+export type { LinearGaugeConfig } from './linear/schema.js'
+export type { CompassGaugeConfig } from './compass/schema.js'
 
 export const version = '0.0.0'
