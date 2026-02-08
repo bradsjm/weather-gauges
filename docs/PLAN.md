@@ -43,6 +43,7 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 | P3-02 | Complete | Compass renderer and `<steelseries-compass-v3>` are implemented in `packages/core/src/compass` and `packages/elements/src/index.ts` with renderer tests.             |
 | P3-03 | Complete | Cross-gauge contracts are normalized via `packages/core/src/contracts/gauge-contract.ts` and value/error events are unified across elements.                         |
 | P3-04 | Complete | Visual regression coverage now includes radial, linear, and compass fixtures and goldens in `packages/test-assets/visual`.                                           |
+| P3-05 | Complete | Legacy migration guidance is published in `docs/MIGRATION_V2_TO_V3.md` with 12 practical conversion examples.                                                        |
 
 ## Phase 0 - Foundation
 
