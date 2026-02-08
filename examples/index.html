@@ -21,7 +21,7 @@
   </head>
   <body>
     <header class="topbar">
-      <strong>SteelSeries v3 Documentation Demo</strong>
+      <strong>Steelseries Documentation</strong>
       <a href="https://github.com/nicolas-van/steelseries" target="_blank" rel="noreferrer"
         >Original v2 reference</a
       >
@@ -29,10 +29,7 @@
 
     <main class="container">
       <h1 style="margin: 0">steelseries v3 gauges</h1>
-      <p class="lead">
-        Local-browser demo inspired by the original documentation page. No local web server
-        required.
-      </p>
+      <p class="lead">Demo aligned to the original Steelseries documentation look and settings.</p>
 
       <nav class="inline-links">
         <a href="./radial.html">Radial focus page</a>
@@ -45,6 +42,7 @@
         <article class="card">
           <h3>Radial</h3>
           <steelseries-radial-v3
+            class="legacy-theme"
             id="radial-main"
             title="Pressure"
             unit="psi"
@@ -63,6 +61,7 @@
         <article class="card">
           <h3>Linear</h3>
           <steelseries-linear-v3
+            class="legacy-theme"
             id="linear-main"
             title="Tank"
             unit="pct"
@@ -83,6 +82,7 @@
         <article class="card">
           <h3>Compass</h3>
           <steelseries-compass-v3
+            class="legacy-theme"
             id="compass-main"
             title="Heading"
             unit="deg"

@@ -58,10 +58,11 @@
       <a href="./index.html">Back to index</a>
     </header>
     <main class="container">
-      <p class="lead">Vertical linear gauge with threshold and live event output.</p>
+      <p class="lead">Vertical linear gauge aligned with the original Steelseries demo style.</p>
 
       <div class="card" style="max-width: 420px">
         <steelseries-linear-v3
+          class="legacy-theme"
           title="Tank"
           unit="pct"
           value="58"
@@ -70,12 +71,6 @@
           threshold="70"
           width="150"
           height="320"
-          style="
-            --ss3-background-color: #fef9c3;
-            --ss3-frame-color: #fde68a;
-            --ss3-text-color: #713f12;
-            --ss3-warning-color: #b45309;
-          "
         ></steelseries-linear-v3>
         <div class="controls">
           <label>Value</label>
