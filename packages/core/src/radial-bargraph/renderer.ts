@@ -604,6 +604,8 @@ const drawFrameBackground = (
     )
     if (typeof innerShadow !== 'string') {
       innerShadow.addColorStop(0, 'rgba(0, 0, 0, 0)')
+      innerShadow.addColorStop(0.7, 'rgba(0, 0, 0, 0)')
+      innerShadow.addColorStop(0.71, 'rgba(0, 0, 0, 0)')
       innerShadow.addColorStop(0.86, 'rgba(0, 0, 0, 0.03)')
       innerShadow.addColorStop(0.92, 'rgba(0, 0, 0, 0.07)')
       innerShadow.addColorStop(0.97, 'rgba(0, 0, 0, 0.15)')
@@ -1031,14 +1033,10 @@ const drawActiveLeds = (
     )
     if (typeof ledGradient !== 'string') {
       ledGradient.addColorStop(0, color.light)
-      ledGradient.addColorStop(0.75, color.medium)
       ledGradient.addColorStop(1, color.dark)
     }
     activeLedContext.fillStyle = ledGradient
     activeLedContext.fillRect(0, 0, activeLedBuffer.width, activeLedBuffer.height)
-    activeLedContext.strokeStyle = color.veryDark
-    activeLedContext.lineWidth = 1
-    activeLedContext.strokeRect(0.5, 0.5, activeLedBuffer.width - 1, activeLedBuffer.height - 1)
   }
 
   drawActiveLedRect(activeColor)
@@ -1052,7 +1050,7 @@ const drawActiveLeds = (
       currentColor = derivePointerColor(color)
     } else if (config.style.useSectionColors && sectionAngles.length > 0) {
       const match = sectionAngles.find(
-        (section) => angle >= section.startDeg && angle <= section.stopDeg
+        (section) => angle >= section.startDeg && angle < section.stopDeg
       )
       if (match) {
         currentColor = derivePointerColor(match.color)

@@ -33,6 +33,7 @@
 
       <nav class="inline-links">
         <a href="./radial.html">Radial focus page</a>
+        <a href="./radial-bargraph.html">Radial bargraph focus page</a>
         <a href="./linear.html">Linear focus page</a>
         <a href="./compass.html">Compass focus page</a>
         <a href="./README.md">Examples README</a>
@@ -56,6 +57,25 @@
             <input id="radial-value" type="range" min="0" max="100" value="50" />
           </div>
           <pre id="radial-log" class="event-log"></pre>
+        </article>
+
+        <article class="card">
+          <h3>Radial Bargraph</h3>
+          <steelseries-radial-bargraph-v3
+            class="legacy-theme"
+            id="radial-bargraph-main"
+            title="Flow"
+            unit="L/min"
+            min-value="0"
+            max-value="100"
+            value="48"
+            threshold="80"
+          ></steelseries-radial-bargraph-v3>
+          <div class="controls">
+            <label>Value: <strong id="radial-bargraph-value-out">48</strong></label>
+            <input id="radial-bargraph-value" type="range" min="0" max="100" value="48" />
+          </div>
+          <pre id="radial-bargraph-log" class="event-log"></pre>
         </article>
 
         <article class="card">

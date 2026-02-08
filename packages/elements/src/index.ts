@@ -578,8 +578,8 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
   }
 
   private buildConfig(current: number): RadialBargraphGaugeConfig {
-    const accentColor = readCssCustomPropertyColor(this, '--ss3-accent-color', '#c5162e')
-    const warningColor = readCssCustomPropertyColor(this, '--ss3-warning-color', '#d97706')
+    const accentColor = readCssCustomPropertyColor(this, '--ss3-accent-color', '#d97706')
+    const warningColor = readCssCustomPropertyColor(this, '--ss3-warning-color', '#c5162e')
     const dangerColor = readCssCustomPropertyColor(this, '--ss3-danger-color', '#ef4444')
 
     const sections = this.useSectionColors

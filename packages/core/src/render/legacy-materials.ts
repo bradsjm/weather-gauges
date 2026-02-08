@@ -196,14 +196,14 @@ export const drawLegacyRadialFrame = (
 
   context.save()
   context.globalCompositeOperation = 'destination-out'
-  drawCircle(context, centerX, centerY, radius * 0.84)
+  drawCircle(context, centerX, centerY, radius * 0.83)
   context.fillStyle = '#000'
   context.fill()
   context.restore()
 
   drawCircle(context, centerX, centerY, radius * 0.995)
-  context.lineWidth = Math.max(1, radius * 0.014)
-  context.strokeStyle = 'rgba(132,132,132,0.55)'
+  context.lineWidth = Math.max(1, (radius * 2) / 90)
+  context.strokeStyle = 'rgba(132,132,132,0.8)'
   context.stroke()
 }
 
@@ -234,14 +234,14 @@ export const drawLegacyRadialFrameMetal = (
 
   context.save()
   context.globalCompositeOperation = 'destination-out'
-  drawCircle(context, centerX, centerY, radius * 0.84)
+  drawCircle(context, centerX, centerY, radius * 0.83)
   context.fillStyle = '#000'
   context.fill()
   context.restore()
 
   drawCircle(context, centerX, centerY, radius * 0.995)
-  context.lineWidth = Math.max(1, radius * 0.01)
-  context.strokeStyle = 'rgba(120,120,120,0.45)'
+  context.lineWidth = Math.max(1, (radius * 2) / 90)
+  context.strokeStyle = 'rgba(132,132,132,0.8)'
   context.stroke()
 }
 
