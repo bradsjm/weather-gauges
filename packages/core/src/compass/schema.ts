@@ -26,7 +26,7 @@ export const compassHeadingSchema = z
 
 export const compassRoseSchema = z
   .object({
-    showDegreeLabels: z.boolean().default(true),
+    showDegreeLabels: z.boolean().default(false),
     showOrdinalMarkers: z.boolean().default(true)
   })
   .strict()
@@ -64,7 +64,7 @@ export const compassGaugeConfigSchema = z
     })),
     text: gaugeTextSchema.default({}),
     rose: compassRoseSchema.default(() => ({
-      showDegreeLabels: true,
+      showDegreeLabels: false,
       showOrdinalMarkers: true
     })),
     indicators: compassIndicatorsSchema

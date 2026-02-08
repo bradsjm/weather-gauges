@@ -106,6 +106,8 @@ const drawRose = (
     drawLegacyCompassRose(context, centerX, centerY, radius)
   }
 
+  const degreeMode = config.rose.showDegreeLabels
+
   const tickGradient = createLinearGradientSafe(
     context,
     centerX,
@@ -121,27 +123,34 @@ const drawRose = (
   }
   context.strokeStyle = tickGradient
 
-  for (let index = 0; index < 36; index += 1) {
-    const isMajor = index % 3 === 0
-    const angle = valueToAngle(index, { min: 0, max: 36 }, -Math.PI / 2, (3 * Math.PI) / 2, {
+  for (let degree = 0; degree < 360; degree += 2.5) {
+    const normalized = degree / 10
+    const angle = valueToAngle(normalized, { min: 0, max: 36 }, -Math.PI / 2, (3 * Math.PI) / 2, {
       clampToRange: false
     })
+    const major = degreeMode ? degree % 10 === 0 : degree % 5 === 0
+    const cardinal = !degreeMode && degree % 45 === 0
+
     const line = createTickLine(
       centerX,
       centerY,
-      radius * (isMajor ? 0.62 : 0.7),
+      radius * (cardinal ? 0.58 : major ? 0.62 : 0.68),
       radius * 0.82,
       angle
     )
 
     context.beginPath()
-    context.lineWidth = isMajor ? Math.max(2, radius * 0.011) : Math.max(1, radius * 0.006)
+    context.lineWidth = cardinal
+      ? Math.max(2.4, radius * 0.013)
+      : major
+        ? Math.max(1.6, radius * 0.009)
+        : 1
     context.moveTo(line.start.x, line.start.y)
     context.lineTo(line.end.x, line.end.y)
     context.stroke()
   }
 
-  if (config.rose.showOrdinalMarkers) {
+  if (!degreeMode && config.rose.showOrdinalMarkers) {
     const markers = [
       { label: 'N', angle: -Math.PI / 2 },
       { label: 'NE', angle: -Math.PI / 4 },
@@ -156,22 +165,22 @@ const drawRose = (
     context.fillStyle = paint.textColor
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    context.font = `600 ${Math.max(11, Math.round(radius * 0.12))}px ${paint.fontFamily}`
+    context.font = `600 ${Math.max(11, Math.round(radius * 0.11))}px ${paint.fontFamily}`
 
     for (const marker of markers) {
-      const point = polarToCartesian(centerX, centerY, radius * 0.53, marker.angle)
+      const point = polarToCartesian(centerX, centerY, radius * 0.51, marker.angle)
       context.fillText(marker.label, point.x, point.y)
     }
   }
 
-  if (config.rose.showDegreeLabels) {
+  if (degreeMode) {
     context.fillStyle = paint.textColor
     context.textAlign = 'center'
     context.textBaseline = 'middle'
     context.font = `500 ${Math.max(9, Math.round(radius * 0.075))}px ${paint.fontFamily}`
-    for (let degree = 0; degree < 360; degree += 30) {
+    for (let degree = 0; degree < 360; degree += 10) {
       const angle = (degree * Math.PI) / 180 - Math.PI / 2
-      const point = polarToCartesian(centerX, centerY, radius * 0.68, angle)
+      const point = polarToCartesian(centerX, centerY, radius * 0.7, angle)
       context.fillText(`${degree}`, point.x, point.y)
     }
   }
@@ -197,65 +206,78 @@ const drawNeedle = (
         ? paint.warningColor
         : paint.accentColor
 
-  if (typeof context.translate === 'function' && typeof context.rotate === 'function') {
+  if (
+    typeof context.translate === 'function' &&
+    typeof context.rotate === 'function' &&
+    typeof context.bezierCurveTo === 'function'
+  ) {
+    const diameter = radius * 2
+    const sx = (value: number): number => (value - 0.5) * diameter
+    const sy = (value: number): number => (value - 0.5) * diameter
+
     context.save()
     context.translate(centerX, centerY)
     context.rotate(angle + Math.PI / 2)
-    context.shadowColor = 'rgba(0,0,0,0.45)'
-    context.shadowBlur = radius * 0.03
-    context.shadowOffsetY = radius * 0.012
+    context.shadowColor = 'rgba(0,0,0,0.35)'
+    context.shadowBlur = radius * 0.018
+    context.shadowOffsetX = radius * 0.006
+    context.shadowOffsetY = radius * 0.006
 
     context.beginPath()
-    context.moveTo(0, -radius * 0.66)
-    context.lineTo(radius * 0.03, 0)
-    context.lineTo(0, radius * 0.16)
-    context.lineTo(-radius * 0.03, 0)
+    context.moveTo(sx(0.5), sy(0.15))
+    context.bezierCurveTo(sx(0.53), sy(0.33), sx(0.556), sy(0.44), sx(0.556), sy(0.5))
+    context.bezierCurveTo(sx(0.535), sy(0.5), sx(0.5), sy(0.5), sx(0.5), sy(0.5))
+    context.bezierCurveTo(sx(0.5), sy(0.5), sx(0.466), sy(0.5), sx(0.444), sy(0.5))
+    context.bezierCurveTo(sx(0.444), sy(0.44), sx(0.47), sy(0.33), sx(0.5), sy(0.15))
     closePathSafe(context)
+
     const northGradient = createLinearGradientSafe(
       context,
-      0,
-      -radius * 0.66,
-      0,
-      radius * 0.16,
+      sx(0.472),
+      sy(0.5),
+      sx(0.528),
+      sy(0.5),
       pointerColor
     )
     if (typeof northGradient !== 'string') {
-      northGradient.addColorStop(0, pointerColor)
-      northGradient.addColorStop(0.45, '#ececec')
-      northGradient.addColorStop(1, '#5d5d5d')
+      northGradient.addColorStop(0, '#f8f8f8')
+      northGradient.addColorStop(0.5, pointerColor)
+      northGradient.addColorStop(1, '#9a9a9a')
     }
     context.fillStyle = northGradient
     context.fill()
 
     context.beginPath()
-    context.moveTo(0, radius * 0.02)
-    context.lineTo(radius * 0.024, radius * 0.44)
-    context.lineTo(0, radius * 0.58)
-    context.lineTo(-radius * 0.024, radius * 0.44)
+    context.moveTo(sx(0.5), sy(0.5))
+    context.bezierCurveTo(sx(0.52), sy(0.64), sx(0.525), sy(0.74), sx(0.5), sy(0.86))
+    context.bezierCurveTo(sx(0.475), sy(0.74), sx(0.48), sy(0.64), sx(0.5), sy(0.5))
     closePathSafe(context)
+
     const southGradient = createLinearGradientSafe(
       context,
-      0,
-      radius * 0.02,
-      0,
-      radius * 0.58,
+      sx(0.472),
+      sy(0.5),
+      sx(0.528),
+      sy(0.5),
       '#8a8a8a'
     )
     if (typeof southGradient !== 'string') {
       southGradient.addColorStop(0, '#f5f5f5')
-      southGradient.addColorStop(1, '#747474')
+      southGradient.addColorStop(0.5, '#c5c5c5')
+      southGradient.addColorStop(1, '#8a8a8a')
     }
     context.fillStyle = southGradient
     context.fill()
 
     context.beginPath()
-    context.moveTo(0, -radius * 0.66)
-    context.lineTo(radius * 0.03, 0)
-    context.lineTo(0, radius * 0.58)
-    context.lineTo(-radius * 0.03, 0)
+    context.moveTo(sx(0.5), sy(0.15))
+    context.bezierCurveTo(sx(0.53), sy(0.33), sx(0.556), sy(0.44), sx(0.556), sy(0.5))
+    context.bezierCurveTo(sx(0.54), sy(0.62), sx(0.53), sy(0.73), sx(0.5), sy(0.86))
+    context.bezierCurveTo(sx(0.47), sy(0.73), sx(0.46), sy(0.62), sx(0.444), sy(0.5))
+    context.bezierCurveTo(sx(0.444), sy(0.44), sx(0.47), sy(0.33), sx(0.5), sy(0.15))
     closePathSafe(context)
-    context.strokeStyle = 'rgba(0,0,0,0.4)'
-    context.lineWidth = Math.max(1, radius * 0.005)
+    context.strokeStyle = 'rgba(0,0,0,0.35)'
+    context.lineWidth = Math.max(1, radius * 0.004)
     context.stroke()
     context.restore()
   } else {
@@ -276,7 +298,7 @@ const drawLabels = (
   config: CompassGaugeConfig,
   paint: ThemePaint,
   heading: number,
-  activeAlerts: CompassAlert[],
+  _activeAlerts: CompassAlert[],
   centerX: number,
   centerY: number,
   radius: number
@@ -290,13 +312,12 @@ const drawLabels = (
     context.fillText(config.text.title, centerX, centerY + radius * 0.44)
   }
 
-  context.font = `700 ${Math.max(16, Math.round(radius * 0.17))}px ${paint.fontFamily}`
-  context.fillText(`${Math.round(heading)}°`, centerX, centerY + radius * 0.29)
+  context.font = `700 ${Math.max(15, Math.round(radius * 0.16))}px ${paint.fontFamily}`
+  context.fillText(`${Math.round(heading)}°`, centerX, centerY + radius * 0.3)
 
-  const [primaryAlert] = activeAlerts
-  if (primaryAlert) {
-    context.font = `500 ${Math.max(10, Math.round(radius * 0.09))}px ${paint.fontFamily}`
-    context.fillText(primaryAlert.message, centerX, centerY + radius * 0.16)
+  if (config.text.unit) {
+    context.font = `500 ${Math.max(9, Math.round(radius * 0.075))}px ${paint.fontFamily}`
+    context.fillText(config.text.unit, centerX, centerY + radius * 0.4)
   }
 }
 

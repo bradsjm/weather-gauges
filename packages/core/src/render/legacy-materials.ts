@@ -481,39 +481,64 @@ export const drawLegacyCompassRose = (
   centerY: number,
   radius: number
 ): void => {
-  const outer = radius * 0.8
-  const highRadius = radius * 0.52
-  const lowRadius = radius * 0.46
+  const ringOuter = radius * 0.52
+  const ringInner = radius * 0.46
 
   for (let degree = 0; degree < 360; degree += 15) {
-    const angle = (degree * Math.PI) / 180
-    const nextAngle = ((degree + 15) * Math.PI) / 180
-    const ringRadius = degree % 30 === 0 ? highRadius : lowRadius
+    const start = (degree * Math.PI) / 180 - Math.PI / 2
+    const end = ((degree + 15) * Math.PI) / 180 - Math.PI / 2
+    const brightSlice = degree % 30 === 0
 
     context.beginPath()
-    context.moveTo(centerX, centerY)
+    context.arc(centerX, centerY, ringOuter, start, end, false)
+    context.arc(centerX, centerY, ringInner, end, start, true)
+    safeClosePath(context)
+    context.fillStyle = brightSlice ? 'rgba(232,232,232,0.78)' : 'rgba(42,42,42,0.36)'
+    context.fill()
+  }
+
+  for (let degree = 0; degree < 360; degree += 90) {
+    const angle = (degree * Math.PI) / 180 - Math.PI / 2
+    const outerPointX = centerX + Math.cos(angle) * ringOuter
+    const outerPointY = centerY + Math.sin(angle) * ringOuter
+    const innerPointX = centerX + Math.cos(angle) * (radius * 0.34)
+    const innerPointY = centerY + Math.sin(angle) * (radius * 0.34)
+    const leftAngle = angle - Math.PI / 28
+    const rightAngle = angle + Math.PI / 28
+    const baseRadius = radius * 0.355
+
+    context.beginPath()
+    context.moveTo(outerPointX, outerPointY)
     context.lineTo(
-      centerX + Math.cos(angle - Math.PI / 2) * ringRadius,
-      centerY + Math.sin(angle - Math.PI / 2) * ringRadius
+      centerX + Math.cos(leftAngle) * baseRadius,
+      centerY + Math.sin(leftAngle) * baseRadius
     )
+    context.lineTo(innerPointX, innerPointY)
     context.lineTo(
-      centerX + Math.cos(nextAngle - Math.PI / 2) * ringRadius,
-      centerY + Math.sin(nextAngle - Math.PI / 2) * ringRadius
+      centerX + Math.cos(rightAngle) * baseRadius,
+      centerY + Math.sin(rightAngle) * baseRadius
     )
     safeClosePath(context)
-    context.fillStyle = degree % 30 === 0 ? 'rgba(240,240,240,0.9)' : 'rgba(60,60,60,0.3)'
+
+    const markerGradient = createLinearGradientSafe(
+      context,
+      centerX + Math.cos(angle) * (radius * 0.27),
+      centerY + Math.sin(angle) * (radius * 0.27),
+      centerX + Math.cos(angle) * (radius * 0.52),
+      centerY + Math.sin(angle) * (radius * 0.52),
+      'rgba(220,220,220,0.8)'
+    )
+    addStops(markerGradient, [
+      [0, 'rgba(245,245,245,0.4)'],
+      [1, 'rgba(245,245,245,0.96)']
+    ])
+    context.fillStyle = markerGradient
     context.fill()
   }
 
   context.beginPath()
-  context.arc(centerX, centerY, outer, 0, Math.PI * 2)
-  context.strokeStyle = 'rgba(255,255,255,0.45)'
-  context.lineWidth = Math.max(1, radius * 0.015)
-  context.stroke()
-
-  context.beginPath()
-  context.arc(centerX, centerY, radius * 0.2, 0, Math.PI * 2)
-  context.strokeStyle = 'rgba(255,255,255,0.55)'
+  context.arc(centerX, centerY, radius * 0.19, 0, Math.PI * 2)
+  context.strokeStyle = 'rgba(235,235,235,0.6)'
   context.lineWidth = Math.max(1, radius * 0.022)
   context.stroke()
 }
