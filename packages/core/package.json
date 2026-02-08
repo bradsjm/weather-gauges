@@ -20,6 +20,7 @@
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
+    "test:api": "vitest run test/public-api-contract.test.ts",
     "test:visual": "vitest run --passWithNoTests",
     "clean": "rm -rf dist"
   },
