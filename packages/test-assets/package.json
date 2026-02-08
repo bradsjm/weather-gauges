@@ -19,7 +19,7 @@
     "dev": "tsc -p tsconfig.json --watch",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run src --passWithNoTests",
     "test:visual": "pnpm --filter @bradsjm/steelseries-v3-elements build && playwright test --config ../../playwright.config.ts",
     "test:visual:update": "pnpm --filter @bradsjm/steelseries-v3-elements build && playwright test --config ../../playwright.config.ts --update-snapshots",
     "clean": "rm -rf dist"
