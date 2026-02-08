@@ -38,6 +38,7 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 | P2-03 | Complete | Radial wrapper theming and label styling are applied in `packages/elements/src/index.ts` and token override demos are published in `packages/docs-site/src/main.ts`. |
 | P2-04 | Complete | Canonical radial fixtures and golden baselines are expanded in `packages/test-assets`, with stable screenshot diffs verified in visual CI checks.                    |
 | P2-05 | Complete | Radial performance benchmark and frame budgets are enforced by `packages/core/test/radial-performance.test.ts` and `bench:radial` script.                            |
+| P2-06 | Complete | Radial API docs and minimal/full/high-update examples are published in `docs/RADIAL.md` and `packages/docs-site/src/main.ts`.                                        |
 
 ## Phase 0 - Foundation
 

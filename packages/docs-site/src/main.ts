@@ -103,6 +103,26 @@ if (app) {
   --ss3-warning-color: #ca8a04;
   --ss3-danger-color: #dc2626;
 }</pre>
+
+        <section style="margin-top: 1rem; padding: 1rem; border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0;">
+          <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">API</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+            <thead>
+              <tr>
+                <th style="text-align: left; padding: 0.35rem; border-bottom: 1px solid #cbd5e1;">Attribute</th>
+                <th style="text-align: left; padding: 0.35rem; border-bottom: 1px solid #cbd5e1;">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">value</td><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">Current gauge value</td></tr>
+              <tr><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">min-value / max-value</td><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">Scale range bounds</td></tr>
+              <tr><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">threshold</td><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">Warning marker value</td></tr>
+              <tr><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">title / unit</td><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">Label metadata</td></tr>
+              <tr><td style="padding: 0.35rem;">animate-value</td><td style="padding: 0.35rem;">Enable/disable value transition animation</td></tr>
+            </tbody>
+          </table>
+          <p style="margin: 0.75rem 0 0; color: #475569; font-size: 0.8rem;">Caveat: use <code>animate-value=&quot;false&quot;</code> for deterministic screenshot capture in visual CI.</p>
+        </section>
       </main>
     `
 
