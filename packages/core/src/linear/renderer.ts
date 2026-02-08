@@ -51,6 +51,23 @@ const closePathSafe = (context: LinearDrawContext): void => {
   }
 }
 
+const createRadialGradientSafe = (
+  context: LinearDrawContext,
+  x0: number,
+  y0: number,
+  r0: number,
+  x1: number,
+  y1: number,
+  r1: number,
+  fallback: string
+): CanvasGradient | string => {
+  if (typeof context.createRadialGradient !== 'function') {
+    return fallback
+  }
+
+  return context.createRadialGradient(x0, y0, r0, x1, y1, r1)
+}
+
 const LEGACY_BACKGROUND_TEXT: Record<LinearBackgroundColorName, string> = {
   DARK_GRAY: 'rgb(255, 255, 255)',
   SATIN_GRAY: 'rgb(167, 184, 180)',
@@ -343,7 +360,7 @@ const drawTicks = (
   for (const tick of ticks) {
     const isMajor = tick.kind === 'major'
     context.beginPath()
-    context.lineWidth = isMajor ? 2 : 1
+    context.lineWidth = isMajor ? 1.5 : 0.5
 
     if (config.scale.vertical) {
       const y =
@@ -365,6 +382,27 @@ const drawTicks = (
     }
 
     context.stroke()
+
+    if (isMajor) {
+      const labelValue = Math.round(tick.value)
+      context.fillStyle = textColor
+      context.textAlign = config.scale.vertical ? 'right' : 'center'
+      context.textBaseline = 'middle'
+      context.font = `${Math.max(8, Math.round(area.innerWidth * 0.09))}px serif`
+
+      if (config.scale.vertical) {
+        const y =
+          area.innerY +
+          area.innerHeight * (scaleConstants.end - tick.position * scaleConstants.yRange)
+        context.fillText(`${labelValue}`, area.innerX + area.innerWidth * 0.28, y)
+      } else {
+        const x =
+          area.innerX +
+          area.innerWidth *
+            (scaleConstants.start + tick.position * (scaleConstants.end - scaleConstants.start))
+        context.fillText(`${labelValue}`, x, area.innerY + area.innerHeight * 0.73)
+      }
+    }
   }
 }
 
@@ -420,64 +458,206 @@ const drawPointer = (
   const scaleConstants = resolveLinearScaleConstants(config)
   const pointerUnit = mapRange(value, config.value, { min: 0, max: 1 }, { clampInput: true })
   const pointerColor = LEGACY_VALUE_COLORS[config.style.valueColor]
-  context.fillStyle = pointerColor.medium
+  const innerDark = 'rgba(0, 0, 0, 0.2)'
+  const innerLight = 'rgba(255, 255, 255, 0.25)'
 
   if (config.scale.vertical) {
-    const y =
+    const top = area.innerY + area.innerHeight * scaleConstants.start
+    const bottom = area.innerY + area.innerHeight * scaleConstants.end
+    const level =
       area.innerY +
       area.innerHeight * (scaleConstants.yOffset - pointerUnit * scaleConstants.yRange)
-    const x = area.innerX + area.innerWidth * 0.435714
-    const markerWidth = area.innerWidth * 0.135
-    const markerHeight = Math.max(8, area.innerHeight * 0.028)
-    const gradient = createLinearGradientSafe(
-      context,
-      x,
-      y - markerHeight / 2,
-      x,
-      y + markerHeight / 2,
-      pointerColor.medium
-    )
-    if (typeof gradient !== 'string') {
-      gradient.addColorStop(0, pointerColor.medium)
-      gradient.addColorStop(1, pointerColor.light)
-    }
-    context.fillStyle = gradient
-    context.fillRect(x, y - markerHeight / 2, markerWidth, markerHeight)
-  } else {
-    const x =
-      area.innerX + area.innerWidth * (scaleConstants.start + pointerUnit * scaleConstants.yRange)
-    const y = area.innerY + area.innerHeight * 0.435714
-    const markerWidth = Math.max(8, area.innerWidth * 0.03)
-    const markerHeight = area.innerHeight * 0.135
-    const gradient = createLinearGradientSafe(
-      context,
-      x - markerWidth / 2,
-      y,
-      x + markerWidth / 2,
-      y,
-      pointerColor.medium
-    )
-    if (typeof gradient !== 'string') {
-      gradient.addColorStop(0, pointerColor.medium)
-      gradient.addColorStop(1, pointerColor.light)
-    }
-    context.fillStyle = gradient
-    context.fillRect(x - markerWidth / 2, y, markerWidth, markerHeight)
-  }
 
-  if (config.style.gaugeType === 'type2') {
-    context.fillStyle = pointerColor.medium
-    if (config.scale.vertical) {
-      const bulbX = area.innerX + area.innerWidth * 0.5
-      const bulbY = area.innerY + area.innerHeight * 0.86
-      context.beginPath()
-      context.arc(bulbX, bulbY, area.innerWidth * 0.06, 0, Math.PI * 2)
-      context.fill()
+    if (config.style.gaugeType === 'type1') {
+      const x = area.innerX + area.innerWidth * 0.435714
+      const width = area.innerWidth * 0.15
+
+      context.fillStyle = 'rgba(255, 255, 255, 0.08)'
+      context.fillRect(x, top, width, bottom - top)
+
+      const border = createLinearGradientSafe(context, x, top, x + width, top, innerDark)
+      if (typeof border !== 'string') {
+        border.addColorStop(0, 'rgba(255, 255, 255, 0.15)')
+        border.addColorStop(0.5, innerDark)
+        border.addColorStop(1, 'rgba(255, 255, 255, 0.15)')
+      }
+      context.strokeStyle = border
+      context.lineWidth = 1
+      if (typeof context.strokeRect === 'function') {
+        context.strokeRect(x, top, width, bottom - top)
+      }
+
+      const valueGradient = createLinearGradientSafe(
+        context,
+        x,
+        bottom,
+        x + width,
+        bottom,
+        pointerColor.medium
+      )
+      if (typeof valueGradient !== 'string') {
+        valueGradient.addColorStop(0, pointerColor.medium)
+        valueGradient.addColorStop(0.5, pointerColor.light)
+        valueGradient.addColorStop(1, pointerColor.medium)
+      }
+      context.fillStyle = valueGradient
+      context.fillRect(x, level, width, bottom - level)
+
+      const valueHighlight = createLinearGradientSafe(
+        context,
+        x,
+        level,
+        x + width,
+        level,
+        innerLight
+      )
+      if (typeof valueHighlight !== 'string') {
+        valueHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.35)')
+        valueHighlight.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)')
+        valueHighlight.addColorStop(1, 'rgba(255, 255, 255, 0.35)')
+      }
+      context.fillStyle = valueHighlight
+      context.fillRect(x + width * 0.15, level, width * 0.7, bottom - level)
     } else {
-      const bulbX = area.innerX + area.innerWidth * 0.12
-      const bulbY = area.innerY + area.innerHeight * 0.5
+      const tubeX = area.innerX + area.innerWidth * 0.5
+      const tubeWidth = area.innerWidth * 0.0486
+      const tubeHalf = tubeWidth * 0.5
+      const bulbRadius = area.innerWidth * 0.12
+
+      const tube = createLinearGradientSafe(
+        context,
+        tubeX - tubeHalf,
+        top,
+        tubeX + tubeHalf,
+        top,
+        pointerColor.medium
+      )
+      if (typeof tube !== 'string') {
+        tube.addColorStop(0, pointerColor.dark)
+        tube.addColorStop(0.5, pointerColor.light)
+        tube.addColorStop(1, pointerColor.dark)
+      }
+      context.fillStyle = tube
+      context.fillRect(tubeX - tubeHalf, level, tubeWidth, bottom - level)
+
       context.beginPath()
-      context.arc(bulbX, bulbY, area.innerHeight * 0.06, 0, Math.PI * 2)
+      context.arc(tubeX, bottom, bulbRadius, 0, Math.PI * 2)
+      const bulb = createRadialGradientSafe(
+        context,
+        tubeX - bulbRadius * 0.2,
+        bottom - bulbRadius * 0.2,
+        0,
+        tubeX,
+        bottom,
+        bulbRadius,
+        pointerColor.medium
+      )
+      if (typeof bulb !== 'string') {
+        bulb.addColorStop(0, pointerColor.light)
+        bulb.addColorStop(0.5, pointerColor.medium)
+        bulb.addColorStop(1, pointerColor.dark)
+      }
+      context.fillStyle = bulb
+      context.fill()
+    }
+  } else {
+    const left = area.innerX + area.innerWidth * scaleConstants.start
+    const right = area.innerX + area.innerWidth * scaleConstants.end
+    const level =
+      area.innerX + area.innerWidth * (scaleConstants.start + pointerUnit * scaleConstants.yRange)
+
+    if (config.style.gaugeType === 'type1') {
+      const y = area.innerY + area.innerHeight * 0.435714
+      const height = area.innerHeight * 0.15
+
+      context.fillStyle = 'rgba(255, 255, 255, 0.08)'
+      context.fillRect(left, y, right - left, height)
+
+      const border = createLinearGradientSafe(context, left, y, left, y + height, innerDark)
+      if (typeof border !== 'string') {
+        border.addColorStop(0, 'rgba(255, 255, 255, 0.15)')
+        border.addColorStop(0.5, innerDark)
+        border.addColorStop(1, 'rgba(255, 255, 255, 0.15)')
+      }
+      context.strokeStyle = border
+      context.lineWidth = 1
+      if (typeof context.strokeRect === 'function') {
+        context.strokeRect(left, y, right - left, height)
+      }
+
+      const valueGradient = createLinearGradientSafe(
+        context,
+        left,
+        y,
+        left,
+        y + height,
+        pointerColor.medium
+      )
+      if (typeof valueGradient !== 'string') {
+        valueGradient.addColorStop(0, pointerColor.medium)
+        valueGradient.addColorStop(0.5, pointerColor.light)
+        valueGradient.addColorStop(1, pointerColor.medium)
+      }
+      context.fillStyle = valueGradient
+      context.fillRect(left, y, level - left, height)
+
+      const valueHighlight = createLinearGradientSafe(
+        context,
+        left,
+        y,
+        left,
+        y + height,
+        innerLight
+      )
+      if (typeof valueHighlight !== 'string') {
+        valueHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.35)')
+        valueHighlight.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)')
+        valueHighlight.addColorStop(1, 'rgba(255, 255, 255, 0.35)')
+      }
+      context.fillStyle = valueHighlight
+      context.fillRect(left, y + height * 0.15, level - left, height * 0.7)
+    } else {
+      const tubeY = area.innerY + area.innerHeight * 0.5
+      const tubeHeight = area.innerHeight * 0.053
+      const tubeHalf = tubeHeight * 0.5
+      const bulbRadius = area.innerHeight * 0.12
+
+      const tube = createLinearGradientSafe(
+        context,
+        left,
+        tubeY - tubeHalf,
+        left,
+        tubeY + tubeHalf,
+        pointerColor.medium
+      )
+      if (typeof tube !== 'string') {
+        tube.addColorStop(0, pointerColor.dark)
+        tube.addColorStop(0.5, pointerColor.light)
+        tube.addColorStop(1, pointerColor.dark)
+      }
+      context.fillStyle = tube
+      context.fillRect(left, tubeY - tubeHalf, level - left, tubeHeight)
+
+      const bulbX = left
+      const bulbY = tubeY
+      context.beginPath()
+      context.arc(bulbX, bulbY, bulbRadius, 0, Math.PI * 2)
+      const bulb = createRadialGradientSafe(
+        context,
+        bulbX - bulbRadius * 0.2,
+        bulbY - bulbRadius * 0.2,
+        0,
+        bulbX,
+        bulbY,
+        bulbRadius,
+        pointerColor.medium
+      )
+      if (typeof bulb !== 'string') {
+        bulb.addColorStop(0, pointerColor.light)
+        bulb.addColorStop(0.5, pointerColor.medium)
+        bulb.addColorStop(1, pointerColor.dark)
+      }
+      context.fillStyle = bulb
       context.fill()
     }
   }
@@ -573,10 +753,14 @@ const drawLabels = (
   }
 
   if (config.visibility.showLcd && typeof context.fillRect === 'function') {
-    const lcdWidth = area.innerWidth * 0.62
-    const lcdHeight = area.innerHeight * 0.11
-    const lcdX = area.innerX + (area.innerWidth - lcdWidth) / 2
-    const lcdY = area.innerY + area.innerHeight * 0.82
+    const lcdWidth = config.scale.vertical ? area.innerWidth * 0.571428 : area.innerWidth * 0.18
+    const lcdHeight = config.scale.vertical ? area.innerHeight * 0.055 : area.innerHeight * 0.15
+    const lcdX = config.scale.vertical
+      ? area.innerX + (area.innerWidth - lcdWidth) / 2
+      : area.innerX + area.innerWidth * 0.695
+    const lcdY = config.scale.vertical
+      ? area.innerY + area.innerHeight * 0.88
+      : area.innerY + area.innerHeight * 0.22
     context.fillStyle = '#b4c0ae'
     context.fillRect(lcdX, lcdY, lcdWidth, lcdHeight)
     if (typeof context.strokeRect === 'function') {
@@ -625,9 +809,9 @@ export const renderLinearGauge = (
   drawSegments(context, config, area)
   drawTicks(context, config, area)
   drawThreshold(context, config, area)
+  drawLabels(context, config, value, width, height, area)
   drawStatusLayers(context, config, area)
   drawPointer(context, config, value, area)
-  drawLabels(context, config, value, width, height, area)
   if (config.visibility.showForeground) {
     drawLegacyLinearForeground(context, area.frame)
   }
