@@ -8,6 +8,7 @@ import {
   gaugeVisibilitySchema,
   sharedGaugeConfigSchema
 } from './schemas/shared.js'
+import { compassGaugeConfigSchema } from './compass/schema.js'
 import { linearGaugeConfigSchema } from './linear/schema.js'
 import { radialGaugeConfigSchema } from './radial/schema.js'
 
@@ -23,20 +24,12 @@ export * from './animation/scheduler.js'
 export * from './render/context.js'
 export * from './theme/tokens.js'
 export * from './extensions/interfaces.js'
+export * from './compass/schema.js'
+export * from './compass/renderer.js'
 export * from './linear/schema.js'
 export * from './linear/renderer.js'
 export * from './radial/schema.js'
 export * from './radial/renderer.js'
-
-export const compassGaugeConfigSchema = z
-  .object({
-    heading: gaugeValueSchema,
-    size: gaugeSizeSchema,
-    animation: gaugeAnimationSchema,
-    visibility: gaugeVisibilitySchema,
-    text: gaugeTextSchema
-  })
-  .strict()
 
 export type RadialGaugeConfig = z.infer<typeof radialGaugeConfigSchema>
 export type LinearGaugeConfig = z.infer<typeof linearGaugeConfigSchema>

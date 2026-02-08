@@ -1,13 +1,18 @@
 import {
+  animateCompassGauge,
   animateLinearGauge,
   animateRadialGauge,
+  compassGaugeConfigSchema,
   createStyleTokenSource,
   linearGaugeConfigSchema,
+  renderCompassGauge,
   renderLinearGauge,
   radialGaugeConfigSchema,
   renderRadialGauge,
   resolveThemePaint,
   type AnimationRunHandle,
+  type CompassDrawContext,
+  type CompassGaugeConfig,
   type LinearDrawContext,
   type LinearGaugeConfig,
   type RadialDrawContext,
@@ -510,9 +515,228 @@ export class SteelseriesLinearV3Element extends LitElement {
   }
 }
 
+@customElement('steelseries-compass-v3')
+export class SteelseriesCompassV3Element extends LitElement {
+  @query('canvas')
+  private canvasElement?: HTMLCanvasElement
+
+  private currentHeading = 0
+  private animationHandle: AnimationRunHandle | undefined
+
+  static override styles = css`
+    :host {
+      --ss3-font-family: system-ui, sans-serif;
+      --ss3-text-color: #1f2937;
+      --ss3-background-color: #f8fafc;
+      --ss3-frame-color: #dbe4ee;
+      --ss3-accent-color: #0f766e;
+      --ss3-warning-color: #b45309;
+      --ss3-danger-color: #b91c1c;
+      display: inline-grid;
+      font-family: var(--ss3-font-family);
+      color: var(--ss3-text-color);
+    }
+
+    .frame {
+      border-radius: 9999px;
+      background: var(--ss3-frame-color);
+      padding: 0.5rem;
+      display: grid;
+      place-items: center;
+      box-sizing: border-box;
+    }
+
+    .wrapper {
+      display: grid;
+      justify-items: center;
+      gap: 0.35rem;
+    }
+
+    .dial {
+      border-radius: inherit;
+      background: var(--ss3-background-color);
+      box-sizing: border-box;
+      display: grid;
+      place-items: center;
+    }
+
+    canvas {
+      display: block;
+      border-radius: inherit;
+    }
+
+    .meta {
+      display: grid;
+      justify-items: center;
+      gap: 0.1rem;
+      color: var(--ss3-text-color);
+    }
+
+    .meta .title {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .meta .unit {
+      font-size: 0.68rem;
+      opacity: 0.82;
+    }
+  `
+
+  @property({ type: Number })
+  heading = 0
+
+  @property({ type: Number })
+  size = 220
+
+  @property({ type: String })
+  override title = 'Compass'
+
+  @property({ type: String })
+  unit = 'deg'
+
+  @property({ type: Boolean, attribute: 'animate-value' })
+  animateValue = true
+
+  override firstUpdated() {
+    this.currentHeading = this.heading
+    this.renderGauge(false)
+  }
+
+  override disconnectedCallback() {
+    this.animationHandle?.cancel()
+    this.animationHandle = undefined
+    super.disconnectedCallback()
+  }
+
+  override updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.size === 0) {
+      return
+    }
+
+    const valueChanged = changedProperties.has('heading')
+    const onlyValueChanged = valueChanged && changedProperties.size === 1
+    this.renderGauge(onlyValueChanged && this.animateValue)
+  }
+
+  private getThemePaint(): ThemePaint {
+    const computedStyle = getComputedStyle(this)
+    return resolveThemePaint({
+      source: createStyleTokenSource(computedStyle)
+    })
+  }
+
+  private getDrawContext(): CompassDrawContext | undefined {
+    if (!this.canvasElement) {
+      return undefined
+    }
+
+    const drawContext = this.canvasElement.getContext('2d')
+    if (!drawContext) {
+      return undefined
+    }
+
+    return drawContext as CompassDrawContext
+  }
+
+  private buildConfig(current: number): CompassGaugeConfig {
+    return compassGaugeConfigSchema.parse({
+      heading: {
+        min: 0,
+        max: 360,
+        current
+      },
+      size: {
+        width: this.size,
+        height: this.size
+      },
+      text: {
+        title: this.title,
+        unit: this.unit
+      },
+      indicators: {
+        alerts: [
+          {
+            id: 'east-wind',
+            heading: 90,
+            message: 'east wind',
+            severity: 'warning'
+          },
+          {
+            id: 'south-storm',
+            heading: 180,
+            message: 'storm',
+            severity: 'critical'
+          }
+        ]
+      }
+    })
+  }
+
+  private renderGauge(animateValue: boolean): void {
+    const drawContext = this.getDrawContext()
+    if (!drawContext || !this.canvasElement) {
+      return
+    }
+
+    this.canvasElement.width = this.size
+    this.canvasElement.height = this.size
+
+    const paint = this.getThemePaint()
+    const nextHeading = this.heading
+    this.animationHandle?.cancel()
+
+    if (animateValue && this.currentHeading !== nextHeading) {
+      const animationConfig = this.buildConfig(nextHeading)
+      this.animationHandle = animateCompassGauge({
+        context: drawContext,
+        config: animationConfig,
+        from: this.currentHeading,
+        to: nextHeading,
+        paint,
+        onFrame: (frame) => {
+          this.currentHeading = frame.heading
+        },
+        onComplete: (frame) => {
+          this.currentHeading = frame.heading
+        }
+      })
+      return
+    }
+
+    const renderConfig = this.buildConfig(nextHeading)
+    renderCompassGauge(drawContext, renderConfig, { heading: nextHeading, paint })
+    this.currentHeading = nextHeading
+  }
+
+  override render() {
+    return html`
+      <div class="wrapper">
+        <div class="frame">
+          <div class="dial">
+            <canvas
+              width=${this.size}
+              height=${this.size}
+              role="img"
+              aria-label="${this.title || 'Compass Gauge'}"
+            ></canvas>
+          </div>
+        </div>
+        <div class="meta">
+          <span class="title">${this.title}</span>
+          <span class="unit">${this.unit || 'deg'}</span>
+        </div>
+      </div>
+    `
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'steelseries-radial-v3': SteelseriesRadialV3Element
     'steelseries-linear-v3': SteelseriesLinearV3Element
+    'steelseries-compass-v3': SteelseriesCompassV3Element
   }
 }

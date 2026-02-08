@@ -40,6 +40,7 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 | P2-05 | Complete | Radial performance benchmark and frame budgets are enforced by `packages/core/test/radial-performance.test.ts` and `bench:radial` script.                            |
 | P2-06 | Complete | Radial API docs and minimal/full/high-update examples are published in `docs/RADIAL.md` and `packages/docs-site/src/main.ts`.                                        |
 | P3-01 | Complete | Linear renderer and `<steelseries-linear-v3>` are implemented in `packages/core/src/linear` and `packages/elements/src/index.ts` with renderer tests.                |
+| P3-02 | Complete | Compass renderer and `<steelseries-compass-v3>` are implemented in `packages/core/src/compass` and `packages/elements/src/index.ts` with renderer tests.             |
 
 ## Phase 0 - Foundation
 
