@@ -1,13 +1,5 @@
 import { z } from 'zod'
 
-import {
-  gaugeAnimationSchema,
-  gaugeSizeSchema,
-  gaugeTextSchema,
-  gaugeValueSchema,
-  gaugeVisibilitySchema,
-  sharedGaugeConfigSchema
-} from './schemas/shared.js'
 import { compassGaugeConfigSchema } from './compass/schema.js'
 import { linearGaugeConfigSchema } from './linear/schema.js'
 import { radialGaugeConfigSchema } from './radial/schema.js'
@@ -24,6 +16,7 @@ export * from './animation/scheduler.js'
 export * from './render/context.js'
 export * from './theme/tokens.js'
 export * from './extensions/interfaces.js'
+export * from './contracts/gauge-contract.js'
 export * from './compass/schema.js'
 export * from './compass/renderer.js'
 export * from './linear/schema.js'

@@ -4,19 +4,24 @@ import {
   animateRadialGauge,
   compassGaugeConfigSchema,
   createStyleTokenSource,
+  gaugeContract,
   linearGaugeConfigSchema,
   renderCompassGauge,
   renderLinearGauge,
   radialGaugeConfigSchema,
   renderRadialGauge,
   resolveThemePaint,
+  toGaugeContractState,
   type AnimationRunHandle,
   type CompassDrawContext,
   type CompassGaugeConfig,
+  type CompassRenderResult,
   type LinearDrawContext,
   type LinearGaugeConfig,
+  type LinearRenderResult,
   type RadialDrawContext,
   type RadialGaugeConfig,
+  type RadialRenderResult,
   type ThemePaint
 } from '@bradsjm/steelseries-v3-core'
 import { LitElement, css, html } from 'lit'
@@ -211,6 +216,29 @@ export class SteelseriesRadialV3Element extends LitElement {
     })
   }
 
+  private emitValueChange(result: RadialRenderResult): void {
+    this.dispatchEvent(
+      new CustomEvent(gaugeContract.valueChangeEvent, {
+        detail: toGaugeContractState('radial', result),
+        bubbles: true,
+        composed: true
+      })
+    )
+  }
+
+  private emitError(error: unknown): void {
+    this.dispatchEvent(
+      new CustomEvent(gaugeContract.errorEvent, {
+        detail: {
+          kind: 'radial',
+          message: error instanceof Error ? error.message : 'Unknown radial rendering error'
+        },
+        bubbles: true,
+        composed: true
+      })
+    )
+  }
+
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
     if (!drawContext || !this.canvasElement) {
@@ -224,27 +252,34 @@ export class SteelseriesRadialV3Element extends LitElement {
     const nextValue = this.value
     this.animationHandle?.cancel()
 
-    if (animateValue && this.currentValue !== nextValue) {
-      const animationConfig = this.buildConfig(nextValue)
-      this.animationHandle = animateRadialGauge({
-        context: drawContext,
-        config: animationConfig,
-        from: this.currentValue,
-        to: nextValue,
-        paint,
-        onFrame: (frame) => {
-          this.currentValue = frame.value
-        },
-        onComplete: (frame) => {
-          this.currentValue = frame.value
-        }
-      })
-      return
-    }
+    try {
+      if (animateValue && this.currentValue !== nextValue) {
+        const animationConfig = this.buildConfig(nextValue)
+        this.animationHandle = animateRadialGauge({
+          context: drawContext,
+          config: animationConfig,
+          from: this.currentValue,
+          to: nextValue,
+          paint,
+          onFrame: (frame) => {
+            this.currentValue = frame.value
+            this.emitValueChange(frame)
+          },
+          onComplete: (frame) => {
+            this.currentValue = frame.value
+            this.emitValueChange(frame)
+          }
+        })
+        return
+      }
 
-    const renderConfig = this.buildConfig(nextValue)
-    renderRadialGauge(drawContext, renderConfig, { value: nextValue, paint })
-    this.currentValue = nextValue
+      const renderConfig = this.buildConfig(nextValue)
+      const result = renderRadialGauge(drawContext, renderConfig, { value: nextValue, paint })
+      this.currentValue = nextValue
+      this.emitValueChange(result)
+    } catch (error) {
+      this.emitError(error)
+    }
   }
 
   override render() {
@@ -457,6 +492,29 @@ export class SteelseriesLinearV3Element extends LitElement {
     })
   }
 
+  private emitValueChange(result: LinearRenderResult): void {
+    this.dispatchEvent(
+      new CustomEvent(gaugeContract.valueChangeEvent, {
+        detail: toGaugeContractState('linear', result),
+        bubbles: true,
+        composed: true
+      })
+    )
+  }
+
+  private emitError(error: unknown): void {
+    this.dispatchEvent(
+      new CustomEvent(gaugeContract.errorEvent, {
+        detail: {
+          kind: 'linear',
+          message: error instanceof Error ? error.message : 'Unknown linear rendering error'
+        },
+        bubbles: true,
+        composed: true
+      })
+    )
+  }
+
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
     if (!drawContext || !this.canvasElement) {
@@ -470,27 +528,34 @@ export class SteelseriesLinearV3Element extends LitElement {
     const nextValue = this.value
     this.animationHandle?.cancel()
 
-    if (animateValue && this.currentValue !== nextValue) {
-      const animationConfig = this.buildConfig(nextValue)
-      this.animationHandle = animateLinearGauge({
-        context: drawContext,
-        config: animationConfig,
-        from: this.currentValue,
-        to: nextValue,
-        paint,
-        onFrame: (frame) => {
-          this.currentValue = frame.value
-        },
-        onComplete: (frame) => {
-          this.currentValue = frame.value
-        }
-      })
-      return
-    }
+    try {
+      if (animateValue && this.currentValue !== nextValue) {
+        const animationConfig = this.buildConfig(nextValue)
+        this.animationHandle = animateLinearGauge({
+          context: drawContext,
+          config: animationConfig,
+          from: this.currentValue,
+          to: nextValue,
+          paint,
+          onFrame: (frame) => {
+            this.currentValue = frame.value
+            this.emitValueChange(frame)
+          },
+          onComplete: (frame) => {
+            this.currentValue = frame.value
+            this.emitValueChange(frame)
+          }
+        })
+        return
+      }
 
-    const renderConfig = this.buildConfig(nextValue)
-    renderLinearGauge(drawContext, renderConfig, { value: nextValue, paint })
-    this.currentValue = nextValue
+      const renderConfig = this.buildConfig(nextValue)
+      const result = renderLinearGauge(drawContext, renderConfig, { value: nextValue, paint })
+      this.currentValue = nextValue
+      this.emitValueChange(result)
+    } catch (error) {
+      this.emitError(error)
+    }
   }
 
   override render() {
@@ -675,6 +740,29 @@ export class SteelseriesCompassV3Element extends LitElement {
     })
   }
 
+  private emitValueChange(result: CompassRenderResult): void {
+    this.dispatchEvent(
+      new CustomEvent(gaugeContract.valueChangeEvent, {
+        detail: toGaugeContractState('compass', result),
+        bubbles: true,
+        composed: true
+      })
+    )
+  }
+
+  private emitError(error: unknown): void {
+    this.dispatchEvent(
+      new CustomEvent(gaugeContract.errorEvent, {
+        detail: {
+          kind: 'compass',
+          message: error instanceof Error ? error.message : 'Unknown compass rendering error'
+        },
+        bubbles: true,
+        composed: true
+      })
+    )
+  }
+
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
     if (!drawContext || !this.canvasElement) {
@@ -688,27 +776,34 @@ export class SteelseriesCompassV3Element extends LitElement {
     const nextHeading = this.heading
     this.animationHandle?.cancel()
 
-    if (animateValue && this.currentHeading !== nextHeading) {
-      const animationConfig = this.buildConfig(nextHeading)
-      this.animationHandle = animateCompassGauge({
-        context: drawContext,
-        config: animationConfig,
-        from: this.currentHeading,
-        to: nextHeading,
-        paint,
-        onFrame: (frame) => {
-          this.currentHeading = frame.heading
-        },
-        onComplete: (frame) => {
-          this.currentHeading = frame.heading
-        }
-      })
-      return
-    }
+    try {
+      if (animateValue && this.currentHeading !== nextHeading) {
+        const animationConfig = this.buildConfig(nextHeading)
+        this.animationHandle = animateCompassGauge({
+          context: drawContext,
+          config: animationConfig,
+          from: this.currentHeading,
+          to: nextHeading,
+          paint,
+          onFrame: (frame) => {
+            this.currentHeading = frame.heading
+            this.emitValueChange(frame)
+          },
+          onComplete: (frame) => {
+            this.currentHeading = frame.heading
+            this.emitValueChange(frame)
+          }
+        })
+        return
+      }
 
-    const renderConfig = this.buildConfig(nextHeading)
-    renderCompassGauge(drawContext, renderConfig, { heading: nextHeading, paint })
-    this.currentHeading = nextHeading
+      const renderConfig = this.buildConfig(nextHeading)
+      const result = renderCompassGauge(drawContext, renderConfig, { heading: nextHeading, paint })
+      this.currentHeading = nextHeading
+      this.emitValueChange(result)
+    } catch (error) {
+      this.emitError(error)
+    }
   }
 
   override render() {
