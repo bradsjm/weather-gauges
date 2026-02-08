@@ -9,13 +9,51 @@ if (app) {
     const value = Number(searchParams.get('value') ?? '50')
     const min = Number(searchParams.get('min') ?? '0')
     const max = Number(searchParams.get('max') ?? '100')
+    const threshold = Number(searchParams.get('threshold') ?? '80')
+    const title = searchParams.get('title') ?? 'Radial'
+    const unit = searchParams.get('unit') ?? ''
     const label = searchParams.get('label') ?? id
+
+    const tokenStyle = [
+      searchParams.get('fontFamily')
+        ? `--ss3-font-family:${searchParams.get('fontFamily')};`
+        : undefined,
+      searchParams.get('textColor')
+        ? `--ss3-text-color:${searchParams.get('textColor')};`
+        : undefined,
+      searchParams.get('backgroundColor')
+        ? `--ss3-background-color:${searchParams.get('backgroundColor')};`
+        : undefined,
+      searchParams.get('frameColor')
+        ? `--ss3-frame-color:${searchParams.get('frameColor')};`
+        : undefined,
+      searchParams.get('accentColor')
+        ? `--ss3-accent-color:${searchParams.get('accentColor')};`
+        : undefined,
+      searchParams.get('warningColor')
+        ? `--ss3-warning-color:${searchParams.get('warningColor')};`
+        : undefined,
+      searchParams.get('dangerColor')
+        ? `--ss3-danger-color:${searchParams.get('dangerColor')};`
+        : undefined
+    ]
+      .filter((value): value is string => value !== undefined)
+      .join(' ')
 
     app.innerHTML = `
       <main style="font-family: 'Avenir Next', 'Segoe UI', sans-serif; padding: 24px; background: #f3f4f6; min-height: 100vh; box-sizing: border-box;">
         <section data-testid="radial-fixture" style="width: 240px; background: white; border-radius: 16px; padding: 16px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);">
           <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #334155; margin-bottom: 8px;">Fixture ${label}</div>
-          <steelseries-radial-v3 value="${value}" data-min="${min}" data-max="${max}"></steelseries-radial-v3>
+          <steelseries-radial-v3
+            title="${title}"
+            unit="${unit}"
+            value="${value}"
+            min-value="${min}"
+            max-value="${max}"
+            threshold="${threshold}"
+            animate-value="false"
+            style="${tokenStyle}"
+          ></steelseries-radial-v3>
         </section>
       </main>
     `

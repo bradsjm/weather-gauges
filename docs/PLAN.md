@@ -36,6 +36,7 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 | P2-01 | Complete | Radial renderer pipeline is implemented in `packages/core/src/radial` with ticks, segments, threshold, alerts, and animation support.                                |
 | P2-02 | Complete | `packages/elements/src/index.ts` integrates core radial rendering on canvas with schema-driven config updates and animated value transitions.                        |
 | P2-03 | Complete | Radial wrapper theming and label styling are applied in `packages/elements/src/index.ts` and token override demos are published in `packages/docs-site/src/main.ts`. |
+| P2-04 | Complete | Canonical radial fixtures and golden baselines are expanded in `packages/test-assets`, with stable screenshot diffs verified in visual CI checks.                    |
 
 ## Phase 0 - Foundation
 
