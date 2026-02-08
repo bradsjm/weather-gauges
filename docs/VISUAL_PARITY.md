@@ -1,85 +1,175 @@
 # Visual Parity Guide (Phase VP)
 
-Status: Active source-driven visual fidelity guide for radial -> linear -> compass execution
+Status: Active source-driven fidelity guide for radial, linear, and compass
 
 ## 1) Purpose
 
-This document is the working reference for SteelSeries v3 visual parity implementation.
-It captures target look-and-feel criteria, measurement approach, fixture categories, and freeze rules.
+This document is the implementation and review standard for v3 visual parity against legacy SteelSeries v2.
 
-## 2) Visual Targets
+Use it to:
 
-The parity pass focuses on matching legacy SteelSeries visual identity across radial, linear, and compass:
+- Port rendering logic at source fidelity (not approximation)
+- Prevent subtle lifecycle/integration regressions that produce visually incorrect output
+- Validate parity with deterministic, reproducible evidence
 
-- Frame chrome depth and bevel contrast
-- Background material richness (gradient ramps + edge darkening)
-- Foreground glass/highlight overlays
-- Tick hierarchy clarity (major/minor separation)
-- Needle/pointer cap depth and readability
-- Typography and label placement consistency
+## 2) Non-Negotiable Rules
 
 ### Source-of-Truth Rule
 
-Legacy SteelSeries JavaScript implementation is the primary source of truth for visual behavior.
+Legacy SteelSeries JavaScript code is the authoritative behavior reference.
 
-- Derive painter logic, gradients, ring/bezel layering, tick spacing, and typography from legacy code paths first.
-- Port gauge behavior at algorithm fidelity (render stages, geometry math, layer order, mode/default interactions), not visual approximation.
-- Performance optimizations in rendering and animation are encouraged, provided they preserve legacy-equivalent visuals and runtime behavior.
-- Use screenshot parity as verification of implementation accuracy, not as the design source.
-- When visual and code-reference expectations diverge, inspect legacy module logic and constants before adjusting screenshots.
-- Document any intentional deviations from legacy behavior with rationale and fixture evidence.
+- Port painter logic from legacy modules before tuning screenshots.
+- Preserve stage order, geometry formulas, gradients, blend/compositing behavior, and defaults.
+- Do not introduce modernized visual interpretation during parity work.
+- Treat screenshots as verification of source port correctness, not the design source.
+- Any intentional deviation must be documented with rationale and fixture evidence.
 
-### Algorithm Fidelity Checklist
+### Fidelity-First Rule
 
-- Match legacy defaults and mode behavior before adding optional modern UX layers.
-- Preserve legacy render stage order and compositing semantics for each gauge.
-- Port geometry formulas, gradient stops, and key constants directly from source modules.
-- Keep color/tone relationships descriptor-equivalent to legacy behavior.
-- Validate with before/after screenshots only after source behavior is implemented.
-- Allow performance optimizations only when visual and functional output remain equivalent.
+When in doubt, copy exact constants and paths from legacy code.
 
-### Legacy Code References (authoritative)
+- Keep enum values and defaults identical.
+- Keep per-mode behavior identical (including fallback branches).
+- Keep text/font placement logic and cardinal/ordinal label behavior identical.
+- Keep texture and material rendering logic identical where feasible.
 
-Use these legacy modules from `nicolas-van/steelseries` as the implementation source:
+## 3) Authoritative Legacy References
 
-- `src/drawFrame.js` (radial frame chrome/material gradients)
-- `src/drawBackground.js` (radial background textures/edge shadow)
-- `src/drawForeground.js` (foreground highlight overlays and glass)
-- `src/drawLinearFrameImage.js` (linear frame materials)
-- `src/drawLinearBackgroundImage.js` (linear background textures and inner shadow stack)
-- `src/drawRoseImage.js` (compass rose ring geometry and cardinal markers)
-- `src/Compass.js` (compass defaults, pointer drawing, rose/tick behavior)
-- `src/definitions.js` (`FrameDesign`, `ForegroundType`, `PointerType` enums)
+Use these modules from `nicolas-van/steelseries` as implementation sources:
 
-### Extracted Legacy Constants (to implement directly)
+- `src/drawFrame.js`
+- `src/drawBackground.js`
+- `src/drawForeground.js`
+- `src/drawLinearFrameImage.js`
+- `src/drawLinearBackgroundImage.js`
+- `src/drawRoseImage.js`
+- `src/Compass.js`
+- `src/drawRadialCustomImage.js`
+- `src/createKnobImage.js`
+- `src/definitions.js`
+- `src/carbonBuffer.js`
+- `src/punchedSheetBuffer.js`
+- `src/brushedMetalTexture.js`
 
-Frame material presets (radial + linear) from `drawFrame.js` / `drawLinearFrameImage.js`:
+## 4) Porting Checklist (Per Gauge)
 
-- Frame designs: `metal`, `brass`, `steel`, `gold`, `anthracite`, `tiltedGray`, `tiltedBlack`, `glossyMetal`, `blackMetal`, `shinyMetal`, `chrome`.
-- Chrome conical gradient fractions: `[0, 0.09, 0.12, 0.16, 0.25, 0.29, 0.33, 0.38, 0.48, 0.52, 0.63, 0.68, 0.8, 0.83, 0.87, 0.97, 1]`.
-- Black metal fractions: `[0, 0.125, 0.347222, 0.5, 0.680555, 0.875, 1]`.
-- Shiny metal fractions: `[0, 0.125, 0.25, 0.347222, 0.5, 0.652777, 0.75, 0.875, 1]`.
-- Linear frame width formula: `frameWidth = ceil(min(0.04 * sqrt(w^2 + h^2), 0.1 * (vertical ? w : h)))`.
+Use this checklist in order for every gauge migration.
 
-Background materials from `drawBackground.js` / `drawLinearBackgroundImage.js`:
+1. **Lock API Surface to Legacy Defaults**
+   - Add legacy enum/property surface in schema and element API before renderer work.
+   - Ensure defaults match legacy exactly (frame/background/pointer/foreground/knob/mode flags).
 
-- Named textures: `CARBON`, `PUNCHED_SHEET`, `BRUSHED_METAL`, `BRUSHED_STAINLESS`, `STAINLESS`, `TURNED`.
-- Stainless/turned conical fractions: `[0, 0.03, 0.1, 0.14, 0.24, 0.33, 0.38, 0.5, 0.62, 0.67, 0.76, 0.81, 0.85, 0.97, 1]`.
-- Radial vignette edge stops: alpha ramp near rim with stops at `0.86`, `0.92`, `0.97`, `1`.
-- Linear inner shadow stack colors (7 strokes):
-  `rgba(0,0,0,0.30)`, `0.20`, `0.13`, `0.09`, `0.06`, `0.04`, `0.03`.
+2. **Port Render Pipeline in Legacy Stage Order**
+   - Frame -> background -> custom image -> static overlays -> dynamic pointer/value -> foreground.
+   - Preserve all `save/restore`, rotation origin, and `globalCompositeOperation` transitions.
 
-Foreground overlay behavior from `drawForeground.js`:
+3. **Port Geometry/Gradient Constants Directly**
+   - Copy ring radii, bezier points, stop offsets, line widths, and text radii.
+   - Avoid "close enough" values.
 
-- Foreground types: `type1`..`type5` with distinct bezier masks.
-- Primary highlight opacity profile (type1/2/3/5): gradient from `rgba(255,255,255,0.275)` to `rgba(255,255,255,0.015)`.
-- Type4 uses additional radial highlight with final alpha around `0.15` near edge.
-- Center knob size reference: `ceil(0.084112 * imageHeight)`.
+4. **Port Mode and Feature Interactions**
+   - Include interactions like `degreeScale`, `pointSymbolsVisible`, `rotateFace`, and visibility flags.
+   - Keep behavior equivalent when combinations are enabled.
 
-Compass rose and heading behavior from `drawRoseImage.js` / `Compass.js`:
+5. **Port Materials and Textures**
+   - Include carbon/punched/brushed/stainless/turned logic where applicable.
+   - Keep edge vignettes and inner shadows in the same order and alpha profile.
 
-- Rose wedge loop: every `15` degrees, alternating fill between radii `0.26 * imageWidth` and `0.23 * imageWidth`.
-- Cardinal marker loop: every `90` degrees.
-- Rose center ring radius: `0.1 * imageWidth`, line width `0.022 * imageWidth`.
-- Compass `angleStep = RAD_FACTOR` and pointer rotation based on `value` heading.
-- Default compass symbols: `['N','NE','E','SE','S','SW','W','NW']`.
+6. **Validate in Runtime and Visual Tests**
+   - Verify rendered canvas is non-empty and deterministic.
+   - Run scoped visual tests and inspect diffs before snapshot updates.
+
+## 5) Compass Lessons Learned (Critical)
+
+These issues occurred during the compass parity port and should be treated as guardrails for future gauges.
+
+### A) Blank Snapshot Failure Mode
+
+A gauge can produce "valid" screenshots that are blank if rendering never executes before capture.
+
+- Symptom: fixture header renders, canvas appears empty/transparent.
+- Detection: sample canvas pixels (`opaque alpha count`) in browser probe.
+- Recommendation: do not update snapshots until runtime probe confirms non-transparent gauge pixels.
+
+### B) Lit `@query` Lifecycle Pitfall
+
+Do not manually assign fields decorated with `@query(...)`.
+
+- Manual writes can interfere with Lit's query-backed accessor behavior and lifecycle expectations.
+- Let Lit resolve queried nodes; if fallback lookup is needed, keep it local and avoid mutating the decorated property.
+
+### C) Boolean Attribute Parsing Pitfall
+
+`animate-value="false"` is still a present boolean attribute in HTML.
+
+- Without converter handling, Lit boolean properties evaluate this as `true`.
+- For deterministic visual harnesses, add explicit boolean converters when string values like `"false"` are used.
+- Prefer explicit property assignment in code where possible.
+
+### D) Build Artifact Staleness Pitfall
+
+Docs-site and visual harness consume package `dist` outputs, not source files.
+
+- After source edits in `core` or `elements`, rebuild relevant packages before visual validation.
+- If results look unchanged, verify dist rebuild happened before deeper debugging.
+
+### E) Silent Failure Pitfall
+
+Element render methods that swallow errors (emit-only) can hide hard failures.
+
+- Keep error event emission.
+- Also add targeted runtime probes in debugging sessions to verify draw execution and pixel output.
+
+## 6) Required Verification Workflow
+
+Follow this sequence for parity work:
+
+1. Implement source-accurate port.
+2. Run package typechecks/tests for affected packages.
+3. Rebuild packages consumed by docs-site/harness.
+4. Run runtime probe against visual route:
+   - Confirm component exists
+   - Confirm canvas exists
+   - Confirm non-zero opaque pixel count
+5. Run scoped visual tests.
+6. Only then update snapshots.
+7. Re-run visual tests to confirm green.
+
+## 7) Snapshot Update Policy
+
+Snapshot updates are allowed only when all are true:
+
+- Runtime probe confirms non-empty draw output.
+- Render path is source-faithful to legacy modules.
+- Diff rationale is understood (expected parity improvement, not unknown drift).
+- Updated snapshots are reviewed at least once manually.
+
+Never update snapshots to "fix" a blank or suspicious render.
+
+## 8) Known High-Risk Areas
+
+Review these first when parity drifts:
+
+- Frame material gradients (especially conic/chrome variants)
+- Background textures and edge vignettes
+- Foreground mask type geometry and alpha gradients
+- Pointer shape paths and gradient stops
+- Tick/label placement fonts and radii
+- Rotation math and `rotateFace` mode
+- Custom layer clipping and draw order
+
+## 9) Practical Advice for Best Results
+
+- Work one gauge at a time; do not mix broad refactors with parity ports.
+- Keep temporary debug probes local and remove them after diagnosis.
+- Keep default demo examples aligned with legacy defaults and add one styled fixture for breadth.
+- Prefer deterministic test inputs (fixed heading/value, disabled animation in visual fixtures unless animation itself is under test).
+
+## 10) Completion Criteria
+
+A parity task is complete only when:
+
+- Legacy behavior is source-matched for defaults and supported options.
+- Visual fixture output is stable and non-blank.
+- Typecheck/tests/visual checks pass.
+- Any remaining intentional deviations are documented in this file or package-specific notes.
