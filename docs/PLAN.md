@@ -13,6 +13,20 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 
 ## 2) Backlog
 
+### Progress Tracker (updated by implementation)
+
+| ID | Status | Notes |
+|---|---|---|
+| P0-01 | Complete | Monorepo packages + workspace scripts are in place. |
+| P0-02 | Complete | Strict TypeScript baseline is configured across packages. |
+| P0-03 | Complete | ESLint/Prettier/typecheck scripts are active. |
+| P0-04 | Complete | CI runs lint, typecheck, test, and build checks. |
+| P0-05 | Complete | Changesets and release/version scripts are configured. |
+| P0-06 | Complete | API conventions are documented in `docs/API_CONVENTIONS.md`. |
+| P0-07 | Complete | CSS token contract v1 is documented in `docs/CSS_TOKENS.md` and consumed by the radial sample element. |
+| P0-08 | Complete | Docs/playground package and app shell are bootstrapped. |
+| P0-09 | Complete | Playwright-based fixture + screenshot baseline pipeline is implemented and wired to CI. |
+
 ## Phase 0 - Foundation
 
 | ID | Task | Deliverable | Acceptance Criteria | Dependencies |
