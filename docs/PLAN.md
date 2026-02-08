@@ -22,9 +22,13 @@ Focus: source-accurate visual fidelity hardening against legacy SteelSeries rend
 
 - Legacy JavaScript renderer modules are authoritative for visual behavior and constants.
 - Implementation order is fixed: **radial -> linear -> compass**.
+- Port behavior at algorithm fidelity for every implemented gauge (geometry, gradients, compositing order, mode logic, and defaults).
+- Do not treat screenshot matching alone as completion criteria when source code behavior is not yet faithfully ported.
 - Screenshots are validation artifacts to verify composition, layering, and positioning; they do not replace legacy code references.
 - If screenshots and source expectations diverge, inspect legacy code path and constants first.
 - Keep v3 best practices while porting visuals: strict TypeScript, typed config boundaries, no public API regressions, deterministic rendering.
+- Keep modernization under the hood only: typed modules, explicit contracts, safe boundaries, and testability without changing visual/function outcomes.
+- Optimize rendering and animation code where beneficial for modern performance, but never at the cost of visual or behavioral fidelity to legacy.
 
 ## 4) Backlog
 
@@ -106,6 +110,7 @@ Focus: source-accurate visual fidelity hardening against legacy SteelSeries rend
 ## 6) Done Criteria (Visual Fidelity Pass)
 
 - Radial, linear, and compass implementations are completed in order with source-backed painter ports.
+- Radial, linear, and compass implementations are algorithm-fidelity ports for visual and functional behavior.
 - Material/chrome/foreground depth is present and consistent across gauges.
 - Typography and tick hierarchy match documented visual contract.
 - Screenshot packs are reviewed and accepted for each gauge pass.

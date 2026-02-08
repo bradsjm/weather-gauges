@@ -402,6 +402,7 @@ Legacy `tools.js` + draw helpers -> v3 `core` typed modules:
 
 - Treat legacy JavaScript painter modules as the visual source of truth.
 - Execute in fixed order: radial -> linear -> compass.
+- Require algorithm-fidelity ports per gauge: preserve render pipeline order, geometry formulas, defaults/mode behavior, and compositing semantics.
 - Start with radial as the reference implementation, then propagate shared painter utilities.
 - Port frame/background/foreground helpers early because they drive identity.
 - Use screenshot fixtures to validate composition and positioning after source-driven implementation.
@@ -447,8 +448,9 @@ When implementing a v3 gauge:
 3. Port geometry and scale rules directly from legacy code paths and constants.
 4. Port static-layer rendering and cache key strategy.
 5. Port dynamic rendering and animation interpolation.
-6. Validate against fixture screenshots before exposing public API.
-7. Expose a clean typed v3 config that preserves behavior, not legacy naming.
+6. Verify pipeline parity against legacy draw order and mode/default behavior.
+7. Validate against fixture screenshots before exposing public API.
+8. Expose a clean typed v3 config that preserves behavior, not legacy naming.
 
 This approach lets v3 remain modern and maintainable while preserving the excellent visual and functional legacy behavior.
 

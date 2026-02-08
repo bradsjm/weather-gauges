@@ -23,9 +23,20 @@ The parity pass focuses on matching legacy SteelSeries visual identity across ra
 Legacy SteelSeries JavaScript implementation is the primary source of truth for visual behavior.
 
 - Derive painter logic, gradients, ring/bezel layering, tick spacing, and typography from legacy code paths first.
+- Port gauge behavior at algorithm fidelity (render stages, geometry math, layer order, mode/default interactions), not visual approximation.
+- Performance optimizations in rendering and animation are encouraged, provided they preserve legacy-equivalent visuals and runtime behavior.
 - Use screenshot parity as verification of implementation accuracy, not as the design source.
 - When visual and code-reference expectations diverge, inspect legacy module logic and constants before adjusting screenshots.
 - Document any intentional deviations from legacy behavior with rationale and fixture evidence.
+
+### Algorithm Fidelity Checklist
+
+- Match legacy defaults and mode behavior before adding optional modern UX layers.
+- Preserve legacy render stage order and compositing semantics for each gauge.
+- Port geometry formulas, gradient stops, and key constants directly from source modules.
+- Keep color/tone relationships descriptor-equivalent to legacy behavior.
+- Validate with before/after screenshots only after source behavior is implemented.
+- Allow performance optimizations only when visual and functional output remain equivalent.
 
 ### Execution Order (Current Pass)
 

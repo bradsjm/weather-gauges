@@ -31,6 +31,8 @@ Out-of-scope for phases 0-3:
 
 - **Visual fidelity first:** maintain high-quality visuals and behavior
 - **Source-driven visuals:** derive painter behavior from legacy renderer code before screenshot validation
+- **Algorithm fidelity ports:** implement equivalent rendering algorithms and composition order for each gauge, not approximation-only restyling
+- **Performance with fidelity guardrails:** optimize rendering/animation internals aggressively when safe, but do not degrade legacy-equivalent visual output or behavior
 - **Typed contracts first:** strict TypeScript + schema validation
 - **Separation of concerns:** rendering engine separated from UI wrappers
 - **Deterministic rendering:** predictable outputs for visual regression
@@ -153,6 +155,7 @@ Implementation direction for the visual fidelity pass:
 
 - Execute renderer fidelity work in strict sequence: radial -> linear -> compass.
 - Use legacy modules (`drawFrame`, `drawBackground`, `drawForeground`, `drawLinear*`, `drawRoseImage`, `Compass`) as the behavior source.
+- Preserve gauge-specific algorithm structure while expressing it in modern TypeScript modules (typed inputs, pure helpers, testable composition).
 - Use screenshots to validate composition, layering, and positioning after source-based implementation.
 
 Rendering is split into deterministic stages:

@@ -14,6 +14,8 @@ All package APIs in `@bradsjm/steelseries-v3-*` must follow these rules.
 - Consistent cross-gauge semantics: radial, linear, and compass use shared terms when behavior matches.
 - Deterministic rendering: same config produces the same output in browser and tests.
 - Positive configuration model: avoid negative booleans and hidden inversions.
+- Algorithm-fidelity rendering policy: preserve legacy visual/function behavior through equivalent modern implementations.
+- Performance optimization policy: optimize render/animation internals for modern runtime efficiency where possible, without changing legacy-equivalent output behavior.
 
 ## 3) Naming Rules
 
@@ -88,6 +90,7 @@ Public configs should use grouped sections for readability and reuse:
 - Legacy compatibility is handled by mapping/adapter layers, not by polluting v3 public APIs.
 - Legacy enum-object patterns map to typed unions.
 - Legacy animated `real_*` fields are internal renderer state only.
+- Gauge renderers must preserve legacy behavior equivalence at algorithm level (layering, defaults, mode logic, and math) even when APIs are renamed.
 
 ## 10) Documentation and Change Control
 
