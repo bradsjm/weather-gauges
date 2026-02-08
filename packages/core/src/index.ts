@@ -15,6 +15,9 @@ export * from './schemas/validation.js'
 export * from './math/range.js'
 export * from './math/ticks.js'
 export * from './math/geometry.js'
+export * from './animation/easing.js'
+export * from './animation/timeline.js'
+export * from './animation/scheduler.js'
 
 export const radialGaugeConfigSchema = sharedGaugeConfigSchema
 

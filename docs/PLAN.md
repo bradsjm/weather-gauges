@@ -28,6 +28,7 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 | P0-09 | Complete | Playwright-based fixture + screenshot baseline pipeline is implemented and wired to CI.                                                     |
 | P1-01 | Complete | Shared zod schema modules are implemented in `packages/core/src/schemas`, with structured validation helpers and unit tests.                |
 | P1-02 | Complete | Math and scale primitives are implemented in `packages/core/src/math` with edge-case tests in `packages/core/test/math-primitives.test.ts`. |
+| P1-03 | Complete | Animation timeline, easing, and scheduler modules are implemented in `packages/core/src/animation` with fake-timer transition tests.        |
 
 ## Phase 0 - Foundation
 
