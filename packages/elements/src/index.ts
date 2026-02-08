@@ -109,6 +109,9 @@ export class SteelseriesRadialV3Element extends LitElement {
   @property({ type: Number })
   size = 220
 
+  @property({ type: Number })
+  heading = 0
+
   @property({ type: String })
   override title = 'Radial'
 
@@ -118,7 +121,13 @@ export class SteelseriesRadialV3Element extends LitElement {
   @property({ type: Number })
   threshold = 80
 
-  @property({ type: Boolean, attribute: 'animate-value' })
+  @property({
+    type: Boolean,
+    attribute: 'animate-value',
+    converter: {
+      fromAttribute: (value: string | null) => value !== null && value !== 'false'
+    }
+  })
   animateValue = true
 
   override firstUpdated() {
@@ -398,7 +407,13 @@ export class SteelseriesLinearV3Element extends LitElement {
   @property({ type: Number })
   threshold = 70
 
-  @property({ type: Boolean, attribute: 'animate-value' })
+  @property({
+    type: Boolean,
+    attribute: 'animate-value',
+    converter: {
+      fromAttribute: (value: string | null) => value !== null && value !== 'false'
+    }
+  })
   animateValue = true
 
   override firstUpdated() {
@@ -592,61 +607,16 @@ export class SteelseriesCompassV3Element extends LitElement {
     :host {
       --ss3-font-family: system-ui, sans-serif;
       --ss3-text-color: #eceff3;
-      --ss3-background-color: #4b4f56;
-      --ss3-frame-color: #c8ccd2;
       --ss3-accent-color: #d01e2f;
       --ss3-warning-color: #d97706;
       --ss3-danger-color: #ef4444;
-      display: inline-grid;
+      display: inline-block;
       font-family: var(--ss3-font-family);
       color: var(--ss3-text-color);
     }
 
-    .frame {
-      border-radius: 9999px;
-      background: var(--ss3-frame-color);
-      padding: 0.5rem;
-      display: grid;
-      place-items: center;
-      box-sizing: border-box;
-    }
-
-    .wrapper {
-      display: grid;
-      justify-items: center;
-      gap: 0.35rem;
-    }
-
-    .dial {
-      border-radius: inherit;
-      background: var(--ss3-background-color);
-      box-sizing: border-box;
-      display: grid;
-      place-items: center;
-    }
-
     canvas {
       display: block;
-      border-radius: inherit;
-    }
-
-    .meta {
-      display: grid;
-      justify-items: center;
-      gap: 0.1rem;
-      color: var(--ss3-text-color);
-    }
-
-    .meta .title {
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .meta .unit {
-      font-size: 0.68rem;
-      opacity: 0.82;
     }
   `
 
@@ -662,10 +632,118 @@ export class SteelseriesCompassV3Element extends LitElement {
   @property({ type: String })
   unit = 'deg'
 
-  @property({ type: Boolean, attribute: 'show-heading-readout' })
-  showHeadingReadout = true
+  @property({ type: String, attribute: 'frame-design' })
+  frameDesign:
+    | 'blackMetal'
+    | 'metal'
+    | 'shinyMetal'
+    | 'brass'
+    | 'steel'
+    | 'chrome'
+    | 'gold'
+    | 'anthracite'
+    | 'tiltedGray'
+    | 'tiltedBlack'
+    | 'glossyMetal' = 'metal'
 
-  @property({ type: Boolean, attribute: 'animate-value' })
+  @property({ type: String, attribute: 'background-color' })
+  backgroundColor:
+    | 'DARK_GRAY'
+    | 'SATIN_GRAY'
+    | 'LIGHT_GRAY'
+    | 'WHITE'
+    | 'BLACK'
+    | 'BEIGE'
+    | 'BROWN'
+    | 'RED'
+    | 'GREEN'
+    | 'BLUE'
+    | 'ANTHRACITE'
+    | 'MUD'
+    | 'PUNCHED_SHEET'
+    | 'CARBON'
+    | 'STAINLESS'
+    | 'BRUSHED_METAL'
+    | 'BRUSHED_STAINLESS'
+    | 'TURNED' = 'DARK_GRAY'
+
+  @property({ type: String, attribute: 'pointer-type' })
+  pointerType = 'type2'
+
+  @property({ type: String, attribute: 'pointer-color' })
+  pointerColor:
+    | 'RED'
+    | 'GREEN'
+    | 'BLUE'
+    | 'ORANGE'
+    | 'YELLOW'
+    | 'CYAN'
+    | 'MAGENTA'
+    | 'WHITE'
+    | 'GRAY'
+    | 'BLACK'
+    | 'RAITH'
+    | 'GREEN_LCD'
+    | 'JUG_GREEN' = 'RED'
+
+  @property({ type: String, attribute: 'knob-type' })
+  knobType: 'standardKnob' | 'metalKnob' = 'standardKnob'
+
+  @property({ type: String, attribute: 'knob-style' })
+  knobStyle: 'black' | 'brass' | 'silver' = 'silver'
+
+  @property({ type: String, attribute: 'foreground-type' })
+  foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
+
+  @property({ type: Boolean, attribute: 'degree-scale' })
+  degreeScale = false
+
+  @property({ type: Boolean, attribute: 'rose-visible' })
+  roseVisible = true
+
+  @property({ type: Boolean, attribute: 'rotate-face' })
+  rotateFace = false
+
+  @property({ type: Boolean, attribute: 'point-symbols-visible' })
+  pointSymbolsVisible = true
+
+  @property({ type: String, attribute: 'point-symbol-n' })
+  pointSymbolN = 'N'
+
+  @property({ type: String, attribute: 'point-symbol-ne' })
+  pointSymbolNE = 'NE'
+
+  @property({ type: String, attribute: 'point-symbol-e' })
+  pointSymbolE = 'E'
+
+  @property({ type: String, attribute: 'point-symbol-se' })
+  pointSymbolSE = 'SE'
+
+  @property({ type: String, attribute: 'point-symbol-s' })
+  pointSymbolS = 'S'
+
+  @property({ type: String, attribute: 'point-symbol-sw' })
+  pointSymbolSW = 'SW'
+
+  @property({ type: String, attribute: 'point-symbol-w' })
+  pointSymbolW = 'W'
+
+  @property({ type: String, attribute: 'point-symbol-nw' })
+  pointSymbolNW = 'NW'
+
+  @property({ attribute: false })
+  customLayer: CanvasImageSource | null = null
+
+  @property({ type: Boolean, attribute: 'show-heading-readout' })
+  showHeadingReadout = false
+
+  @property({
+    type: Boolean,
+    attribute: 'animate-value',
+    converter: {
+      fromAttribute: (value: string | null) => value !== null && value !== 'false'
+    }
+  })
   animateValue = true
 
   override firstUpdated() {
@@ -726,6 +804,34 @@ export class SteelseriesCompassV3Element extends LitElement {
       text: {
         ...(title ? { title } : {}),
         ...(unit ? { unit } : {})
+      },
+      rose: {
+        showDegreeLabels: this.degreeScale,
+        showOrdinalMarkers: this.pointSymbolsVisible
+      },
+      style: {
+        frameDesign: this.frameDesign,
+        backgroundColor: this.backgroundColor,
+        pointerType: this.pointerType,
+        pointerColor: this.pointerColor,
+        knobType: this.knobType,
+        knobStyle: this.knobStyle,
+        foregroundType: this.foregroundType,
+        pointSymbols: [
+          this.pointSymbolN,
+          this.pointSymbolNE,
+          this.pointSymbolE,
+          this.pointSymbolSE,
+          this.pointSymbolS,
+          this.pointSymbolSW,
+          this.pointSymbolW,
+          this.pointSymbolNW
+        ],
+        pointSymbolsVisible: this.pointSymbolsVisible,
+        degreeScale: this.degreeScale,
+        roseVisible: this.roseVisible,
+        rotateFace: this.rotateFace,
+        customLayer: this.customLayer
       },
       indicators: {
         alerts: [
@@ -819,22 +925,12 @@ export class SteelseriesCompassV3Element extends LitElement {
 
   override render() {
     return html`
-      <div class="wrapper">
-        <div class="frame">
-          <div class="dial">
-            <canvas
-              width=${this.size}
-              height=${this.size}
-              role="img"
-              aria-label="${this.title || 'Compass Gauge'}"
-            ></canvas>
-          </div>
-        </div>
-        <div class="meta">
-          <span class="title">${this.title}</span>
-          <span class="unit">${this.unit || 'deg'}</span>
-        </div>
-      </div>
+      <canvas
+        width=${this.size}
+        height=${this.size}
+        role="img"
+        aria-label="${this.title || 'Compass Gauge'}"
+      ></canvas>
     `
   }
 }

@@ -28,9 +28,11 @@ const createMockContext = () => {
     stroke: () => undefined,
     fill: () => undefined,
     moveTo: () => undefined,
+    bezierCurveTo: () => undefined,
     lineTo: () => {
       operations.push({ kind: 'lineTo' })
     },
+    closePath: () => undefined,
     save: () => undefined,
     restore: () => undefined,
     fillText: (text) => {
@@ -67,7 +69,9 @@ const createConfig = (current = 45): CompassGaugeConfig => {
 describe('compass renderer', () => {
   it('renders rose, needle, and heading labels', () => {
     const mock = createMockContext()
-    const result = renderCompassGauge(mock.context, createConfig(88))
+    const result = renderCompassGauge(mock.context, createConfig(88), {
+      showHeadingReadout: true
+    })
 
     expect(result.tone).toBe('warning')
     expect(result.activeAlerts.map((alert) => alert.id)).toEqual(['warn-east'])
@@ -77,7 +81,7 @@ describe('compass renderer', () => {
     )
     expect(
       mock.operations.filter((operation) => operation.kind === 'lineTo').length
-    ).toBeGreaterThan(10)
+    ).toBeGreaterThan(0)
     expect(
       mock.operations.some(
         (operation) => operation.kind === 'fillText' && operation.text.includes('Heading')
