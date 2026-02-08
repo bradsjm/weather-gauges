@@ -2,6 +2,51 @@ import { z } from 'zod'
 
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
+export const radialFrameDesignSchema = z.enum([
+  'blackMetal',
+  'metal',
+  'shinyMetal',
+  'brass',
+  'steel',
+  'chrome',
+  'gold',
+  'anthracite',
+  'tiltedGray',
+  'tiltedBlack',
+  'glossyMetal'
+])
+
+export const radialBackgroundColorSchema = z.enum([
+  'DARK_GRAY',
+  'SATIN_GRAY',
+  'LIGHT_GRAY',
+  'WHITE',
+  'BLACK',
+  'BEIGE',
+  'BROWN',
+  'RED',
+  'GREEN',
+  'BLUE',
+  'ANTHRACITE',
+  'MUD',
+  'PUNCHED_SHEET',
+  'CARBON',
+  'STAINLESS',
+  'BRUSHED_METAL',
+  'BRUSHED_STAINLESS',
+  'TURNED'
+])
+
+export const radialForegroundTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
+
+export const radialStyleSchema = z
+  .object({
+    frameDesign: radialFrameDesignSchema.default('metal'),
+    backgroundColor: radialBackgroundColorSchema.default('DARK_GRAY'),
+    foregroundType: radialForegroundTypeSchema.default('type1')
+  })
+  .strict()
+
 export const radialScaleSchema = z
   .object({
     startAngle: z
@@ -66,6 +111,11 @@ export const radialGaugeConfigSchema = sharedGaugeConfigSchema
       majorTickCount: 9,
       minorTicksPerMajor: 4
     })),
+    style: radialStyleSchema.default({
+      frameDesign: 'metal',
+      backgroundColor: 'DARK_GRAY',
+      foregroundType: 'type1'
+    }),
     segments: z.array(radialSegmentSchema).default([]),
     indicators: radialIndicatorsSchema
   })
@@ -76,4 +126,8 @@ export type RadialSegment = z.infer<typeof radialSegmentSchema>
 export type RadialThreshold = z.infer<typeof radialThresholdSchema>
 export type RadialAlert = z.infer<typeof radialAlertSchema>
 export type RadialIndicators = z.infer<typeof radialIndicatorsSchema>
+export type RadialFrameDesign = z.infer<typeof radialFrameDesignSchema>
+export type RadialBackgroundColorName = z.infer<typeof radialBackgroundColorSchema>
+export type RadialForegroundType = z.infer<typeof radialForegroundTypeSchema>
+export type RadialStyle = z.infer<typeof radialStyleSchema>
 export type RadialGaugeConfig = z.infer<typeof radialGaugeConfigSchema>

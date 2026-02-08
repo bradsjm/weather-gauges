@@ -3,13 +3,20 @@ import { createTickLine, valueToAngle } from '../math/geometry.js'
 import { clamp } from '../math/range.js'
 import { generateTicks } from '../math/ticks.js'
 import {
+  drawLegacyRadialBackground,
   drawLegacyCenterKnob,
   drawLegacyRadialBackgroundDark,
   drawLegacyRadialForeground,
+  drawLegacyRadialFrame,
   drawLegacyRadialFrameMetal
 } from '../render/legacy-materials.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
-import type { RadialAlert, RadialGaugeConfig } from './schema.js'
+import type {
+  RadialAlert,
+  RadialBackgroundColorName,
+  RadialGaugeConfig,
+  RadialFrameDesign
+} from './schema.js'
 
 export type RadialDrawContext = CanvasRenderingContext2D
 
@@ -38,6 +45,64 @@ const mergePaint = (paint?: Partial<ThemePaint>): ThemePaint => {
   return {
     ...resolveThemePaint(),
     ...paint
+  }
+}
+
+const LEGACY_BACKGROUND_TEXT: Record<RadialBackgroundColorName, string> = {
+  DARK_GRAY: 'rgb(255, 255, 255)',
+  SATIN_GRAY: 'rgb(167, 184, 180)',
+  LIGHT_GRAY: 'rgb(0, 0, 0)',
+  WHITE: 'rgb(0, 0, 0)',
+  BLACK: 'rgb(255, 255, 255)',
+  BEIGE: 'rgb(0, 0, 0)',
+  BROWN: 'rgb(109, 73, 47)',
+  RED: 'rgb(0, 0, 0)',
+  GREEN: 'rgb(0, 0, 0)',
+  BLUE: 'rgb(0, 0, 0)',
+  ANTHRACITE: 'rgb(250, 250, 250)',
+  MUD: 'rgb(255, 255, 240)',
+  PUNCHED_SHEET: 'rgb(255, 255, 255)',
+  CARBON: 'rgb(255, 255, 255)',
+  STAINLESS: 'rgb(0, 0, 0)',
+  BRUSHED_METAL: 'rgb(0, 0, 0)',
+  BRUSHED_STAINLESS: 'rgb(0, 0, 0)',
+  TURNED: 'rgb(0, 0, 0)'
+}
+
+const LEGACY_BACKGROUND_FILL: Record<RadialBackgroundColorName, string> = {
+  DARK_GRAY: '#333333',
+  SATIN_GRAY: '#3f4c4c',
+  LIGHT_GRAY: '#d0d0d0',
+  WHITE: '#ffffff',
+  BLACK: '#000000',
+  BEIGE: '#d7d2bf',
+  BROWN: '#f5e1c1',
+  RED: '#d48486',
+  GREEN: '#89b070',
+  BLUE: '#8ca9c2',
+  ANTHRACITE: '#3e3e44',
+  MUD: '#4e544f',
+  PUNCHED_SHEET: '#3e3e44',
+  CARBON: '#3e3e44',
+  STAINLESS: '#d7d7d7',
+  BRUSHED_METAL: '#3e3e44',
+  BRUSHED_STAINLESS: '#5f5f60',
+  TURNED: '#d7d7d7'
+}
+
+const isChromeLikeFrame = (design: RadialFrameDesign): boolean => {
+  return design === 'chrome' || design === 'blackMetal' || design === 'shinyMetal'
+}
+
+const resolveLegacyPaint = (config: RadialGaugeConfig, paint: ThemePaint): ThemePaint => {
+  const textColor = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
+  const backgroundColor = LEGACY_BACKGROUND_FILL[config.style.backgroundColor]
+
+  return {
+    ...paint,
+    textColor,
+    backgroundColor,
+    frameColor: isChromeLikeFrame(config.style.frameDesign) ? '#d0d0d0' : '#c8c8c8'
   }
 }
 
@@ -96,12 +161,22 @@ const drawBackground = (
   centerY: number,
   radius: number
 ): void => {
+  const legacyPaint = resolveLegacyPaint(config, paint)
+
   if (config.visibility.showFrame) {
-    drawLegacyRadialFrameMetal(context, centerX, centerY, radius)
+    if (isChromeLikeFrame(config.style.frameDesign)) {
+      drawLegacyRadialFrame(context, centerX, centerY, radius)
+    } else {
+      drawLegacyRadialFrameMetal(context, centerX, centerY, radius)
+    }
   }
 
   if (config.visibility.showBackground) {
-    drawLegacyRadialBackgroundDark(context, centerX, centerY, radius)
+    if (config.style.backgroundColor === 'DARK_GRAY') {
+      drawLegacyRadialBackgroundDark(context, centerX, centerY, radius)
+    } else {
+      drawLegacyRadialBackground(context, legacyPaint, centerX, centerY, radius)
+    }
   }
 }
 
@@ -142,6 +217,7 @@ const drawTicks = (
   centerY: number,
   radius: number
 ): void => {
+  const textColor = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
   const ticks = generateTicks(config.value, {
     majorTickCount: config.scale.majorTickCount,
     minorTicksPerMajor: config.scale.minorTicksPerMajor
@@ -153,11 +229,11 @@ const drawTicks = (
     centerY - radius,
     centerX,
     centerY + radius,
-    paint.textColor
+    textColor
   )
   if (typeof tickGradient !== 'string') {
     tickGradient.addColorStop(0, 'rgba(255,255,255,0.95)')
-    tickGradient.addColorStop(0.45, paint.textColor)
+    tickGradient.addColorStop(0.45, textColor)
     tickGradient.addColorStop(1, 'rgba(0,0,0,0.65)')
   }
   context.strokeStyle = tickGradient
@@ -187,10 +263,10 @@ const drawTicks = (
     if (isMajor) {
       const labelValue = Math.round(tick.value)
       const labelLine = createTickLine(centerX, centerY, radius * 0.625, radius * 0.625, angle)
-      context.fillStyle = paint.textColor
+      context.fillStyle = textColor
       context.textAlign = 'center'
       context.textBaseline = 'middle'
-      context.font = `600 ${Math.max(8, Math.round(radius * 0.078))}px ${paint.fontFamily}`
+      context.font = `${Math.max(8, Math.round(radius * 0.078))}px serif`
       context.fillText(`${labelValue}`, labelLine.start.x, labelLine.start.y)
     }
   }
@@ -308,14 +384,14 @@ const drawLabels = (
   centerY: number,
   radius: number
 ): void => {
-  context.fillStyle = paint.textColor
+  context.fillStyle = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
   context.textAlign = 'center'
   context.textBaseline = 'middle'
 
   const titleSize = Math.max(10, Math.round(radius * 0.085))
 
   if (config.text.title) {
-    context.font = `600 ${titleSize}px ${paint.fontFamily}`
+    context.font = `${titleSize}px serif`
     context.fillText(config.text.title, centerX, centerY - radius * 0.22)
   }
 
@@ -331,11 +407,11 @@ const drawLabels = (
     context.strokeRect(lcdX, lcdY, lcdWidth, lcdHeight)
     context.fillStyle = '#1f2933'
     context.textAlign = 'right'
-    context.font = `700 ${Math.max(12, Math.round(radius * 0.14))}px ${paint.fontFamily}`
+    context.font = `${Math.max(12, Math.round(radius * 0.14))}px serif`
     context.fillText(`${value.toFixed(2)}`, lcdX + lcdWidth * 0.94, lcdY + lcdHeight * 0.58)
     context.textAlign = 'center'
   } else {
-    context.font = `700 ${Math.max(14, Math.round(radius * 0.16))}px ${paint.fontFamily}`
+    context.font = `${Math.max(14, Math.round(radius * 0.16))}px serif`
     context.fillText(`${value.toFixed(2)}`, centerX, centerY + radius * 0.32)
   }
 
@@ -345,7 +421,7 @@ const drawLabels = (
       return
     }
 
-    context.font = `500 ${Math.max(9, Math.round(radius * 0.07))}px ${paint.fontFamily}`
+    context.font = `${Math.max(9, Math.round(radius * 0.07))}px serif`
     context.fillText(primaryAlert.message, centerX, centerY + radius * 0.46)
   }
 }

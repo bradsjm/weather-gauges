@@ -8,7 +8,12 @@ import {
   type LinearMaterialFrame
 } from '../render/legacy-materials.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
-import type { LinearAlert, LinearGaugeConfig } from './schema.js'
+import type {
+  LinearAlert,
+  LinearBackgroundColorName,
+  LinearFrameDesign,
+  LinearGaugeConfig
+} from './schema.js'
 
 import type { RadialDrawContext } from '../radial/renderer.js'
 
@@ -38,6 +43,59 @@ export type LinearAnimationOptions = {
 const mergePaint = (paint?: Partial<ThemePaint>): ThemePaint => ({
   ...resolveThemePaint(),
   ...paint
+})
+
+const LEGACY_BACKGROUND_TEXT: Record<LinearBackgroundColorName, string> = {
+  DARK_GRAY: 'rgb(255, 255, 255)',
+  SATIN_GRAY: 'rgb(167, 184, 180)',
+  LIGHT_GRAY: 'rgb(0, 0, 0)',
+  WHITE: 'rgb(0, 0, 0)',
+  BLACK: 'rgb(255, 255, 255)',
+  BEIGE: 'rgb(0, 0, 0)',
+  BROWN: 'rgb(109, 73, 47)',
+  RED: 'rgb(0, 0, 0)',
+  GREEN: 'rgb(0, 0, 0)',
+  BLUE: 'rgb(0, 0, 0)',
+  ANTHRACITE: 'rgb(250, 250, 250)',
+  MUD: 'rgb(255, 255, 240)',
+  PUNCHED_SHEET: 'rgb(255, 255, 255)',
+  CARBON: 'rgb(255, 255, 255)',
+  STAINLESS: 'rgb(0, 0, 0)',
+  BRUSHED_METAL: 'rgb(0, 0, 0)',
+  BRUSHED_STAINLESS: 'rgb(0, 0, 0)',
+  TURNED: 'rgb(0, 0, 0)'
+}
+
+const LEGACY_BACKGROUND_FILL: Record<LinearBackgroundColorName, string> = {
+  DARK_GRAY: '#333333',
+  SATIN_GRAY: '#3f4c4c',
+  LIGHT_GRAY: '#d0d0d0',
+  WHITE: '#ffffff',
+  BLACK: '#000000',
+  BEIGE: '#d7d2bf',
+  BROWN: '#f5e1c1',
+  RED: '#d48486',
+  GREEN: '#89b070',
+  BLUE: '#8ca9c2',
+  ANTHRACITE: '#3e3e44',
+  MUD: '#4e544f',
+  PUNCHED_SHEET: '#3e3e44',
+  CARBON: '#3e3e44',
+  STAINLESS: '#d7d7d7',
+  BRUSHED_METAL: '#3e3e44',
+  BRUSHED_STAINLESS: '#5f5f60',
+  TURNED: '#d7d7d7'
+}
+
+const isChromeLikeFrame = (design: LinearFrameDesign): boolean => {
+  return design === 'chrome' || design === 'blackMetal' || design === 'shinyMetal'
+}
+
+const resolveLegacyPaint = (config: LinearGaugeConfig, paint: ThemePaint): ThemePaint => ({
+  ...paint,
+  textColor: LEGACY_BACKGROUND_TEXT[config.style.backgroundColor],
+  backgroundColor: LEGACY_BACKGROUND_FILL[config.style.backgroundColor],
+  frameColor: isChromeLikeFrame(config.style.frameDesign) ? '#d0d0d0' : '#c8c8c8'
 })
 
 const createLinearGradientSafe = (
@@ -96,6 +154,7 @@ const drawFrame = (
   width: number,
   height: number
 ): LinearRenderArea => {
+  const legacyPaint = resolveLegacyPaint(config, paint)
   const fallbackFrameWidth = Math.ceil(
     Math.min(
       0.04 * Math.sqrt(width * width + height * height),
@@ -105,7 +164,7 @@ const drawFrame = (
 
   if (!config.visibility.showFrame) {
     if (config.visibility.showBackground && typeof context.fillRect === 'function') {
-      context.fillStyle = paint.backgroundColor
+      context.fillStyle = legacyPaint.backgroundColor
       context.fillRect(0, 0, width, height)
     }
 
@@ -127,7 +186,7 @@ const drawFrame = (
 
   const frame = drawLegacyLinearFrame(context, width, height, config.scale.vertical)
   if (config.visibility.showBackground) {
-    drawLegacyLinearBackground(context, paint, frame)
+    drawLegacyLinearBackground(context, legacyPaint, frame)
   }
 
   return {
@@ -200,6 +259,7 @@ const drawTicks = (
   paint: ThemePaint,
   area: LinearRenderArea
 ): void => {
+  const textColor = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
   const ticks = generateTicks(config.value, {
     majorTickCount: config.scale.majorTickCount,
     minorTicksPerMajor: config.scale.minorTicksPerMajor
@@ -212,19 +272,12 @@ const drawTicks = (
         area.innerY + area.innerHeight,
         0,
         area.innerY,
-        paint.textColor
+        textColor
       )
-    : createLinearGradientSafe(
-        context,
-        area.innerX,
-        0,
-        area.innerX + area.innerWidth,
-        0,
-        paint.textColor
-      )
+    : createLinearGradientSafe(context, area.innerX, 0, area.innerX + area.innerWidth, 0, textColor)
   if (typeof tickGradient !== 'string') {
     tickGradient.addColorStop(0, 'rgba(0,0,0,0.7)')
-    tickGradient.addColorStop(0.5, paint.textColor)
+    tickGradient.addColorStop(0.5, textColor)
     tickGradient.addColorStop(1, 'rgba(255,255,255,0.8)')
   }
   context.strokeStyle = tickGradient
@@ -357,12 +410,12 @@ const drawLabels = (
   height: number,
   area: LinearRenderArea
 ): void => {
-  context.fillStyle = paint.textColor
+  context.fillStyle = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
   context.textAlign = 'center'
   context.textBaseline = 'middle'
 
   if (config.text.title) {
-    context.font = `600 ${Math.max(11, Math.round(width * 0.09))}px ${paint.fontFamily}`
+    context.font = `${Math.max(11, Math.round(width * 0.09))}px serif`
     context.fillText(config.text.title, width / 2, height * 0.08)
   }
 
@@ -379,22 +432,22 @@ const drawLabels = (
       context.strokeRect(lcdX, lcdY, lcdWidth, lcdHeight)
     }
     context.fillStyle = '#1f2933'
-    context.font = `700 ${Math.max(11, Math.round(width * 0.11))}px ${paint.fontFamily}`
+    context.font = `${Math.max(11, Math.round(width * 0.11))}px serif`
     context.fillText(`${value.toFixed(2)}`, width / 2, lcdY + lcdHeight * 0.58)
     if (config.text.unit) {
-      context.fillStyle = paint.textColor
-      context.font = `500 ${Math.max(9, Math.round(width * 0.075))}px ${paint.fontFamily}`
+      context.fillStyle = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
+      context.font = `${Math.max(9, Math.round(width * 0.075))}px serif`
       context.fillText(config.text.unit, width / 2, lcdY + lcdHeight + height * 0.03)
     }
   } else {
-    context.font = `700 ${Math.max(12, Math.round(width * 0.11))}px ${paint.fontFamily}`
+    context.font = `${Math.max(12, Math.round(width * 0.11))}px serif`
     const unitSuffix = config.text.unit ? ` ${config.text.unit}` : ''
     context.fillText(`${value.toFixed(2)}${unitSuffix}`, width / 2, height * 0.94)
   }
 
   const [primaryAlert] = activeAlerts
   if (primaryAlert) {
-    context.font = `500 ${Math.max(10, Math.round(width * 0.075))}px ${paint.fontFamily}`
+    context.font = `${Math.max(10, Math.round(width * 0.075))}px serif`
     context.fillText(primaryAlert.message, width / 2, height * 0.18)
   }
 }

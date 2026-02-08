@@ -2,6 +2,48 @@ import { z } from 'zod'
 
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
+export const linearFrameDesignSchema = z.enum([
+  'blackMetal',
+  'metal',
+  'shinyMetal',
+  'brass',
+  'steel',
+  'chrome',
+  'gold',
+  'anthracite',
+  'tiltedGray',
+  'tiltedBlack',
+  'glossyMetal'
+])
+
+export const linearBackgroundColorSchema = z.enum([
+  'DARK_GRAY',
+  'SATIN_GRAY',
+  'LIGHT_GRAY',
+  'WHITE',
+  'BLACK',
+  'BEIGE',
+  'BROWN',
+  'RED',
+  'GREEN',
+  'BLUE',
+  'ANTHRACITE',
+  'MUD',
+  'PUNCHED_SHEET',
+  'CARBON',
+  'STAINLESS',
+  'BRUSHED_METAL',
+  'BRUSHED_STAINLESS',
+  'TURNED'
+])
+
+export const linearStyleSchema = z
+  .object({
+    frameDesign: linearFrameDesignSchema.default('metal'),
+    backgroundColor: linearBackgroundColorSchema.default('DARK_GRAY')
+  })
+  .strict()
+
 export const linearScaleSchema = z
   .object({
     majorTickCount: z.number().int().min(2).default(7),
@@ -58,6 +100,10 @@ export const linearGaugeConfigSchema = sharedGaugeConfigSchema
       minorTicksPerMajor: 2,
       vertical: true
     })),
+    style: linearStyleSchema.default({
+      frameDesign: 'metal',
+      backgroundColor: 'DARK_GRAY'
+    }),
     segments: z.array(linearSegmentSchema).default([]),
     indicators: linearIndicatorsSchema
   })
@@ -68,4 +114,7 @@ export type LinearSegment = z.infer<typeof linearSegmentSchema>
 export type LinearThreshold = z.infer<typeof linearThresholdSchema>
 export type LinearAlert = z.infer<typeof linearAlertSchema>
 export type LinearIndicators = z.infer<typeof linearIndicatorsSchema>
+export type LinearFrameDesign = z.infer<typeof linearFrameDesignSchema>
+export type LinearBackgroundColorName = z.infer<typeof linearBackgroundColorSchema>
+export type LinearStyle = z.infer<typeof linearStyleSchema>
 export type LinearGaugeConfig = z.infer<typeof linearGaugeConfigSchema>

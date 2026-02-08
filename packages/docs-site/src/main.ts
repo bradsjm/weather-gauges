@@ -19,6 +19,31 @@ if (app) {
     const width = Number(searchParams.get('width') ?? '140')
     const height = Number(searchParams.get('height') ?? '300')
 
+    const radialAttributeString = [
+      searchParams.get('frameDesign')
+        ? `frame-design="${searchParams.get('frameDesign')}"`
+        : undefined,
+      searchParams.get('radialBackgroundColor')
+        ? `background-color="${searchParams.get('radialBackgroundColor')}"`
+        : undefined,
+      searchParams.get('radialForegroundType')
+        ? `foreground-type="${searchParams.get('radialForegroundType')}"`
+        : undefined
+    ]
+      .filter((value): value is string => value !== undefined)
+      .join(' ')
+
+    const linearAttributeString = [
+      searchParams.get('frameDesign')
+        ? `frame-design="${searchParams.get('frameDesign')}"`
+        : undefined,
+      searchParams.get('linearBackgroundColor')
+        ? `background-color="${searchParams.get('linearBackgroundColor')}"`
+        : undefined
+    ]
+      .filter((value): value is string => value !== undefined)
+      .join(' ')
+
     const compassAttributeString = [
       searchParams.get('frameDesign')
         ? `frame-design="${searchParams.get('frameDesign')}"`
@@ -115,6 +140,7 @@ if (app) {
             width="${width}"
             height="${height}"
             animate-value="false"
+            ${linearAttributeString}
             style="${tokenStyle}"
           ></steelseries-linear-v3>`
         : kind === 'compass'
@@ -135,6 +161,7 @@ if (app) {
             max-value="${max}"
             threshold="${threshold}"
             animate-value="false"
+            ${radialAttributeString}
             style="${tokenStyle}"
           ></steelseries-radial-v3>`
 
@@ -161,17 +188,17 @@ if (app) {
           </article>
 
           <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Token Overrides</h2>
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Radial Legacy Style</h2>
             <steelseries-radial-v3
               title="Temperature"
               unit="°F"
               value="88"
               threshold="72"
+              frame-design="brass"
+              background-color="BEIGE"
+              foreground-type="type3"
               style="
                 --ss3-font-family: 'IBM Plex Sans', 'Avenir Next', sans-serif;
-                --ss3-background-color: #e0f2fe;
-                --ss3-frame-color: #bae6fd;
-                --ss3-text-color: #0c4a6e;
                 --ss3-accent-color: #0f766e;
                 --ss3-warning-color: #ca8a04;
                 --ss3-danger-color: #dc2626;
@@ -182,6 +209,27 @@ if (app) {
           <article style="padding: 1rem; border-radius: 14px; background: #0f172a; border: 1px solid #1e293b; color: #e2e8f0;">
             <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">High Update</h2>
             <steelseries-radial-v3 id="demo-high-update" title="Load" unit="%" value="15" threshold="70" style="--ss3-text-color:#e2e8f0; --ss3-background-color:#1e293b; --ss3-frame-color:#334155;"></steelseries-radial-v3>
+          </article>
+        </section>
+
+        <section style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: start;">
+          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Linear Default</h2>
+            <steelseries-linear-v3 title="Tank" unit="%" value="58" width="140" height="300" animate-value="false"></steelseries-linear-v3>
+          </article>
+
+          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Linear Legacy Style</h2>
+            <steelseries-linear-v3
+              title="Reservoir"
+              unit="%"
+              value="37"
+              width="140"
+              height="300"
+              frame-design="steel"
+              background-color="LIGHT_GRAY"
+              animate-value="false"
+            ></steelseries-linear-v3>
           </article>
         </section>
 

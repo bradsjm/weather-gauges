@@ -39,61 +39,16 @@ export class SteelseriesRadialV3Element extends LitElement {
     :host {
       --ss3-font-family: system-ui, sans-serif;
       --ss3-text-color: #eceff3;
-      --ss3-background-color: #4b4f56;
-      --ss3-frame-color: #c8ccd2;
       --ss3-accent-color: #c5162e;
       --ss3-warning-color: #d97706;
       --ss3-danger-color: #ef4444;
-      display: inline-grid;
+      display: inline-block;
       font-family: var(--ss3-font-family);
       color: var(--ss3-text-color);
     }
 
-    .frame {
-      border-radius: 9999px;
-      background: var(--ss3-frame-color);
-      padding: 0.5rem;
-      display: grid;
-      place-items: center;
-      box-sizing: border-box;
-    }
-
-    .wrapper {
-      display: grid;
-      justify-items: center;
-      gap: 0.35rem;
-    }
-
-    .dial {
-      border-radius: inherit;
-      background: var(--ss3-background-color);
-      box-sizing: border-box;
-      display: grid;
-      place-items: center;
-    }
-
     canvas {
       display: block;
-      border-radius: inherit;
-    }
-
-    .meta {
-      display: grid;
-      justify-items: center;
-      gap: 0.1rem;
-      color: var(--ss3-text-color);
-    }
-
-    .meta .title {
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .meta .unit {
-      font-size: 0.68rem;
-      opacity: 0.82;
     }
   `
 
@@ -109,9 +64,6 @@ export class SteelseriesRadialV3Element extends LitElement {
   @property({ type: Number })
   size = 220
 
-  @property({ type: Number })
-  heading = 0
-
   @property({ type: String })
   override title = 'Radial'
 
@@ -120,6 +72,44 @@ export class SteelseriesRadialV3Element extends LitElement {
 
   @property({ type: Number })
   threshold = 80
+
+  @property({ type: String, attribute: 'frame-design' })
+  frameDesign:
+    | 'blackMetal'
+    | 'metal'
+    | 'shinyMetal'
+    | 'brass'
+    | 'steel'
+    | 'chrome'
+    | 'gold'
+    | 'anthracite'
+    | 'tiltedGray'
+    | 'tiltedBlack'
+    | 'glossyMetal' = 'metal'
+
+  @property({ type: String, attribute: 'background-color' })
+  backgroundColor:
+    | 'DARK_GRAY'
+    | 'SATIN_GRAY'
+    | 'LIGHT_GRAY'
+    | 'WHITE'
+    | 'BLACK'
+    | 'BEIGE'
+    | 'BROWN'
+    | 'RED'
+    | 'GREEN'
+    | 'BLUE'
+    | 'ANTHRACITE'
+    | 'MUD'
+    | 'PUNCHED_SHEET'
+    | 'CARBON'
+    | 'STAINLESS'
+    | 'BRUSHED_METAL'
+    | 'BRUSHED_STAINLESS'
+    | 'TURNED' = 'DARK_GRAY'
+
+  @property({ type: String, attribute: 'foreground-type' })
+  foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
   @property({
     type: Boolean,
@@ -159,11 +149,12 @@ export class SteelseriesRadialV3Element extends LitElement {
   }
 
   private getDrawContext(): RadialDrawContext | undefined {
-    if (!this.canvasElement) {
+    const canvas = this.renderRoot.querySelector('canvas')
+    if (!(canvas instanceof HTMLCanvasElement)) {
       return undefined
     }
 
-    const drawContext = this.canvasElement.getContext('2d')
+    const drawContext = canvas.getContext('2d')
     if (!drawContext) {
       return undefined
     }
@@ -183,12 +174,17 @@ export class SteelseriesRadialV3Element extends LitElement {
         height: this.size
       },
       text: {
-        title: this.title,
-        unit: this.unit
+        ...(this.title ? { title: this.title } : {}),
+        ...(this.unit ? { unit: this.unit } : {})
       },
       scale: {
         majorTickCount: 11,
         minorTicksPerMajor: 4
+      },
+      style: {
+        frameDesign: this.frameDesign,
+        backgroundColor: this.backgroundColor,
+        foregroundType: this.foregroundType
       },
       indicators: {
         threshold: {
@@ -250,12 +246,13 @@ export class SteelseriesRadialV3Element extends LitElement {
 
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
-    if (!drawContext || !this.canvasElement) {
+    const canvas = this.renderRoot.querySelector('canvas')
+    if (!drawContext || !(canvas instanceof HTMLCanvasElement)) {
       return
     }
 
-    this.canvasElement.width = this.size
-    this.canvasElement.height = this.size
+    canvas.width = this.size
+    canvas.height = this.size
 
     const paint = this.getThemePaint()
     const nextValue = this.value
@@ -293,22 +290,12 @@ export class SteelseriesRadialV3Element extends LitElement {
 
   override render() {
     return html`
-      <div class="wrapper">
-        <div class="frame">
-          <div class="dial">
-            <canvas
-              width=${this.size}
-              height=${this.size}
-              role="img"
-              aria-label="${this.title || 'Radial Gauge'}"
-            ></canvas>
-          </div>
-        </div>
-        <div class="meta">
-          <span class="title">${this.title}</span>
-          <span class="unit">${this.unit || 'value'}</span>
-        </div>
-      </div>
+      <canvas
+        width=${this.size}
+        height=${this.size}
+        role="img"
+        aria-label="${this.title || 'Radial Gauge'}"
+      ></canvas>
     `
   }
 }
@@ -325,61 +312,16 @@ export class SteelseriesLinearV3Element extends LitElement {
     :host {
       --ss3-font-family: system-ui, sans-serif;
       --ss3-text-color: #e8ebef;
-      --ss3-background-color: #444a51;
-      --ss3-frame-color: #c6cbd2;
       --ss3-accent-color: #c5162e;
       --ss3-warning-color: #d97706;
       --ss3-danger-color: #ef4444;
-      display: inline-grid;
+      display: inline-block;
       font-family: var(--ss3-font-family);
       color: var(--ss3-text-color);
     }
 
-    .frame {
-      border-radius: 14px;
-      background: var(--ss3-frame-color);
-      padding: 0.5rem;
-      display: grid;
-      place-items: center;
-      box-sizing: border-box;
-    }
-
-    .wrapper {
-      display: grid;
-      justify-items: center;
-      gap: 0.35rem;
-    }
-
-    .dial {
-      border-radius: 10px;
-      background: var(--ss3-background-color);
-      box-sizing: border-box;
-      display: grid;
-      place-items: center;
-    }
-
     canvas {
       display: block;
-      border-radius: inherit;
-    }
-
-    .meta {
-      display: grid;
-      justify-items: center;
-      gap: 0.1rem;
-      color: var(--ss3-text-color);
-    }
-
-    .meta .title {
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .meta .unit {
-      font-size: 0.68rem;
-      opacity: 0.82;
     }
   `
 
@@ -406,6 +348,41 @@ export class SteelseriesLinearV3Element extends LitElement {
 
   @property({ type: Number })
   threshold = 70
+
+  @property({ type: String, attribute: 'frame-design' })
+  frameDesign:
+    | 'blackMetal'
+    | 'metal'
+    | 'shinyMetal'
+    | 'brass'
+    | 'steel'
+    | 'chrome'
+    | 'gold'
+    | 'anthracite'
+    | 'tiltedGray'
+    | 'tiltedBlack'
+    | 'glossyMetal' = 'metal'
+
+  @property({ type: String, attribute: 'background-color' })
+  backgroundColor:
+    | 'DARK_GRAY'
+    | 'SATIN_GRAY'
+    | 'LIGHT_GRAY'
+    | 'WHITE'
+    | 'BLACK'
+    | 'BEIGE'
+    | 'BROWN'
+    | 'RED'
+    | 'GREEN'
+    | 'BLUE'
+    | 'ANTHRACITE'
+    | 'MUD'
+    | 'PUNCHED_SHEET'
+    | 'CARBON'
+    | 'STAINLESS'
+    | 'BRUSHED_METAL'
+    | 'BRUSHED_STAINLESS'
+    | 'TURNED' = 'DARK_GRAY'
 
   @property({
     type: Boolean,
@@ -445,11 +422,12 @@ export class SteelseriesLinearV3Element extends LitElement {
   }
 
   private getDrawContext(): LinearDrawContext | undefined {
-    if (!this.canvasElement) {
+    const canvas = this.renderRoot.querySelector('canvas')
+    if (!(canvas instanceof HTMLCanvasElement)) {
       return undefined
     }
 
-    const drawContext = this.canvasElement.getContext('2d')
+    const drawContext = canvas.getContext('2d')
     if (!drawContext) {
       return undefined
     }
@@ -469,8 +447,12 @@ export class SteelseriesLinearV3Element extends LitElement {
         height: this.height
       },
       text: {
-        title: this.title,
-        unit: this.unit
+        ...(this.title ? { title: this.title } : {}),
+        ...(this.unit ? { unit: this.unit } : {})
+      },
+      style: {
+        frameDesign: this.frameDesign,
+        backgroundColor: this.backgroundColor
       },
       indicators: {
         threshold: {
@@ -532,12 +514,13 @@ export class SteelseriesLinearV3Element extends LitElement {
 
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
-    if (!drawContext || !this.canvasElement) {
+    const canvas = this.renderRoot.querySelector('canvas')
+    if (!drawContext || !(canvas instanceof HTMLCanvasElement)) {
       return
     }
 
-    this.canvasElement.width = this.width
-    this.canvasElement.height = this.height
+    canvas.width = this.width
+    canvas.height = this.height
 
     const paint = this.getThemePaint()
     const nextValue = this.value
@@ -575,22 +558,12 @@ export class SteelseriesLinearV3Element extends LitElement {
 
   override render() {
     return html`
-      <div class="wrapper">
-        <div class="frame">
-          <div class="dial">
-            <canvas
-              width=${this.width}
-              height=${this.height}
-              role="img"
-              aria-label="${this.title || 'Linear Gauge'}"
-            ></canvas>
-          </div>
-        </div>
-        <div class="meta">
-          <span class="title">${this.title}</span>
-          <span class="unit">${this.unit || 'value'}</span>
-        </div>
-      </div>
+      <canvas
+        width=${this.width}
+        height=${this.height}
+        role="img"
+        aria-label="${this.title || 'Linear Gauge'}"
+      ></canvas>
     `
   }
 }
