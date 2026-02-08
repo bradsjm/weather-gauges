@@ -8,35 +8,36 @@ import {
   positiveIntegerSchema
 } from './primitives.js'
 
-export const gaugeRangeSchema = z
+const gaugeRangeBaseSchema = z
   .object({
     min: finiteNumberSchema,
     max: finiteNumberSchema
   })
   .strict()
-  .superRefine((value, ctx) => {
-    if (value.max <= value.min) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['max'],
-        message: 'max must be greater than min'
-      })
-    }
-  })
 
-export const gaugeValueSchema = gaugeRangeSchema
-  .extend({
-    current: finiteNumberSchema
-  })
-  .superRefine((value, ctx) => {
-    if (value.current < value.min || value.current > value.max) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['current'],
-        message: 'current must be within min and max range'
-      })
-    }
-  })
+export const gaugeRangeSchema = gaugeRangeBaseSchema.superRefine((value, ctx) => {
+  if (value.max <= value.min) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['max'],
+      message: 'max must be greater than min'
+    })
+  }
+})
+
+const gaugeValueBaseSchema = gaugeRangeBaseSchema.extend({
+  current: finiteNumberSchema
+})
+
+export const gaugeValueSchema = gaugeValueBaseSchema.superRefine((value, ctx) => {
+  if (value.current < value.min || value.current > value.max) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['current'],
+      message: 'current must be within min and max range'
+    })
+  }
+})
 
 export const gaugeSizeSchema = z
   .object({
