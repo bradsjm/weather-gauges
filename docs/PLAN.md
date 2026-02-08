@@ -15,26 +15,27 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 
 ### Progress Tracker (updated by implementation)
 
-| ID    | Status   | Notes                                                                                                                                         |
-| ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0-01 | Complete | Monorepo packages + workspace scripts are in place.                                                                                           |
-| P0-02 | Complete | Strict TypeScript baseline is configured across packages.                                                                                     |
-| P0-03 | Complete | ESLint/Prettier/typecheck scripts are active.                                                                                                 |
-| P0-04 | Complete | CI runs lint, typecheck, test, and build checks.                                                                                              |
-| P0-05 | Complete | Changesets and release/version scripts are configured.                                                                                        |
-| P0-06 | Complete | API conventions are documented in `docs/API_CONVENTIONS.md`.                                                                                  |
-| P0-07 | Complete | CSS token contract v1 is documented in `docs/CSS_TOKENS.md` and consumed by the radial sample element.                                        |
-| P0-08 | Complete | Docs/playground package and app shell are bootstrapped.                                                                                       |
-| P0-09 | Complete | Playwright-based fixture + screenshot baseline pipeline is implemented and wired to CI.                                                       |
-| P1-01 | Complete | Shared zod schema modules are implemented in `packages/core/src/schemas`, with structured validation helpers and unit tests.                  |
-| P1-02 | Complete | Math and scale primitives are implemented in `packages/core/src/math` with edge-case tests in `packages/core/test/math-primitives.test.ts`.   |
-| P1-03 | Complete | Animation timeline, easing, and scheduler modules are implemented in `packages/core/src/animation` with fake-timer transition tests.          |
-| P1-04 | Complete | Render context abstraction is implemented in `packages/core/src/render/context.ts` with canvas/offscreen strategy and deterministic tests.    |
-| P1-05 | Complete | Theme resolution pipeline is implemented in `packages/core/src/theme/tokens.ts` with deterministic override/default tests.                    |
-| P1-06 | Complete | Extension interfaces and registry are implemented in `packages/core/src/extensions/interfaces.ts` with sample compile/use tests.              |
-| P1-07 | Complete | Core alpha API contract is reviewed and frozen via `docs/CORE_ALPHA_CONTRACT.md` and `packages/core/test/public-api-contract.test.ts`.        |
-| P2-01 | Complete | Radial renderer pipeline is implemented in `packages/core/src/radial` with ticks, segments, threshold, alerts, and animation support.         |
-| P2-02 | Complete | `packages/elements/src/index.ts` integrates core radial rendering on canvas with schema-driven config updates and animated value transitions. |
+| ID    | Status   | Notes                                                                                                                                                                |
+| ----- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0-01 | Complete | Monorepo packages + workspace scripts are in place.                                                                                                                  |
+| P0-02 | Complete | Strict TypeScript baseline is configured across packages.                                                                                                            |
+| P0-03 | Complete | ESLint/Prettier/typecheck scripts are active.                                                                                                                        |
+| P0-04 | Complete | CI runs lint, typecheck, test, and build checks.                                                                                                                     |
+| P0-05 | Complete | Changesets and release/version scripts are configured.                                                                                                               |
+| P0-06 | Complete | API conventions are documented in `docs/API_CONVENTIONS.md`.                                                                                                         |
+| P0-07 | Complete | CSS token contract v1 is documented in `docs/CSS_TOKENS.md` and consumed by the radial sample element.                                                               |
+| P0-08 | Complete | Docs/playground package and app shell are bootstrapped.                                                                                                              |
+| P0-09 | Complete | Playwright-based fixture + screenshot baseline pipeline is implemented and wired to CI.                                                                              |
+| P1-01 | Complete | Shared zod schema modules are implemented in `packages/core/src/schemas`, with structured validation helpers and unit tests.                                         |
+| P1-02 | Complete | Math and scale primitives are implemented in `packages/core/src/math` with edge-case tests in `packages/core/test/math-primitives.test.ts`.                          |
+| P1-03 | Complete | Animation timeline, easing, and scheduler modules are implemented in `packages/core/src/animation` with fake-timer transition tests.                                 |
+| P1-04 | Complete | Render context abstraction is implemented in `packages/core/src/render/context.ts` with canvas/offscreen strategy and deterministic tests.                           |
+| P1-05 | Complete | Theme resolution pipeline is implemented in `packages/core/src/theme/tokens.ts` with deterministic override/default tests.                                           |
+| P1-06 | Complete | Extension interfaces and registry are implemented in `packages/core/src/extensions/interfaces.ts` with sample compile/use tests.                                     |
+| P1-07 | Complete | Core alpha API contract is reviewed and frozen via `docs/CORE_ALPHA_CONTRACT.md` and `packages/core/test/public-api-contract.test.ts`.                               |
+| P2-01 | Complete | Radial renderer pipeline is implemented in `packages/core/src/radial` with ticks, segments, threshold, alerts, and animation support.                                |
+| P2-02 | Complete | `packages/elements/src/index.ts` integrates core radial rendering on canvas with schema-driven config updates and animated value transitions.                        |
+| P2-03 | Complete | Radial wrapper theming and label styling are applied in `packages/elements/src/index.ts` and token override demos are published in `packages/docs-site/src/main.ts`. |
 
 ## Phase 0 - Foundation
 

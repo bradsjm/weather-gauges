@@ -43,6 +43,12 @@ export class SteelseriesRadialV3Element extends LitElement {
       box-sizing: border-box;
     }
 
+    .wrapper {
+      display: grid;
+      justify-items: center;
+      gap: 0.35rem;
+    }
+
     .dial {
       border-radius: inherit;
       background: var(--ss3-background-color);
@@ -54,6 +60,25 @@ export class SteelseriesRadialV3Element extends LitElement {
     canvas {
       display: block;
       border-radius: inherit;
+    }
+
+    .meta {
+      display: grid;
+      justify-items: center;
+      gap: 0.1rem;
+      color: var(--ss3-text-color);
+    }
+
+    .meta .title {
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .meta .unit {
+      font-size: 0.68rem;
+      opacity: 0.82;
     }
   `
 
@@ -214,14 +239,20 @@ export class SteelseriesRadialV3Element extends LitElement {
 
   override render() {
     return html`
-      <div class="frame">
-        <div class="dial">
-          <canvas
-            width=${this.size}
-            height=${this.size}
-            role="img"
-            aria-label="${this.title || 'Radial Gauge'}"
-          ></canvas>
+      <div class="wrapper">
+        <div class="frame">
+          <div class="dial">
+            <canvas
+              width=${this.size}
+              height=${this.size}
+              role="img"
+              aria-label="${this.title || 'Radial Gauge'}"
+            ></canvas>
+          </div>
+        </div>
+        <div class="meta">
+          <span class="title">${this.title}</span>
+          <span class="unit">${this.unit || 'value'}</span>
         </div>
       </div>
     `
