@@ -29,6 +29,12 @@ if (app) {
       searchParams.get('radialForegroundType')
         ? `foreground-type="${searchParams.get('radialForegroundType')}"`
         : undefined,
+      searchParams.get('radialPointerType')
+        ? `pointer-type="${searchParams.get('radialPointerType')}"`
+        : undefined,
+      searchParams.get('radialGaugeType')
+        ? `gauge-type="${searchParams.get('radialGaugeType')}"`
+        : undefined,
       searchParams.get('radialPointerColor')
         ? `pointer-color="${searchParams.get('radialPointerColor')}"`
         : undefined
@@ -45,6 +51,9 @@ if (app) {
         : undefined,
       searchParams.get('linearValueColor')
         ? `value-color="${searchParams.get('linearValueColor')}"`
+        : undefined,
+      searchParams.get('linearGaugeType')
+        ? `gauge-type="${searchParams.get('linearGaugeType')}"`
         : undefined
     ]
       .filter((value): value is string => value !== undefined)

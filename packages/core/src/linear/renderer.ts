@@ -45,6 +45,12 @@ const mergePaint = (paint?: Partial<ThemePaint>): ThemePaint => ({
   ...paint
 })
 
+const closePathSafe = (context: LinearDrawContext): void => {
+  if (typeof context.closePath === 'function') {
+    context.closePath()
+  }
+}
+
 const LEGACY_BACKGROUND_TEXT: Record<LinearBackgroundColorName, string> = {
   DARK_GRAY: 'rgb(255, 255, 255)',
   SATIN_GRAY: 'rgb(167, 184, 180)',
@@ -97,6 +103,36 @@ const resolveLegacyPaint = (config: LinearGaugeConfig, paint: ThemePaint): Theme
   backgroundColor: LEGACY_BACKGROUND_FILL[config.style.backgroundColor],
   frameColor: isChromeLikeFrame(config.style.frameDesign) ? '#d0d0d0' : '#c8c8c8'
 })
+
+const resolveLinearScaleConstants = (
+  config: LinearGaugeConfig
+): {
+  start: number
+  end: number
+  yOffset: number
+  yRange: number
+} => {
+  const type2 = config.style.gaugeType === 'type2'
+  if (config.scale.vertical) {
+    const yOffset = type2 ? 0.7475 : 0.856796
+    const start = 0.12864
+    return {
+      start,
+      end: yOffset,
+      yOffset,
+      yRange: yOffset - start
+    }
+  }
+
+  const start = type2 ? 0.19857 : 0.142857
+  const end = type2 ? 0.82 : 0.871012
+  return {
+    start,
+    end,
+    yOffset: end,
+    yRange: end - start
+  }
+}
 
 type ValueColor = {
   light: string
@@ -280,6 +316,7 @@ const drawTicks = (
   config: LinearGaugeConfig,
   area: LinearRenderArea
 ): void => {
+  const scaleConstants = resolveLinearScaleConstants(config)
   const textColor = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
   const ticks = generateTicks(config.value, {
     majorTickCount: config.scale.majorTickCount,
@@ -309,15 +346,20 @@ const drawTicks = (
     context.lineWidth = isMajor ? 2 : 1
 
     if (config.scale.vertical) {
-      const y = area.innerY + area.innerHeight * (0.88 - tick.position * 0.76)
-      const startX = area.innerX + area.innerWidth * 0.8
-      const endX = area.innerX + area.innerWidth * (isMajor ? 0.95 : 0.9)
+      const y =
+        area.innerY +
+        area.innerHeight * (scaleConstants.end - tick.position * scaleConstants.yRange)
+      const startX = area.innerX + area.innerWidth * (isMajor ? 0.32 : 0.34)
+      const endX = area.innerX + area.innerWidth * 0.36
       context.moveTo(startX, y)
       context.lineTo(endX, y)
     } else {
-      const x = area.innerX + area.innerWidth * (0.12 + tick.position * 0.76)
-      const startY = area.innerY + area.innerHeight * 0.8
-      const endY = area.innerY + area.innerHeight * (isMajor ? 0.95 : 0.9)
+      const x =
+        area.innerX +
+        area.innerWidth *
+          (scaleConstants.start + tick.position * (scaleConstants.end - scaleConstants.start))
+      const startY = area.innerY + area.innerHeight * (isMajor ? 0.67 : 0.65)
+      const endY = area.innerY + area.innerHeight * 0.63
       context.moveTo(x, startY)
       context.lineTo(x, endY)
     }
@@ -331,6 +373,7 @@ const drawThreshold = (
   config: LinearGaugeConfig,
   area: LinearRenderArea
 ): void => {
+  const scaleConstants = resolveLinearScaleConstants(config)
   const threshold = config.indicators.threshold
   if (!threshold || !threshold.show) {
     return
@@ -349,18 +392,21 @@ const drawThreshold = (
   context.beginPath()
 
   if (config.scale.vertical) {
-    const y = area.innerY + area.innerHeight * (0.88 - thresholdUnit * 0.76)
-    context.moveTo(area.innerX + area.innerWidth * 0.05, y)
-    context.lineTo(area.innerX + area.innerWidth * 0.16, y - area.innerHeight * 0.02)
-    context.lineTo(area.innerX + area.innerWidth * 0.16, y + area.innerHeight * 0.02)
+    const y =
+      area.innerY +
+      area.innerHeight * (scaleConstants.yOffset - thresholdUnit * scaleConstants.yRange)
+    context.moveTo(area.innerX + area.innerWidth * 0.365, y)
+    context.lineTo(area.innerX + area.innerWidth * 0.39, y - area.innerHeight * 0.02)
+    context.lineTo(area.innerX + area.innerWidth * 0.39, y + area.innerHeight * 0.02)
   } else {
-    const x = area.innerX + area.innerWidth * (0.12 + thresholdUnit * 0.76)
-    context.moveTo(x, area.innerY + area.innerHeight * 0.95)
-    context.lineTo(x - area.innerWidth * 0.02, area.innerY + area.innerHeight * 0.84)
-    context.lineTo(x + area.innerWidth * 0.02, area.innerY + area.innerHeight * 0.84)
+    const x =
+      area.innerX + area.innerWidth * (scaleConstants.start + thresholdUnit * scaleConstants.yRange)
+    context.moveTo(x, area.innerY + area.innerHeight * 0.58)
+    context.lineTo(x - area.innerWidth * 0.02, area.innerY + area.innerHeight * 0.64)
+    context.lineTo(x + area.innerWidth * 0.02, area.innerY + area.innerHeight * 0.64)
   }
 
-  context.closePath()
+  closePathSafe(context)
   context.fill()
   context.stroke()
 }
@@ -371,15 +417,18 @@ const drawPointer = (
   value: number,
   area: LinearRenderArea
 ): void => {
+  const scaleConstants = resolveLinearScaleConstants(config)
   const pointerUnit = mapRange(value, config.value, { min: 0, max: 1 }, { clampInput: true })
   const pointerColor = LEGACY_VALUE_COLORS[config.style.valueColor]
   context.fillStyle = pointerColor.medium
 
   if (config.scale.vertical) {
-    const y = area.innerY + area.innerHeight * (0.88 - pointerUnit * 0.76)
-    const x = area.innerX + area.innerWidth * 0.24
-    const markerWidth = area.innerWidth * 0.52
-    const markerHeight = Math.max(8, area.innerHeight * 0.03)
+    const y =
+      area.innerY +
+      area.innerHeight * (scaleConstants.yOffset - pointerUnit * scaleConstants.yRange)
+    const x = area.innerX + area.innerWidth * 0.435714
+    const markerWidth = area.innerWidth * 0.135
+    const markerHeight = Math.max(8, area.innerHeight * 0.028)
     const gradient = createLinearGradientSafe(
       context,
       x,
@@ -389,17 +438,17 @@ const drawPointer = (
       pointerColor.medium
     )
     if (typeof gradient !== 'string') {
-      gradient.addColorStop(0, pointerColor.light)
-      gradient.addColorStop(0.55, pointerColor.medium)
-      gradient.addColorStop(1, pointerColor.dark)
+      gradient.addColorStop(0, pointerColor.medium)
+      gradient.addColorStop(1, pointerColor.light)
     }
     context.fillStyle = gradient
     context.fillRect(x, y - markerHeight / 2, markerWidth, markerHeight)
   } else {
-    const x = area.innerX + area.innerWidth * (0.12 + pointerUnit * 0.76)
-    const y = area.innerY + area.innerHeight * 0.24
+    const x =
+      area.innerX + area.innerWidth * (scaleConstants.start + pointerUnit * scaleConstants.yRange)
+    const y = area.innerY + area.innerHeight * 0.435714
     const markerWidth = Math.max(8, area.innerWidth * 0.03)
-    const markerHeight = area.innerHeight * 0.52
+    const markerHeight = area.innerHeight * 0.135
     const gradient = createLinearGradientSafe(
       context,
       x - markerWidth / 2,
@@ -409,12 +458,100 @@ const drawPointer = (
       pointerColor.medium
     )
     if (typeof gradient !== 'string') {
-      gradient.addColorStop(0, pointerColor.light)
-      gradient.addColorStop(0.55, pointerColor.medium)
-      gradient.addColorStop(1, pointerColor.dark)
+      gradient.addColorStop(0, pointerColor.medium)
+      gradient.addColorStop(1, pointerColor.light)
     }
     context.fillStyle = gradient
     context.fillRect(x - markerWidth / 2, y, markerWidth, markerHeight)
+  }
+
+  if (config.style.gaugeType === 'type2') {
+    context.fillStyle = pointerColor.medium
+    if (config.scale.vertical) {
+      const bulbX = area.innerX + area.innerWidth * 0.5
+      const bulbY = area.innerY + area.innerHeight * 0.86
+      context.beginPath()
+      context.arc(bulbX, bulbY, area.innerWidth * 0.06, 0, Math.PI * 2)
+      context.fill()
+    } else {
+      const bulbX = area.innerX + area.innerWidth * 0.12
+      const bulbY = area.innerY + area.innerHeight * 0.5
+      context.beginPath()
+      context.arc(bulbX, bulbY, area.innerHeight * 0.06, 0, Math.PI * 2)
+      context.fill()
+    }
+  }
+}
+
+const drawStatusLayers = (
+  context: LinearDrawContext,
+  config: LinearGaugeConfig,
+  area: LinearRenderArea
+): void => {
+  const scaleConstants = resolveLinearScaleConstants(config)
+
+  if (config.indicators.ledVisible) {
+    const ledX = config.scale.vertical
+      ? area.innerX + area.innerWidth * 0.5
+      : area.innerX + area.innerWidth * 0.89
+    const ledY = config.scale.vertical
+      ? area.innerY + area.innerHeight * (config.style.gaugeType === 'type2' ? 0.038 : 0.053)
+      : area.innerY + area.innerHeight * 0.5
+    const ledRadius = Math.min(area.innerWidth, area.innerHeight) * 0.045
+    const led = createLinearGradientSafe(
+      context,
+      ledX,
+      ledY - ledRadius,
+      ledX,
+      ledY + ledRadius,
+      '#c00000'
+    )
+    if (typeof led !== 'string') {
+      led.addColorStop(0, '#ff9f9f')
+      led.addColorStop(0.2, '#ff3535')
+      led.addColorStop(1, '#650000')
+    }
+    context.fillStyle = led
+    context.beginPath()
+    context.arc(ledX, ledY, ledRadius, 0, Math.PI * 2)
+    context.fill()
+  }
+
+  const drawMeasuredMarker = (value: number, color: string): void => {
+    const position = mapRange(
+      clamp(value, config.value.min, config.value.max),
+      config.value,
+      { min: 0, max: 1 },
+      { clampInput: true }
+    )
+
+    context.fillStyle = color
+    context.beginPath()
+    if (config.scale.vertical) {
+      const y =
+        area.innerY + area.innerHeight * (scaleConstants.yOffset - position * scaleConstants.yRange)
+      const x = area.innerX + area.innerWidth * 0.31
+      context.moveTo(x, y)
+      context.lineTo(x + area.innerWidth * 0.03, y - area.innerHeight * 0.014)
+      context.lineTo(x + area.innerWidth * 0.03, y + area.innerHeight * 0.014)
+    } else {
+      const x =
+        area.innerX + area.innerWidth * (scaleConstants.start + position * scaleConstants.yRange)
+      const y = area.innerY + area.innerHeight * 0.65
+      context.moveTo(x, y)
+      context.lineTo(x - area.innerWidth * 0.015, y + area.innerHeight * 0.03)
+      context.lineTo(x + area.innerWidth * 0.015, y + area.innerHeight * 0.03)
+    }
+    closePathSafe(context)
+    context.fill()
+  }
+
+  if (config.indicators.minMeasuredValueVisible) {
+    drawMeasuredMarker(config.indicators.minMeasuredValue ?? config.value.min, '#003dff')
+  }
+
+  if (config.indicators.maxMeasuredValueVisible) {
+    drawMeasuredMarker(config.indicators.maxMeasuredValue ?? config.value.max, '#ff7a00')
   }
 }
 
@@ -488,6 +625,7 @@ export const renderLinearGauge = (
   drawSegments(context, config, area)
   drawTicks(context, config, area)
   drawThreshold(context, config, area)
+  drawStatusLayers(context, config, area)
   drawPointer(context, config, value, area)
   drawLabels(context, config, value, width, height, area)
   if (config.visibility.showForeground) {

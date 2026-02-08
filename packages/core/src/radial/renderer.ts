@@ -14,8 +14,10 @@ import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   RadialAlert,
   RadialBackgroundColorName,
+  RadialGaugeType,
   RadialGaugeConfig,
   RadialFrameDesign,
+  RadialPointerType,
   RadialPointerColorName
 } from './schema.js'
 
@@ -111,22 +113,135 @@ type PointerColor = {
   light: string
   medium: string
   dark: string
+  veryDark: string
 }
 
 const LEGACY_POINTER_COLORS: Record<RadialPointerColorName, PointerColor> = {
-  RED: { dark: 'rgb(82, 0, 0)', medium: 'rgb(213, 0, 25)', light: 'rgb(255, 171, 173)' },
-  GREEN: { dark: 'rgb(8, 54, 4)', medium: 'rgb(15, 148, 0)', light: 'rgb(190, 231, 141)' },
-  BLUE: { dark: 'rgb(0, 11, 68)', medium: 'rgb(0, 108, 201)', light: 'rgb(122, 200, 255)' },
-  ORANGE: { dark: 'rgb(118, 83, 30)', medium: 'rgb(240, 117, 0)', light: 'rgb(255, 255, 128)' },
-  YELLOW: { dark: 'rgb(41, 41, 0)', medium: 'rgb(177, 165, 0)', light: 'rgb(255, 250, 153)' },
-  CYAN: { dark: 'rgb(15, 109, 109)', medium: 'rgb(0, 144, 191)', light: 'rgb(153, 223, 249)' },
-  MAGENTA: { dark: 'rgb(98, 0, 114)', medium: 'rgb(191, 36, 107)', light: 'rgb(255, 172, 210)' },
-  WHITE: { dark: 'rgb(210, 210, 210)', medium: 'rgb(235, 235, 235)', light: 'rgb(255, 255, 255)' },
-  GRAY: { dark: 'rgb(25, 25, 25)', medium: 'rgb(76, 76, 76)', light: 'rgb(204, 204, 204)' },
-  BLACK: { dark: 'rgb(0, 0, 0)', medium: 'rgb(10, 10, 10)', light: 'rgb(20, 20, 20)' },
-  RAITH: { dark: 'rgb(0, 32, 65)', medium: 'rgb(0, 106, 172)', light: 'rgb(148, 203, 242)' },
-  GREEN_LCD: { dark: 'rgb(0, 55, 45)', medium: 'rgb(0, 185, 165)', light: 'rgb(153, 255, 227)' },
-  JUG_GREEN: { dark: 'rgb(0, 56, 0)', medium: 'rgb(50, 161, 0)', light: 'rgb(190, 231, 141)' }
+  RED: {
+    dark: 'rgb(82, 0, 0)',
+    medium: 'rgb(213, 0, 25)',
+    light: 'rgb(255, 171, 173)',
+    veryDark: 'rgb(82, 0, 0)'
+  },
+  GREEN: {
+    dark: 'rgb(8, 54, 4)',
+    medium: 'rgb(15, 148, 0)',
+    light: 'rgb(190, 231, 141)',
+    veryDark: 'rgb(8, 54, 4)'
+  },
+  BLUE: {
+    dark: 'rgb(0, 11, 68)',
+    medium: 'rgb(0, 108, 201)',
+    light: 'rgb(122, 200, 255)',
+    veryDark: 'rgb(0, 11, 68)'
+  },
+  ORANGE: {
+    dark: 'rgb(118, 83, 30)',
+    medium: 'rgb(240, 117, 0)',
+    light: 'rgb(255, 255, 128)',
+    veryDark: 'rgb(118, 83, 30)'
+  },
+  YELLOW: {
+    dark: 'rgb(41, 41, 0)',
+    medium: 'rgb(177, 165, 0)',
+    light: 'rgb(255, 250, 153)',
+    veryDark: 'rgb(41, 41, 0)'
+  },
+  CYAN: {
+    dark: 'rgb(15, 109, 109)',
+    medium: 'rgb(0, 144, 191)',
+    light: 'rgb(153, 223, 249)',
+    veryDark: 'rgb(15, 109, 109)'
+  },
+  MAGENTA: {
+    dark: 'rgb(98, 0, 114)',
+    medium: 'rgb(191, 36, 107)',
+    light: 'rgb(255, 172, 210)',
+    veryDark: 'rgb(98, 0, 114)'
+  },
+  WHITE: {
+    dark: 'rgb(210, 210, 210)',
+    medium: 'rgb(235, 235, 235)',
+    light: 'rgb(255, 255, 255)',
+    veryDark: 'rgb(180, 180, 180)'
+  },
+  GRAY: {
+    dark: 'rgb(25, 25, 25)',
+    medium: 'rgb(76, 76, 76)',
+    light: 'rgb(204, 204, 204)',
+    veryDark: 'rgb(10, 10, 10)'
+  },
+  BLACK: {
+    dark: 'rgb(0, 0, 0)',
+    medium: 'rgb(10, 10, 10)',
+    light: 'rgb(20, 20, 20)',
+    veryDark: 'rgb(0, 0, 0)'
+  },
+  RAITH: {
+    dark: 'rgb(0, 32, 65)',
+    medium: 'rgb(0, 106, 172)',
+    light: 'rgb(148, 203, 242)',
+    veryDark: 'rgb(0, 16, 32)'
+  },
+  GREEN_LCD: {
+    dark: 'rgb(0, 55, 45)',
+    medium: 'rgb(0, 185, 165)',
+    light: 'rgb(153, 255, 227)',
+    veryDark: 'rgb(0, 32, 24)'
+  },
+  JUG_GREEN: {
+    dark: 'rgb(0, 56, 0)',
+    medium: 'rgb(50, 161, 0)',
+    light: 'rgb(190, 231, 141)',
+    veryDark: 'rgb(0, 34, 0)'
+  }
+}
+
+const PI = Math.PI
+const HALF_PI = PI * 0.5
+const TWO_PI = PI * 2
+
+const resolveGaugeAngles = (
+  gaugeType: RadialGaugeType,
+  valueMin: number,
+  valueMax: number
+): { rotationOffset: number; angleRange: number; angleStep: number } => {
+  const range = valueMax - valueMin
+  if (range <= 0) {
+    return {
+      rotationOffset: HALF_PI,
+      angleRange: TWO_PI - (60 * PI) / 180,
+      angleStep: 0
+    }
+  }
+
+  let rotationOffset = HALF_PI
+  let angleRange = TWO_PI - (60 * PI) / 180
+
+  if (gaugeType === 'type1') {
+    rotationOffset = PI
+    angleRange = HALF_PI
+  } else if (gaugeType === 'type2') {
+    rotationOffset = PI
+    angleRange = PI
+  } else if (gaugeType === 'type3') {
+    rotationOffset = HALF_PI
+    angleRange = 1.5 * PI
+  }
+
+  return {
+    rotationOffset,
+    angleRange,
+    angleStep: angleRange / range
+  }
+}
+
+const toLegacyGaugeAngle = (
+  value: number,
+  config: RadialGaugeConfig,
+  angles: { rotationOffset: number; angleStep: number }
+): number => {
+  return angles.rotationOffset + HALF_PI + (value - config.value.min) * angles.angleStep
 }
 
 const createLinearGradientSafe = (
@@ -235,9 +350,11 @@ const drawSegments = (
 const drawTicks = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
+  angles: { rotationOffset: number; angleStep: number },
   centerX: number,
   centerY: number,
-  radius: number
+  radius: number,
+  imageWidth: number
 ): void => {
   const textColor = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
   const ticks = generateTicks(config.value, {
@@ -261,18 +378,13 @@ const drawTicks = (
   context.strokeStyle = tickGradient
 
   for (const tick of ticks) {
-    const angle = valueToAngle(
-      tick.value,
-      config.value,
-      config.scale.startAngle,
-      config.scale.endAngle
-    )
+    const angle = toLegacyGaugeAngle(tick.value, config, angles)
     const isMajor = tick.kind === 'major'
     const line = createTickLine(
       centerX,
       centerY,
-      radius * (isMajor ? 0.73 : 0.75),
-      radius * 0.79,
+      imageWidth * (isMajor ? 0.35 : 0.36),
+      imageWidth * 0.38,
       angle
     )
 
@@ -284,11 +396,11 @@ const drawTicks = (
 
     if (isMajor) {
       const labelValue = Math.round(tick.value)
-      const labelLine = createTickLine(centerX, centerY, radius * 0.625, radius * 0.625, angle)
+      const labelLine = createTickLine(centerX, centerY, imageWidth * 0.3, imageWidth * 0.3, angle)
       context.fillStyle = textColor
       context.textAlign = 'center'
       context.textBaseline = 'middle'
-      context.font = `${Math.max(8, Math.round(radius * 0.078))}px serif`
+      context.font = `${Math.max(8, Math.round(imageWidth * 0.04))}px serif`
       context.fillText(`${labelValue}`, labelLine.start.x, labelLine.start.y)
     }
   }
@@ -297,34 +409,35 @@ const drawTicks = (
 const drawThreshold = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
+  angles: { rotationOffset: number; angleStep: number },
   centerX: number,
   centerY: number,
-  radius: number
+  radius: number,
+  imageWidth: number
 ): void => {
   const threshold = config.indicators.threshold
   if (!threshold || !threshold.show) {
     return
   }
 
-  const angle = valueToAngle(
+  const angle = toLegacyGaugeAngle(
     clamp(threshold.value, config.value.min, config.value.max),
-    config.value,
-    config.scale.startAngle,
-    config.scale.endAngle
+    config,
+    angles
   )
-  const tip = createTickLine(centerX, centerY, radius * 0.84, radius * 0.84, angle).start
+  const tip = createTickLine(centerX, centerY, imageWidth * 0.43, imageWidth * 0.43, angle).start
   const left = createTickLine(
     centerX,
     centerY,
-    radius * 0.76,
-    radius * 0.82,
+    imageWidth * 0.39,
+    imageWidth * 0.41,
     angle - 0.02 * Math.PI
   ).end
   const right = createTickLine(
     centerX,
     centerY,
-    radius * 0.76,
-    radius * 0.82,
+    imageWidth * 0.39,
+    imageWidth * 0.41,
     angle + 0.02 * Math.PI
   ).end
 
@@ -336,62 +449,474 @@ const drawThreshold = (
   context.fillStyle = '#e60000'
   context.fill()
   context.strokeStyle = '#600000'
-  context.lineWidth = Math.max(1, radius * 0.004)
+  context.lineWidth = Math.max(1, imageWidth * 0.004)
   context.stroke()
+}
+
+const drawLegacyPointerShape = (
+  context: RadialDrawContext,
+  pointerType: RadialPointerType,
+  size: number,
+  ptrColor: PointerColor,
+  labelColor: string,
+  centerX: number,
+  centerY: number
+): void => {
+  const x = (value: number): number => size * value - centerX
+  const y = (value: number): number => size * value - centerY
+  let grad: CanvasGradient | string
+  let radius = 0
+
+  switch (pointerType) {
+    case 'type2':
+      grad = createLinearGradientSafe(context, 0, y(0.471962), 0, y(0.130841), ptrColor.light)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, labelColor)
+        grad.addColorStop(0.36, labelColor)
+        grad.addColorStop(0.361, ptrColor.light)
+        grad.addColorStop(1, ptrColor.light)
+      }
+      context.fillStyle = grad
+      context.beginPath()
+      context.moveTo(x(0.518691), y(0.471962))
+      context.lineTo(x(0.509345), y(0.462616))
+      context.lineTo(x(0.509345), y(0.341121))
+      context.lineTo(x(0.504672), y(0.130841))
+      context.lineTo(x(0.495327), y(0.130841))
+      context.lineTo(x(0.490654), y(0.341121))
+      context.lineTo(x(0.490654), y(0.462616))
+      context.lineTo(x(0.481308), y(0.471962))
+      closePathSafe(context)
+      context.fill()
+      break
+    case 'type3':
+      context.beginPath()
+      context.rect(x(0.495327), y(0.130841), size * 0.009345, size * 0.373831)
+      closePathSafe(context)
+      context.fillStyle = ptrColor.light
+      context.fill()
+      break
+    case 'type4':
+      grad = createLinearGradientSafe(context, x(0.467289), 0, x(0.528036), 0, ptrColor.light)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.dark)
+        grad.addColorStop(0.51, ptrColor.dark)
+        grad.addColorStop(0.52, ptrColor.light)
+        grad.addColorStop(1, ptrColor.light)
+      }
+      context.fillStyle = grad
+      context.beginPath()
+      context.moveTo(x(0.5), y(0.126168))
+      context.lineTo(x(0.514018), y(0.135514))
+      context.lineTo(x(0.53271), y(0.5))
+      context.lineTo(x(0.523364), y(0.602803))
+      context.lineTo(x(0.476635), y(0.602803))
+      context.lineTo(x(0.467289), y(0.5))
+      context.lineTo(x(0.485981), y(0.135514))
+      context.lineTo(x(0.5), y(0.126168))
+      closePathSafe(context)
+      context.fill()
+      break
+    case 'type5':
+      grad = createLinearGradientSafe(context, x(0.471962), 0, x(0.528036), 0, ptrColor.medium)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.light)
+        grad.addColorStop(0.5, ptrColor.light)
+        grad.addColorStop(0.5, ptrColor.medium)
+        grad.addColorStop(1, ptrColor.medium)
+      }
+      context.fillStyle = grad
+      context.beginPath()
+      context.moveTo(x(0.5), y(0.495327))
+      context.lineTo(x(0.528037), y(0.495327))
+      context.lineTo(x(0.5), y(0.149532))
+      context.lineTo(x(0.471962), y(0.495327))
+      context.lineTo(x(0.5), y(0.495327))
+      closePathSafe(context)
+      context.fill()
+      context.strokeStyle = ptrColor.dark
+      context.lineWidth = 1
+      context.stroke()
+      break
+    case 'type6':
+      context.fillStyle = ptrColor.medium
+      context.beginPath()
+      context.moveTo(x(0.481308), y(0.485981))
+      context.lineTo(x(0.481308), y(0.392523))
+      context.lineTo(x(0.485981), y(0.317757))
+      context.lineTo(x(0.495327), y(0.130841))
+      context.lineTo(x(0.504672), y(0.130841))
+      context.lineTo(x(0.514018), y(0.317757))
+      context.lineTo(x(0.518691), y(0.38785))
+      context.lineTo(x(0.518691), y(0.485981))
+      context.lineTo(x(0.504672), y(0.485981))
+      context.lineTo(x(0.504672), y(0.38785))
+      context.lineTo(x(0.5), y(0.317757))
+      context.lineTo(x(0.495327), y(0.392523))
+      context.lineTo(x(0.495327), y(0.485981))
+      context.lineTo(x(0.481308), y(0.485981))
+      closePathSafe(context)
+      context.fill()
+      break
+    case 'type7':
+      grad = createLinearGradientSafe(context, x(0.481308), 0, x(0.518691), 0, ptrColor.medium)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.dark)
+        grad.addColorStop(1, ptrColor.medium)
+      }
+      context.fillStyle = grad
+      context.beginPath()
+      context.moveTo(x(0.490654), y(0.130841))
+      context.lineTo(x(0.481308), y(0.5))
+      context.lineTo(x(0.518691), y(0.5))
+      context.lineTo(x(0.504672), y(0.130841))
+      context.lineTo(x(0.490654), y(0.130841))
+      closePathSafe(context)
+      context.fill()
+      break
+    case 'type8':
+      grad = createLinearGradientSafe(context, x(0.471962), 0, x(0.528036), 0, ptrColor.medium)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.light)
+        grad.addColorStop(0.5, ptrColor.light)
+        grad.addColorStop(0.5, ptrColor.medium)
+        grad.addColorStop(1, ptrColor.medium)
+      }
+      context.fillStyle = grad
+      context.strokeStyle = ptrColor.dark
+      context.beginPath()
+      context.moveTo(x(0.5), y(0.53271))
+      context.lineTo(x(0.53271), y(0.5))
+      context.bezierCurveTo(x(0.53271), y(0.5), x(0.509345), y(0.457943), x(0.5), y(0.149532))
+      context.bezierCurveTo(x(0.490654), y(0.457943), x(0.467289), y(0.5), x(0.467289), y(0.5))
+      context.lineTo(x(0.5), y(0.53271))
+      closePathSafe(context)
+      context.fill()
+      context.stroke()
+      break
+    case 'type9':
+      grad = createLinearGradientSafe(context, x(0.471962), 0, x(0.528036), 0, 'rgb(50, 50, 50)')
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, 'rgb(50, 50, 50)')
+        grad.addColorStop(0.5, '#666666')
+        grad.addColorStop(1, 'rgb(50, 50, 50)')
+      }
+      context.fillStyle = grad
+      context.strokeStyle = '#2E2E2E'
+      context.beginPath()
+      context.moveTo(x(0.495327), y(0.233644))
+      context.lineTo(x(0.504672), y(0.233644))
+      context.lineTo(x(0.514018), y(0.439252))
+      context.lineTo(x(0.485981), y(0.439252))
+      closePathSafe(context)
+      context.moveTo(x(0.490654), y(0.130841))
+      context.lineTo(x(0.471962), y(0.471962))
+      context.lineTo(x(0.471962), y(0.528037))
+      context.bezierCurveTo(
+        x(0.471962),
+        y(0.528037),
+        x(0.476635),
+        y(0.602803),
+        x(0.476635),
+        y(0.602803)
+      )
+      context.bezierCurveTo(x(0.476635), y(0.607476), x(0.481308), y(0.607476), x(0.5), y(0.607476))
+      context.bezierCurveTo(
+        x(0.518691),
+        y(0.607476),
+        x(0.523364),
+        y(0.607476),
+        x(0.523364),
+        y(0.602803)
+      )
+      context.bezierCurveTo(
+        x(0.523364),
+        y(0.602803),
+        x(0.528037),
+        y(0.528037),
+        x(0.528037),
+        y(0.528037)
+      )
+      context.lineTo(x(0.528037), y(0.471962))
+      context.lineTo(x(0.509345), y(0.130841))
+      closePathSafe(context)
+      context.fill()
+      context.beginPath()
+      context.moveTo(x(0.495327), y(0.219626))
+      context.lineTo(x(0.504672), y(0.219626))
+      context.lineTo(x(0.504672), y(0.135514))
+      context.lineTo(x(0.495327), y(0.135514))
+      closePathSafe(context)
+      context.fillStyle = ptrColor.medium
+      context.fill()
+      break
+    case 'type10':
+      context.beginPath()
+      context.moveTo(x(0.5), y(0.149532))
+      context.bezierCurveTo(x(0.5), y(0.149532), x(0.443925), y(0.490654), x(0.443925), y(0.5))
+      context.bezierCurveTo(x(0.443925), y(0.53271), x(0.467289), y(0.556074), x(0.5), y(0.556074))
+      context.bezierCurveTo(x(0.53271), y(0.556074), x(0.556074), y(0.53271), x(0.556074), y(0.5))
+      context.bezierCurveTo(x(0.556074), y(0.490654), x(0.5), y(0.149532), x(0.5), y(0.149532))
+      closePathSafe(context)
+      grad = createLinearGradientSafe(context, x(0.471962), 0, x(0.528036), 0, ptrColor.medium)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.light)
+        grad.addColorStop(0.5, ptrColor.light)
+        grad.addColorStop(0.5, ptrColor.medium)
+        grad.addColorStop(1, ptrColor.medium)
+      }
+      context.fillStyle = grad
+      context.strokeStyle = ptrColor.medium
+      context.lineWidth = 1
+      context.fill()
+      context.stroke()
+      break
+    case 'type11':
+      context.beginPath()
+      context.moveTo(x(0.5), y(0.168224))
+      context.lineTo(x(0.485981), y(0.5))
+      context.bezierCurveTo(x(0.485981), y(0.5), x(0.481308), y(0.584112), x(0.5), y(0.584112))
+      context.bezierCurveTo(x(0.514018), y(0.584112), x(0.509345), y(0.5), x(0.509345), y(0.5))
+      context.lineTo(x(0.5), y(0.168224))
+      closePathSafe(context)
+      grad = createLinearGradientSafe(context, 0, y(0.168224), 0, y(0.584112), ptrColor.dark)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.medium)
+        grad.addColorStop(1, ptrColor.dark)
+      }
+      context.fillStyle = grad
+      context.strokeStyle = ptrColor.dark
+      context.fill()
+      context.stroke()
+      break
+    case 'type12':
+      context.beginPath()
+      context.moveTo(x(0.5), y(0.168224))
+      context.lineTo(x(0.485981), y(0.5))
+      context.lineTo(x(0.5), y(0.504672))
+      context.lineTo(x(0.509345), y(0.5))
+      context.lineTo(x(0.5), y(0.168224))
+      closePathSafe(context)
+      grad = createLinearGradientSafe(context, 0, y(0.168224), 0, y(0.504672), ptrColor.dark)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.medium)
+        grad.addColorStop(1, ptrColor.dark)
+      }
+      context.fillStyle = grad
+      context.strokeStyle = ptrColor.dark
+      context.fill()
+      context.stroke()
+      break
+    case 'type13':
+    case 'type14':
+      context.beginPath()
+      context.moveTo(x(0.485981), y(0.168224))
+      context.lineTo(x(0.5), y(0.130841))
+      context.lineTo(x(0.509345), y(0.168224))
+      context.lineTo(x(0.509345), y(0.509345))
+      context.lineTo(x(0.485981), y(0.509345))
+      closePathSafe(context)
+      if (pointerType === 'type13') {
+        grad = createLinearGradientSafe(context, 0, y(0.5), 0, y(0.130841), ptrColor.medium)
+        if (typeof grad !== 'string') {
+          grad.addColorStop(0, labelColor)
+          grad.addColorStop(0.85, labelColor)
+          grad.addColorStop(0.85, ptrColor.medium)
+          grad.addColorStop(1, ptrColor.medium)
+        }
+      } else {
+        grad = createLinearGradientSafe(context, x(0.485981), 0, x(0.509345), 0, ptrColor.veryDark)
+        if (typeof grad !== 'string') {
+          grad.addColorStop(0, ptrColor.veryDark)
+          grad.addColorStop(0.5, ptrColor.light)
+          grad.addColorStop(1, ptrColor.veryDark)
+        }
+      }
+      context.fillStyle = grad
+      context.fill()
+      break
+    case 'type15':
+    case 'type16':
+      context.beginPath()
+      context.moveTo(x(0.509345), y(0.457943))
+      context.lineTo(x(0.5015), y(0.13))
+      context.lineTo(x(0.4985), y(0.13))
+      context.lineTo(x(0.490654), y(0.457943))
+      context.bezierCurveTo(
+        x(0.490654),
+        y(0.457943),
+        x(0.490654),
+        y(0.457943),
+        x(0.490654),
+        y(0.457943)
+      )
+      context.bezierCurveTo(x(0.471962), y(0.462616), x(0.457943), y(0.481308), x(0.457943), y(0.5))
+      context.bezierCurveTo(
+        x(0.457943),
+        y(0.518691),
+        x(0.471962),
+        y(0.537383),
+        x(0.490654),
+        y(0.542056)
+      )
+      if (pointerType === 'type15') {
+        context.lineTo(x(0.490654), y(0.57))
+        context.bezierCurveTo(x(0.46), y(0.58), x(0.46), y(0.62), x(0.490654), y(0.63))
+        context.bezierCurveTo(x(0.47), y(0.62), x(0.48), y(0.59), x(0.5), y(0.59))
+        context.bezierCurveTo(x(0.53), y(0.59), x(0.52), y(0.62), x(0.509345), y(0.63))
+        context.bezierCurveTo(x(0.54), y(0.62), x(0.54), y(0.58), x(0.509345), y(0.57))
+        context.lineTo(x(0.509345), y(0.57))
+      } else {
+        context.lineTo(x(0.490654), y(0.621495))
+        context.lineTo(x(0.509345), y(0.621495))
+      }
+      context.lineTo(x(0.509345), y(0.542056))
+      context.bezierCurveTo(
+        x(0.509345),
+        y(0.542056),
+        x(0.509345),
+        y(0.542056),
+        x(0.509345),
+        y(0.542056)
+      )
+      context.bezierCurveTo(x(0.528037), y(0.537383), x(0.542056), y(0.518691), x(0.542056), y(0.5))
+      context.bezierCurveTo(
+        x(0.542056),
+        y(0.481308),
+        x(0.528037),
+        y(0.462616),
+        x(0.509345),
+        y(0.457943)
+      )
+      closePathSafe(context)
+      grad = createLinearGradientSafe(
+        context,
+        0,
+        0,
+        0,
+        y(pointerType === 'type15' ? 0.63 : 0.621495),
+        ptrColor.medium
+      )
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.medium)
+        grad.addColorStop(0.388888, ptrColor.medium)
+        grad.addColorStop(0.5, ptrColor.light)
+        grad.addColorStop(0.611111, ptrColor.medium)
+        grad.addColorStop(1, ptrColor.medium)
+      }
+      context.fillStyle = grad
+      context.strokeStyle = ptrColor.dark
+      context.fill()
+      context.stroke()
+      context.beginPath()
+      radius = (size * 0.06542) / 2
+      context.arc(x(0.5), y(0.5), radius, 0, TWO_PI)
+      grad = createLinearGradientSafe(
+        context,
+        x(0.5) - radius,
+        y(0.5) + radius,
+        0,
+        y(0.5) + radius,
+        '#c48200'
+      )
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, '#e6b35c')
+        grad.addColorStop(0.01, '#e6b35c')
+        grad.addColorStop(0.99, '#c48200')
+        grad.addColorStop(1, '#c48200')
+      }
+      context.fillStyle = grad
+      context.fill()
+      context.beginPath()
+      radius = (size * 0.046728) / 2
+      context.arc(x(0.5), y(0.5), radius, 0, TWO_PI)
+      const ring = context.createRadialGradient(x(0.5), y(0.5), 0, x(0.5), y(0.5), radius)
+      ring.addColorStop(0, '#c5c5c5')
+      ring.addColorStop(0.19, '#c5c5c5')
+      ring.addColorStop(0.22, '#000000')
+      ring.addColorStop(0.8, '#000000')
+      ring.addColorStop(0.99, '#707070')
+      ring.addColorStop(1, '#707070')
+      context.fillStyle = ring
+      context.fill()
+      break
+    case 'type1':
+    default:
+      grad = createLinearGradientSafe(context, 0, y(0.471962), 0, y(0.130841), ptrColor.veryDark)
+      if (typeof grad !== 'string') {
+        grad.addColorStop(0, ptrColor.veryDark)
+        grad.addColorStop(0.3, ptrColor.medium)
+        grad.addColorStop(0.59, ptrColor.medium)
+        grad.addColorStop(1, ptrColor.veryDark)
+      }
+      context.fillStyle = grad
+      context.beginPath()
+      context.moveTo(x(0.518691), y(0.471962))
+      context.bezierCurveTo(
+        x(0.514018),
+        y(0.457943),
+        x(0.509345),
+        y(0.415887),
+        x(0.509345),
+        y(0.401869)
+      )
+      context.bezierCurveTo(x(0.504672), y(0.383177), x(0.5), y(0.130841), x(0.5), y(0.130841))
+      context.bezierCurveTo(x(0.5), y(0.130841), x(0.490654), y(0.383177), x(0.490654), y(0.397196))
+      context.bezierCurveTo(
+        x(0.490654),
+        y(0.415887),
+        x(0.485981),
+        y(0.457943),
+        x(0.481308),
+        y(0.471962)
+      )
+      context.bezierCurveTo(x(0.471962), y(0.481308), x(0.467289), y(0.490654), x(0.467289), y(0.5))
+      context.bezierCurveTo(x(0.467289), y(0.518691), x(0.481308), y(0.53271), x(0.5), y(0.53271))
+      context.bezierCurveTo(x(0.518691), y(0.53271), x(0.53271), y(0.518691), x(0.53271), y(0.5))
+      context.bezierCurveTo(
+        x(0.53271),
+        y(0.490654),
+        x(0.528037),
+        y(0.481308),
+        x(0.518691),
+        y(0.471962)
+      )
+      closePathSafe(context)
+      context.fill()
+      break
+  }
 }
 
 const drawNeedle = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
+  angles: { rotationOffset: number; angleStep: number },
   value: number,
   centerX: number,
   centerY: number,
-  radius: number
+  radius: number,
+  imageWidth: number
 ): void => {
-  const angle = valueToAngle(value, config.value, config.scale.startAngle, config.scale.endAngle)
+  const angle = toLegacyGaugeAngle(value, config, angles)
   const pointerColor = LEGACY_POINTER_COLORS[config.style.pointerColor]
 
   if (typeof context.translate === 'function' && typeof context.rotate === 'function') {
     context.save()
     context.translate(centerX, centerY)
-    context.rotate(angle + Math.PI / 2)
+    context.rotate(angle)
     context.shadowColor = 'rgba(0, 0, 0, 0.8)'
     context.shadowBlur = radius * 0.012
     context.shadowOffsetX = radius * 0.006
     context.shadowOffsetY = radius * 0.006
-
-    context.beginPath()
-    context.moveTo(0, -radius * 0.56)
-    context.lineTo(radius * 0.025, radius * 0.05)
-    context.lineTo(0, radius * 0.11)
-    context.lineTo(-radius * 0.025, radius * 0.05)
-    closePathSafe(context)
-
-    const needleGradient = createLinearGradientSafe(
+    drawLegacyPointerShape(
       context,
-      0,
-      -radius * 0.56,
-      0,
-      radius * 0.11,
-      pointerColor.medium
+      config.style.pointerType,
+      imageWidth,
+      pointerColor,
+      LEGACY_BACKGROUND_TEXT[config.style.backgroundColor],
+      centerX,
+      centerY
     )
-    if (typeof needleGradient !== 'string') {
-      needleGradient.addColorStop(0, pointerColor.light)
-      needleGradient.addColorStop(0.47, pointerColor.medium)
-      needleGradient.addColorStop(1, pointerColor.dark)
-    }
-    context.fillStyle = needleGradient
-    context.fill()
-
-    context.beginPath()
-    context.moveTo(0, -radius * 0.56)
-    context.lineTo(radius * 0.025, radius * 0.05)
-    context.lineTo(0, radius * 0.11)
-    context.lineTo(-radius * 0.025, radius * 0.05)
-    closePathSafe(context)
-    context.strokeStyle = pointerColor.dark
-    context.lineWidth = Math.max(1, radius * 0.005)
-    context.stroke()
 
     context.restore()
   } else {
@@ -404,7 +929,116 @@ const drawNeedle = (
     context.stroke()
   }
 
-  drawLegacyCenterKnob(context, centerX, centerY, radius)
+  if (config.style.pointerType !== 'type15' && config.style.pointerType !== 'type16') {
+    drawLegacyCenterKnob(context, centerX, centerY, radius)
+  }
+}
+
+const drawRadialStatusLayers = (
+  context: RadialDrawContext,
+  config: RadialGaugeConfig,
+  angles: { rotationOffset: number; angleStep: number },
+  centerX: number,
+  centerY: number,
+  imageWidth: number
+): void => {
+  if (config.indicators.ledVisible) {
+    const ledRadius = imageWidth * 0.046728
+    const ledX = imageWidth * 0.6
+    const ledY = imageWidth * 0.4
+    const led = createLinearGradientSafe(
+      context,
+      ledX,
+      ledY - ledRadius,
+      ledX,
+      ledY + ledRadius,
+      '#cc0000'
+    )
+    if (typeof led !== 'string') {
+      led.addColorStop(0, '#ff9f9f')
+      led.addColorStop(0.2, '#ff3a3a')
+      led.addColorStop(1, '#700000')
+    }
+    context.beginPath()
+    context.fillStyle = led
+    context.arc(ledX, ledY, ledRadius, 0, TWO_PI)
+    context.fill()
+  }
+
+  if (config.indicators.userLedVisible) {
+    const ledRadius = imageWidth * 0.046728
+    const ledX = config.style.gaugeType === 'type3' ? imageWidth * 0.6 : centerX
+    const ledY = config.style.gaugeType === 'type3' ? imageWidth * 0.72 : imageWidth * 0.75
+    const led = createLinearGradientSafe(
+      context,
+      ledX,
+      ledY - ledRadius,
+      ledX,
+      ledY + ledRadius,
+      '#00aa00'
+    )
+    if (typeof led !== 'string') {
+      led.addColorStop(0, '#b7ffb7')
+      led.addColorStop(0.2, '#3adb3a')
+      led.addColorStop(1, '#055805')
+    }
+    context.beginPath()
+    context.fillStyle = led
+    context.arc(ledX, ledY, ledRadius, 0, TWO_PI)
+    context.fill()
+  }
+
+  if (config.indicators.trendVisible) {
+    const trendSize = imageWidth * 0.06
+    const x = imageWidth * 0.29
+    const y = imageWidth * 0.36
+    context.fillStyle = 'rgba(80, 80, 80, 0.7)'
+    if (config.indicators.trendState === 'up') {
+      context.fillStyle = '#ff2a2a'
+      context.beginPath()
+      context.moveTo(x + trendSize * 0.5, y)
+      context.lineTo(x + trendSize, y + trendSize * 0.4)
+      context.lineTo(x, y + trendSize * 0.4)
+      closePathSafe(context)
+      context.fill()
+    } else if (config.indicators.trendState === 'steady') {
+      context.fillStyle = '#00d07d'
+      context.fillRect(x, y + trendSize * 0.3, trendSize, trendSize * 0.12)
+      context.fillRect(x, y + trendSize * 0.55, trendSize, trendSize * 0.12)
+    } else {
+      context.fillStyle = '#00a7ff'
+      context.beginPath()
+      context.moveTo(x + trendSize * 0.5, y + trendSize)
+      context.lineTo(x + trendSize, y + trendSize * 0.6)
+      context.lineTo(x, y + trendSize * 0.6)
+      closePathSafe(context)
+      context.fill()
+    }
+  }
+
+  const drawMeasuredMarker = (value: number, color: string): void => {
+    const angle = toLegacyGaugeAngle(value, config, angles)
+    context.save()
+    context.translate(centerX, centerY)
+    context.rotate(angle)
+    context.translate(-centerX, -centerY)
+    const marker = imageWidth * 0.028037
+    context.fillStyle = color
+    context.beginPath()
+    context.moveTo(centerX, imageWidth * 0.14)
+    context.lineTo(centerX - marker, imageWidth * 0.14 - marker)
+    context.lineTo(centerX + marker, imageWidth * 0.14 - marker)
+    closePathSafe(context)
+    context.fill()
+    context.restore()
+  }
+
+  if (config.indicators.minMeasuredValueVisible) {
+    drawMeasuredMarker(config.indicators.minMeasuredValue ?? config.value.min, '#0044ff')
+  }
+  if (config.indicators.maxMeasuredValueVisible) {
+    drawMeasuredMarker(config.indicators.maxMeasuredValue ?? config.value.max, '#ff6600')
+  }
 }
 
 const drawLabels = (
@@ -470,7 +1104,9 @@ export const renderRadialGauge = (
   const value = clamp(options.value ?? config.value.current, config.value.min, config.value.max)
   const centerX = config.size.width / 2
   const centerY = config.size.height / 2
+  const imageWidth = Math.min(config.size.width, config.size.height)
   const radius = Math.min(config.size.width, config.size.height) * 0.48
+  const angles = resolveGaugeAngles(config.style.gaugeType, config.value.min, config.value.max)
   const activeAlerts = resolveActiveAlerts(value, config.indicators.alerts)
   const tone = resolveTone(
     {
@@ -487,10 +1123,11 @@ export const renderRadialGauge = (
 
   drawBackground(context, config, paint, centerX, centerY, radius)
   drawSegments(context, config, centerX, centerY, radius)
-  drawTicks(context, config, centerX, centerY, radius)
-  drawThreshold(context, config, centerX, centerY, radius)
-  drawNeedle(context, config, value, centerX, centerY, radius)
+  drawTicks(context, config, angles, centerX, centerY, radius, imageWidth)
+  drawThreshold(context, config, angles, centerX, centerY, radius, imageWidth)
   drawLabels(context, config, value, centerX, centerY, radius)
+  drawRadialStatusLayers(context, config, angles, centerX, centerY, imageWidth)
+  drawNeedle(context, config, angles, value, centerX, centerY, radius, imageWidth)
   drawForeground(context, config, centerX, centerY, radius)
 
   return {

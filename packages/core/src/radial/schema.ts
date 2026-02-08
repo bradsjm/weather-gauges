@@ -39,6 +39,27 @@ export const radialBackgroundColorSchema = z.enum([
 
 export const radialForegroundTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
 
+export const radialPointerTypeSchema = z.enum([
+  'type1',
+  'type2',
+  'type3',
+  'type4',
+  'type5',
+  'type6',
+  'type7',
+  'type8',
+  'type9',
+  'type10',
+  'type11',
+  'type12',
+  'type13',
+  'type14',
+  'type15',
+  'type16'
+])
+
+export const radialGaugeTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4'])
+
 export const radialPointerColorSchema = z.enum([
   'RED',
   'GREEN',
@@ -60,6 +81,8 @@ export const radialStyleSchema = z
     frameDesign: radialFrameDesignSchema.default('metal'),
     backgroundColor: radialBackgroundColorSchema.default('DARK_GRAY'),
     foregroundType: radialForegroundTypeSchema.default('type1'),
+    pointerType: radialPointerTypeSchema.default('type1'),
+    gaugeType: radialGaugeTypeSchema.default('type4'),
     pointerColor: radialPointerColorSchema.default('RED')
   })
   .strict()
@@ -115,10 +138,26 @@ export const radialAlertSchema = z
 export const radialIndicatorsSchema = z
   .object({
     threshold: radialThresholdSchema.optional(),
-    alerts: z.array(radialAlertSchema).default([])
+    alerts: z.array(radialAlertSchema).default([]),
+    ledVisible: z.boolean().default(false),
+    userLedVisible: z.boolean().default(false),
+    trendVisible: z.boolean().default(false),
+    trendState: z.enum(['up', 'steady', 'down']).default('down'),
+    minMeasuredValueVisible: z.boolean().default(false),
+    maxMeasuredValueVisible: z.boolean().default(false),
+    minMeasuredValue: z.number().finite().optional(),
+    maxMeasuredValue: z.number().finite().optional()
   })
   .strict()
-  .default({ alerts: [] })
+  .default({
+    alerts: [],
+    ledVisible: false,
+    userLedVisible: false,
+    trendVisible: false,
+    trendState: 'down',
+    minMeasuredValueVisible: false,
+    maxMeasuredValueVisible: false
+  })
 
 export const radialGaugeConfigSchema = sharedGaugeConfigSchema
   .extend({
@@ -132,6 +171,8 @@ export const radialGaugeConfigSchema = sharedGaugeConfigSchema
       frameDesign: 'metal',
       backgroundColor: 'DARK_GRAY',
       foregroundType: 'type1',
+      pointerType: 'type1',
+      gaugeType: 'type4',
       pointerColor: 'RED'
     }),
     segments: z.array(radialSegmentSchema).default([]),
@@ -147,6 +188,8 @@ export type RadialIndicators = z.infer<typeof radialIndicatorsSchema>
 export type RadialFrameDesign = z.infer<typeof radialFrameDesignSchema>
 export type RadialBackgroundColorName = z.infer<typeof radialBackgroundColorSchema>
 export type RadialForegroundType = z.infer<typeof radialForegroundTypeSchema>
+export type RadialPointerType = z.infer<typeof radialPointerTypeSchema>
+export type RadialGaugeType = z.infer<typeof radialGaugeTypeSchema>
 export type RadialPointerColorName = z.infer<typeof radialPointerColorSchema>
 export type RadialStyle = z.infer<typeof radialStyleSchema>
 export type RadialGaugeConfig = z.infer<typeof radialGaugeConfigSchema>

@@ -39,6 +39,7 @@ export const linearBackgroundColorSchema = z.enum([
 
 export const linearStyleSchema = z
   .object({
+    gaugeType: z.enum(['type1', 'type2']).default('type1'),
     frameDesign: linearFrameDesignSchema.default('metal'),
     backgroundColor: linearBackgroundColorSchema.default('DARK_GRAY'),
     valueColor: z
@@ -105,10 +106,20 @@ export const linearAlertSchema = z
 export const linearIndicatorsSchema = z
   .object({
     threshold: linearThresholdSchema.optional(),
-    alerts: z.array(linearAlertSchema).default([])
+    alerts: z.array(linearAlertSchema).default([]),
+    ledVisible: z.boolean().default(false),
+    minMeasuredValueVisible: z.boolean().default(false),
+    maxMeasuredValueVisible: z.boolean().default(false),
+    minMeasuredValue: z.number().finite().optional(),
+    maxMeasuredValue: z.number().finite().optional()
   })
   .strict()
-  .default({ alerts: [] })
+  .default({
+    alerts: [],
+    ledVisible: false,
+    minMeasuredValueVisible: false,
+    maxMeasuredValueVisible: false
+  })
 
 export const linearGaugeConfigSchema = sharedGaugeConfigSchema
   .extend({
@@ -118,6 +129,7 @@ export const linearGaugeConfigSchema = sharedGaugeConfigSchema
       vertical: true
     })),
     style: linearStyleSchema.default({
+      gaugeType: 'type1',
       frameDesign: 'metal',
       backgroundColor: 'DARK_GRAY',
       valueColor: 'RED'

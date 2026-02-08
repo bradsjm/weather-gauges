@@ -111,6 +111,28 @@ export class SteelseriesRadialV3Element extends LitElement {
   @property({ type: String, attribute: 'foreground-type' })
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
+  @property({ type: String, attribute: 'pointer-type' })
+  pointerType:
+    | 'type1'
+    | 'type2'
+    | 'type3'
+    | 'type4'
+    | 'type5'
+    | 'type6'
+    | 'type7'
+    | 'type8'
+    | 'type9'
+    | 'type10'
+    | 'type11'
+    | 'type12'
+    | 'type13'
+    | 'type14'
+    | 'type15'
+    | 'type16' = 'type1'
+
+  @property({ type: String, attribute: 'gauge-type' })
+  gaugeType: 'type1' | 'type2' | 'type3' | 'type4' = 'type4'
+
   @property({ type: String, attribute: 'pointer-color' })
   pointerColor:
     | 'RED'
@@ -201,6 +223,8 @@ export class SteelseriesRadialV3Element extends LitElement {
         frameDesign: this.frameDesign,
         backgroundColor: this.backgroundColor,
         foregroundType: this.foregroundType,
+        pointerType: this.pointerType,
+        gaugeType: this.gaugeType,
         pointerColor: this.pointerColor
       },
       indicators: {
@@ -417,6 +441,9 @@ export class SteelseriesLinearV3Element extends LitElement {
     | 'GREEN_LCD'
     | 'JUG_GREEN' = 'RED'
 
+  @property({ type: String, attribute: 'gauge-type' })
+  gaugeType: 'type1' | 'type2' = 'type1'
+
   @property({
     type: Boolean,
     attribute: 'animate-value',
@@ -484,6 +511,7 @@ export class SteelseriesLinearV3Element extends LitElement {
         ...(this.unit ? { unit: this.unit } : {})
       },
       style: {
+        gaugeType: this.gaugeType,
         frameDesign: this.frameDesign,
         backgroundColor: this.backgroundColor,
         valueColor: this.valueColor
