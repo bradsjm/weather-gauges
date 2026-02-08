@@ -38,12 +38,12 @@ export class SteelseriesRadialV3Element extends LitElement {
   static override styles = css`
     :host {
       --ss3-font-family: system-ui, sans-serif;
-      --ss3-text-color: #1f2937;
-      --ss3-background-color: #f8fafc;
-      --ss3-frame-color: #dbe4ee;
-      --ss3-accent-color: #0f766e;
-      --ss3-warning-color: #b45309;
-      --ss3-danger-color: #b91c1c;
+      --ss3-text-color: #eceff3;
+      --ss3-background-color: #4b4f56;
+      --ss3-frame-color: #c8ccd2;
+      --ss3-accent-color: #c5162e;
+      --ss3-warning-color: #d97706;
+      --ss3-danger-color: #ef4444;
       display: inline-grid;
       font-family: var(--ss3-font-family);
       color: var(--ss3-text-color);
@@ -178,7 +178,7 @@ export class SteelseriesRadialV3Element extends LitElement {
         unit: this.unit
       },
       scale: {
-        majorTickCount: 9,
+        majorTickCount: 11,
         minorTicksPerMajor: 4
       },
       indicators: {

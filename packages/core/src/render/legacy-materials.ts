@@ -207,6 +207,44 @@ export const drawLegacyRadialFrame = (
   context.stroke()
 }
 
+export const drawLegacyRadialFrameMetal = (
+  context: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number
+): void => {
+  const frameGradient = createLinearGradientSafe(
+    context,
+    centerX,
+    centerY - radius,
+    centerX,
+    centerY + radius,
+    '#bdbdbd'
+  )
+  addStops(frameGradient, [
+    [0, '#fefefe'],
+    [0.07, '#d2d2d2'],
+    [0.12, '#b3b3b3'],
+    [1, '#d5d5d5']
+  ])
+
+  drawCircle(context, centerX, centerY, radius)
+  context.fillStyle = frameGradient
+  context.fill()
+
+  context.save()
+  context.globalCompositeOperation = 'destination-out'
+  drawCircle(context, centerX, centerY, radius * 0.84)
+  context.fillStyle = '#000'
+  context.fill()
+  context.restore()
+
+  drawCircle(context, centerX, centerY, radius * 0.995)
+  context.lineWidth = Math.max(1, radius * 0.01)
+  context.strokeStyle = 'rgba(120,120,120,0.45)'
+  context.stroke()
+}
+
 export const drawLegacyRadialBackground = (
   context: CanvasRenderingContext2D,
   paint: ThemePaint,
@@ -263,6 +301,72 @@ export const drawLegacyRadialBackground = (
     [0.92, 'rgba(0,0,0,0.07)'],
     [0.97, 'rgba(0,0,0,0.15)'],
     [1, 'rgba(0,0,0,0.3)']
+  ])
+  drawCircle(context, centerX, centerY, baseRadius)
+  context.fillStyle = edgeVignette
+  context.fill()
+}
+
+export const drawLegacyRadialBackgroundDark = (
+  context: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radius: number
+): void => {
+  const baseRadius = radius * 0.84
+  const baseGradient = createLinearGradientSafe(
+    context,
+    centerX,
+    centerY - baseRadius,
+    centerX,
+    centerY + baseRadius,
+    '#4a4a4a'
+  )
+  addStops(baseGradient, [
+    [0, '#5b5b5b'],
+    [0.42, '#4a4a4a'],
+    [1, '#2f2f2f']
+  ])
+
+  drawCircle(context, centerX, centerY, baseRadius)
+  context.fillStyle = baseGradient
+  context.fill()
+
+  const centerGlow = createRadialGradientSafe(
+    context,
+    centerX,
+    centerY,
+    0,
+    centerX,
+    centerY,
+    baseRadius,
+    'rgba(0,0,0,0.2)'
+  )
+  addStops(centerGlow, [
+    [0, 'rgba(255,255,255,0.04)'],
+    [0.6, 'rgba(0,0,0,0.06)'],
+    [1, 'rgba(0,0,0,0.2)']
+  ])
+  drawCircle(context, centerX, centerY, baseRadius)
+  context.fillStyle = centerGlow
+  context.fill()
+
+  const edgeVignette = createRadialGradientSafe(
+    context,
+    centerX,
+    centerY,
+    baseRadius * 0.35,
+    centerX,
+    centerY,
+    baseRadius,
+    'rgba(0,0,0,0.25)'
+  )
+  addStops(edgeVignette, [
+    [0.7, 'rgba(0,0,0,0)'],
+    [0.86, 'rgba(0,0,0,0.04)'],
+    [0.92, 'rgba(0,0,0,0.1)'],
+    [0.97, 'rgba(0,0,0,0.2)'],
+    [1, 'rgba(0,0,0,0.35)']
   ])
   drawCircle(context, centerX, centerY, baseRadius)
   context.fillStyle = edgeVignette
@@ -445,9 +549,9 @@ export const drawLegacyLinearBackground = (
     paint.backgroundColor
   )
   addStops(baseGradient, [
-    [0, '#f5f5f5'],
+    [0, 'rgba(255,255,255,0.12)'],
     [0.5, paint.backgroundColor],
-    [1, '#d6d6d6']
+    [1, 'rgba(0,0,0,0.28)']
   ])
 
   drawRoundRectPath(context, innerX, innerY, innerWidth, innerHeight, cornerRadius)
@@ -473,6 +577,80 @@ export const drawLegacyLinearBackground = (
     context.lineWidth = 1
     context.stroke()
   }
+}
+
+export const drawLegacyLinearForeground = (
+  context: CanvasRenderingContext2D,
+  frame: LinearMaterialFrame
+): void => {
+  const { innerX, innerY, innerWidth, innerHeight } = frame
+  const frameWidth = Math.max(1, frame.frameWidth)
+  const fgOffset = 1.3 * frameWidth
+  const fgOffset2 = 1.33 * fgOffset
+
+  context.beginPath()
+  context.moveTo(innerX + fgOffset, innerY + innerHeight - fgOffset)
+  context.lineTo(innerX + innerWidth - fgOffset, innerY + innerHeight - fgOffset)
+  if (typeof context.bezierCurveTo === 'function') {
+    context.bezierCurveTo(
+      innerX + innerWidth - fgOffset,
+      innerY + innerHeight - fgOffset,
+      innerX + innerWidth - fgOffset2,
+      innerY + innerHeight * 0.7,
+      innerX + innerWidth - fgOffset2,
+      innerY + innerHeight * 0.5
+    )
+    context.bezierCurveTo(
+      innerX + innerWidth - fgOffset2,
+      innerY + fgOffset2,
+      innerX + innerWidth - fgOffset,
+      innerY + fgOffset,
+      innerX + innerWidth - frameWidth,
+      innerY + fgOffset
+    )
+  }
+  context.lineTo(innerX + fgOffset, innerY + fgOffset)
+  if (typeof context.bezierCurveTo === 'function') {
+    context.bezierCurveTo(
+      innerX + fgOffset,
+      innerY + fgOffset,
+      innerX + fgOffset2,
+      innerY + innerHeight * 0.285714,
+      innerX + fgOffset2,
+      innerY + innerHeight * 0.5
+    )
+    context.bezierCurveTo(
+      innerX + fgOffset2,
+      innerY + innerHeight * 0.7,
+      innerX + fgOffset,
+      innerY + innerHeight - fgOffset,
+      innerX + frameWidth,
+      innerY + innerHeight - fgOffset
+    )
+  }
+  safeClosePath(context)
+
+  const foregroundGradient = createLinearGradientSafe(
+    context,
+    0,
+    innerY + innerHeight - frameWidth,
+    0,
+    innerY + frameWidth,
+    'rgba(255,255,255,0.06)'
+  )
+  addStops(foregroundGradient, [
+    [0, 'rgba(255,255,255,0)'],
+    [0.06, 'rgba(255,255,255,0)'],
+    [0.17, 'rgba(255,255,255,0.013546)'],
+    [0.84, 'rgba(255,255,255,0.082217)'],
+    [0.93, 'rgba(255,255,255,0.288702)'],
+    [0.94, 'rgba(255,255,255,0.298039)'],
+    [0.96, 'rgba(255,255,255,0.119213)'],
+    [0.97, 'rgba(255,255,255,0)'],
+    [1, 'rgba(255,255,255,0)']
+  ])
+  context.fillStyle = foregroundGradient
+  context.fill()
 }
 
 export const drawLegacyCompassRose = (

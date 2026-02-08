@@ -4,9 +4,9 @@ import { clamp } from '../math/range.js'
 import { generateTicks } from '../math/ticks.js'
 import {
   drawLegacyCenterKnob,
-  drawLegacyRadialBackground,
+  drawLegacyRadialBackgroundDark,
   drawLegacyRadialForeground,
-  drawLegacyRadialFrame
+  drawLegacyRadialFrameMetal
 } from '../render/legacy-materials.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { RadialAlert, RadialGaugeConfig } from './schema.js'
@@ -97,11 +97,11 @@ const drawBackground = (
   radius: number
 ): void => {
   if (config.visibility.showFrame) {
-    drawLegacyRadialFrame(context, centerX, centerY, radius)
+    drawLegacyRadialFrameMetal(context, centerX, centerY, radius)
   }
 
   if (config.visibility.showBackground) {
-    drawLegacyRadialBackground(context, paint, centerX, centerY, radius)
+    drawLegacyRadialBackgroundDark(context, centerX, centerY, radius)
   }
 }
 
@@ -183,6 +183,16 @@ const drawTicks = (
     context.moveTo(line.start.x, line.start.y)
     context.lineTo(line.end.x, line.end.y)
     context.stroke()
+
+    if (isMajor) {
+      const labelValue = Math.round(tick.value)
+      const labelLine = createTickLine(centerX, centerY, radius * 0.52, radius * 0.52, angle)
+      context.fillStyle = paint.textColor
+      context.textAlign = 'center'
+      context.textBaseline = 'middle'
+      context.font = `600 ${Math.max(9, Math.round(radius * 0.07))}px ${paint.fontFamily}`
+      context.fillText(`${labelValue}`, labelLine.start.x, labelLine.start.y)
+    }
   }
 }
 
@@ -302,17 +312,30 @@ const drawLabels = (
   context.textAlign = 'center'
   context.textBaseline = 'middle'
 
-  const titleSize = Math.max(12, Math.round(radius * 0.11))
-  const valueSize = Math.max(16, Math.round(radius * 0.17))
+  const titleSize = Math.max(10, Math.round(radius * 0.085))
 
   if (config.text.title) {
     context.font = `600 ${titleSize}px ${paint.fontFamily}`
-    context.fillText(config.text.title, centerX, centerY - radius * 0.38)
+    context.fillText(config.text.title, centerX, centerY - radius * 0.22)
   }
 
-  context.font = `700 ${valueSize}px ${paint.fontFamily}`
-  const unitSuffix = config.text.unit ? ` ${config.text.unit}` : ''
-  context.fillText(`${value.toFixed(1)}${unitSuffix}`, centerX, centerY + radius * 0.42)
+  if (typeof context.fillRect === 'function') {
+    const lcdWidth = radius * 0.58
+    const lcdHeight = radius * 0.2
+    const lcdX = centerX - lcdWidth / 2
+    const lcdY = centerY + radius * 0.22
+    context.fillStyle = '#b6c0b0'
+    context.fillRect(lcdX, lcdY, lcdWidth, lcdHeight)
+    context.strokeStyle = 'rgba(20,20,20,0.5)'
+    context.lineWidth = Math.max(1, radius * 0.006)
+    context.strokeRect(lcdX, lcdY, lcdWidth, lcdHeight)
+    context.fillStyle = '#1f2933'
+    context.font = `700 ${Math.max(12, Math.round(radius * 0.14))}px ${paint.fontFamily}`
+    context.fillText(`${value.toFixed(2)}`, centerX, lcdY + lcdHeight * 0.58)
+  } else {
+    context.font = `700 ${Math.max(14, Math.round(radius * 0.16))}px ${paint.fontFamily}`
+    context.fillText(`${value.toFixed(2)}`, centerX, centerY + radius * 0.32)
+  }
 
   if (activeAlerts.length > 0) {
     const [primaryAlert] = activeAlerts
@@ -320,8 +343,8 @@ const drawLabels = (
       return
     }
 
-    context.font = `500 ${Math.max(10, Math.round(radius * 0.09))}px ${paint.fontFamily}`
-    context.fillText(primaryAlert.message, centerX, centerY + radius * 0.25)
+    context.font = `500 ${Math.max(9, Math.round(radius * 0.07))}px ${paint.fontFamily}`
+    context.fillText(primaryAlert.message, centerX, centerY + radius * 0.46)
   }
 }
 
