@@ -1,8 +1,25 @@
+import {
+  animateRadialGauge,
+  createStyleTokenSource,
+  radialGaugeConfigSchema,
+  renderRadialGauge,
+  resolveThemePaint,
+  type AnimationRunHandle,
+  type RadialDrawContext,
+  type RadialGaugeConfig,
+  type ThemePaint
+} from '@bradsjm/steelseries-v3-core'
 import { LitElement, css, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement, property, query } from 'lit/decorators.js'
 
 @customElement('steelseries-radial-v3')
 export class SteelseriesRadialV3Element extends LitElement {
+  @query('canvas')
+  private canvasElement?: HTMLCanvasElement
+
+  private currentValue = 0
+  private animationHandle: AnimationRunHandle | undefined
+
   static override styles = css`
     :host {
       --ss3-font-family: system-ui, sans-serif;
@@ -12,7 +29,7 @@ export class SteelseriesRadialV3Element extends LitElement {
       --ss3-accent-color: #0f766e;
       --ss3-warning-color: #b45309;
       --ss3-danger-color: #b91c1c;
-      display: inline-block;
+      display: inline-grid;
       font-family: var(--ss3-font-family);
       color: var(--ss3-text-color);
     }
@@ -21,63 +38,190 @@ export class SteelseriesRadialV3Element extends LitElement {
       border-radius: 9999px;
       background: var(--ss3-frame-color);
       padding: 0.5rem;
-      min-width: 180px;
-      min-height: 180px;
       display: grid;
       place-items: center;
       box-sizing: border-box;
     }
 
     .dial {
-      width: 100%;
-      height: 100%;
       border-radius: inherit;
       background: var(--ss3-background-color);
+      box-sizing: border-box;
       display: grid;
       place-items: center;
-      text-align: center;
-      box-sizing: border-box;
-      padding: 0.75rem;
-      gap: 0.35rem;
     }
 
-    .label {
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      opacity: 0.78;
-    }
-
-    .value {
-      font-size: 1.1rem;
-      font-variant-numeric: tabular-nums;
-      font-weight: 600;
-    }
-
-    .dial.accent .value {
-      color: var(--ss3-accent-color);
-    }
-
-    .dial.warning .value {
-      color: var(--ss3-warning-color);
-    }
-
-    .dial.danger .value {
-      color: var(--ss3-danger-color);
+    canvas {
+      display: block;
+      border-radius: inherit;
     }
   `
 
   @property({ type: Number })
   value = 0
 
-  override render() {
-    const tone = this.value >= 90 ? 'danger' : this.value >= 75 ? 'warning' : 'accent'
+  @property({ type: Number, attribute: 'min-value' })
+  minValue = 0
 
+  @property({ type: Number, attribute: 'max-value' })
+  maxValue = 100
+
+  @property({ type: Number })
+  size = 220
+
+  @property({ type: String })
+  override title = 'Radial'
+
+  @property({ type: String })
+  unit = ''
+
+  @property({ type: Number })
+  threshold = 80
+
+  @property({ type: Boolean, attribute: 'animate-value' })
+  animateValue = true
+
+  override firstUpdated() {
+    this.currentValue = this.value
+    this.renderGauge(false)
+  }
+
+  override disconnectedCallback() {
+    this.animationHandle?.cancel()
+    this.animationHandle = undefined
+    super.disconnectedCallback()
+  }
+
+  override updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.size === 0) {
+      return
+    }
+
+    const valueChanged = changedProperties.has('value')
+    const onlyValueChanged = valueChanged && changedProperties.size === 1
+    this.renderGauge(onlyValueChanged && this.animateValue)
+  }
+
+  private getThemePaint(): ThemePaint {
+    const computedStyle = getComputedStyle(this)
+    return resolveThemePaint({
+      source: createStyleTokenSource(computedStyle)
+    })
+  }
+
+  private getDrawContext(): RadialDrawContext | undefined {
+    if (!this.canvasElement) {
+      return undefined
+    }
+
+    const drawContext = this.canvasElement.getContext('2d')
+    if (!drawContext) {
+      return undefined
+    }
+
+    return drawContext as RadialDrawContext
+  }
+
+  private buildConfig(current: number): RadialGaugeConfig {
+    return radialGaugeConfigSchema.parse({
+      value: {
+        min: this.minValue,
+        max: this.maxValue,
+        current
+      },
+      size: {
+        width: this.size,
+        height: this.size
+      },
+      text: {
+        title: this.title,
+        unit: this.unit
+      },
+      scale: {
+        majorTickCount: 9,
+        minorTicksPerMajor: 4
+      },
+      indicators: {
+        threshold: {
+          value: this.threshold,
+          show: true
+        },
+        alerts: [
+          {
+            id: 'critical',
+            value: this.maxValue * 0.95,
+            message: 'critical',
+            severity: 'critical'
+          },
+          {
+            id: 'warning',
+            value: this.threshold,
+            message: 'warning',
+            severity: 'warning'
+          }
+        ]
+      },
+      segments: [
+        {
+          from: this.minValue,
+          to: this.threshold,
+          color: 'var(--ss3-accent-color)'
+        },
+        {
+          from: this.threshold,
+          to: this.maxValue,
+          color: 'var(--ss3-warning-color)'
+        }
+      ]
+    })
+  }
+
+  private renderGauge(animateValue: boolean): void {
+    const drawContext = this.getDrawContext()
+    if (!drawContext || !this.canvasElement) {
+      return
+    }
+
+    this.canvasElement.width = this.size
+    this.canvasElement.height = this.size
+
+    const paint = this.getThemePaint()
+    const nextValue = this.value
+    this.animationHandle?.cancel()
+
+    if (animateValue && this.currentValue !== nextValue) {
+      const animationConfig = this.buildConfig(nextValue)
+      this.animationHandle = animateRadialGauge({
+        context: drawContext,
+        config: animationConfig,
+        from: this.currentValue,
+        to: nextValue,
+        paint,
+        onFrame: (frame) => {
+          this.currentValue = frame.value
+        },
+        onComplete: (frame) => {
+          this.currentValue = frame.value
+        }
+      })
+      return
+    }
+
+    const renderConfig = this.buildConfig(nextValue)
+    renderRadialGauge(drawContext, renderConfig, { value: nextValue, paint })
+    this.currentValue = nextValue
+  }
+
+  override render() {
     return html`
       <div class="frame">
-        <div class="dial ${tone}">
-          <span class="label">radial scaffold</span>
-          <span class="value">${this.value}</span>
+        <div class="dial">
+          <canvas
+            width=${this.size}
+            height=${this.size}
+            role="img"
+            aria-label="${this.title || 'Radial Gauge'}"
+          ></canvas>
         </div>
       </div>
     `
