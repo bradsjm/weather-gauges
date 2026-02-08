@@ -30,6 +30,7 @@ Out-of-scope for phases 0-3:
 ## 3) Design Principles
 
 - **Visual fidelity first:** maintain high-quality visuals and behavior
+- **Source-driven visuals:** derive painter behavior from legacy renderer code before screenshot validation
 - **Typed contracts first:** strict TypeScript + schema validation
 - **Separation of concerns:** rendering engine separated from UI wrappers
 - **Deterministic rendering:** predictable outputs for visual regression
@@ -147,6 +148,12 @@ type GaugeTheme = {
 Variant schemas are validated with zod and composed from shared primitives.
 
 ## 7) Rendering Architecture
+
+Implementation direction for the visual fidelity pass:
+
+- Execute renderer fidelity work in strict sequence: radial -> linear -> compass.
+- Use legacy modules (`drawFrame`, `drawBackground`, `drawForeground`, `drawLinear*`, `drawRoseImage`, `Compass`) as the behavior source.
+- Use screenshots to validate composition, layering, and positioning after source-based implementation.
 
 Rendering is split into deterministic stages:
 

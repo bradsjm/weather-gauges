@@ -398,11 +398,13 @@ Legacy `tools.js` + draw helpers -> v3 `core` typed modules:
 - Move draw and normalization logic to `core`
 - Avoid direct side-effect registration for entire library by default
 
-### 17.4 Visual parity strategy
+### 17.4 Visual fidelity strategy (source-driven)
 
-- Start with radial as parity reference implementation
-- Port frame/background/foreground helpers early because they drive identity
-- Add fixture-driven screenshot parity for every material/frame/pointer family
+- Treat legacy JavaScript painter modules as the visual source of truth.
+- Execute in fixed order: radial -> linear -> compass.
+- Start with radial as the reference implementation, then propagate shared painter utilities.
+- Port frame/background/foreground helpers early because they drive identity.
+- Use screenshot fixtures to validate composition and positioning after source-driven implementation.
 
 ## 18) Priority Legacy Files for Ongoing Reference
 
@@ -442,13 +444,15 @@ When implementing a v3 gauge:
 
 1. Identify matching legacy module + helper dependencies.
 2. Document expected visual layers (frame/background/foreground/pointer/LCD).
-3. Port geometry and scale rules first.
+3. Port geometry and scale rules directly from legacy code paths and constants.
 4. Port static-layer rendering and cache key strategy.
 5. Port dynamic rendering and animation interpolation.
 6. Validate against fixture screenshots before exposing public API.
 7. Expose a clean typed v3 config that preserves behavior, not legacy naming.
 
 This approach lets v3 remain modern and maintainable while preserving the excellent visual and functional legacy behavior.
+
+For the current visual fidelity pass, implement gauges in strict sequence: radial -> linear -> compass.
 
 ## 21) Visual Analysis from `docs/gauges-v2.gif`
 

@@ -1,6 +1,6 @@
 # Visual Parity Guide (Phase VP)
 
-Status: Draft scaffold for VP0-VP4 execution
+Status: Active source-driven visual fidelity guide for radial -> linear -> compass execution
 
 ## 1) Purpose
 
@@ -24,8 +24,15 @@ Legacy SteelSeries JavaScript implementation is the primary source of truth for 
 
 - Derive painter logic, gradients, ring/bezel layering, tick spacing, and typography from legacy code paths first.
 - Use screenshot parity as verification of implementation accuracy, not as the design source.
-- When visual and code-reference expectations diverge, inspect legacy module logic and constants before adjusting thresholds.
+- When visual and code-reference expectations diverge, inspect legacy module logic and constants before adjusting screenshots.
 - Document any intentional deviations from legacy behavior with rationale and fixture evidence.
+
+### Execution Order (Current Pass)
+
+- Implement in strict sequence: **radial -> linear -> compass**.
+- Treat radial as the reference implementation for shared painter behavior.
+- Port shared material and depth techniques to linear after radial stabilization.
+- Port compass rose/ring/pointer behavior after linear acceptance.
 
 ### Legacy Code References (authoritative)
 
@@ -73,23 +80,21 @@ Compass rose and heading behavior from `drawRoseImage.js` / `Compass.js`:
 - Compass `angleStep = RAD_FACTOR` and pointer rotation based on `value` heading.
 - Default compass symbols: `['N','NE','E','SE','S','SW','W','NW']`.
 
-## 3) Measurement Model
+## 3) Validation Model (Current Pass)
 
-Parity assessment is fixture-based and metric-backed.
+Current pass assessment is fixture-based and screenshot-backed.
 
-- Primary comparator: screenshot pixel diff per fixture
-- Reported metrics:
-  - pixel diff count
-  - diff percentage
-  - max local error cluster
-- Threshold bands:
-  - pass
-  - warning
-  - fail
+- Primary comparator: side-by-side screenshots per fixture against source-accurate expectations.
+- Required evidence per PR:
+  - before/after screenshots for changed fixtures
+  - mapping note to legacy source module(s) and constants
+  - short rationale for any intentional divergence
 
-Threshold values are defined and versioned in the parity CI workflow once VP0-03 is complete.
+Numeric thresholds are deferred until the team decides stricter CI gating is needed.
 
-### Threshold Policy Table (VP0-03)
+### Deferred Threshold Policy (Optional Tightening)
+
+The threshold table remains available for a future tightening pass if screenshot review becomes insufficient.
 
 | Gauge   | Fixture Group          | Pass (<= diff %) | Warning (<= diff %) | Fail (> diff %) | Notes                                          |
 | ------- | ---------------------- | ---------------- | ------------------- | --------------- | ---------------------------------------------- |
@@ -100,11 +105,11 @@ Threshold values are defined and versioned in the parity CI workflow once VP0-03
 | Compass | Cardinal headings      | 0.90%            | 1.60%               | 1.60%           | Validate N/E/S/W marker fidelity               |
 | Compass | Intercardinal headings | 1.10%            | 2.00%               | 2.00%           | Validate rose detail and needle contrast       |
 
-Policy notes:
+Policy notes for deferred threshold mode:
 
 - Evaluate against frozen reference snapshots per fixture.
-- Warning threshold requires PR rationale if accepted.
-- Fail threshold blocks merge unless fixture baseline update is explicitly approved.
+- Warning threshold should require PR rationale if accepted.
+- Fail threshold should block merge unless fixture baseline update is explicitly approved.
 - Add a secondary guardrail for local drift: max local error cluster should stay <= 0.35% for pass and <= 0.60% for warning.
 - Recalibrate thresholds only when renderer behavior intentionally changes and all affected fixtures are reviewed side-by-side.
 
@@ -126,11 +131,11 @@ Additional directional fixtures:
 
 ## 5) Implementation Checklist
 
-### VP0 Baseline
+### VP0 Legacy Source Mapping + Baseline Screenshots
 
-- [ ] Lock baseline fixture set for all three gauges
-- [ ] Add parity metric report output artifact
-- [ ] Define and publish threshold policy
+- [ ] Lock screenshot fixture set for all three gauges
+- [ ] Record legacy source mapping for each visual layer
+- [ ] Capture baseline screenshot packs for team review
 
 ### VP1 Radial Fidelity
 
@@ -139,33 +144,34 @@ Additional directional fixtures:
 - [ ] Tune tick/label typography hierarchy
 - [ ] Freeze radial parity baselines
 
-### VP2 Linear + Compass Fidelity
+### VP2 Linear Fidelity
 
 - [ ] Port material pipeline to linear
-- [ ] Port material pipeline to compass
-- [ ] Normalize pointer/needle styling
-- [ ] Freeze linear/compass parity baselines
+- [ ] Implement linear inner shadow/bevel stack from source
+- [ ] Normalize linear pointer/value readability
+- [ ] Freeze linear screenshots for review
 
-### VP3 Cross-Gauge Consistency
+### VP3 Compass Fidelity
+
+- [ ] Port rose/ring/pointer pipeline to compass
+- [ ] Tune compass cardinal/intercardinal text and tick hierarchy
+- [ ] Normalize pointer/needle styling across gauges
+- [ ] Freeze compass screenshots for review
+
+### VP4 Cross-Gauge Consistency + Tightening Decision
 
 - [ ] Normalize tone mapping visual behavior
 - [ ] Normalize tick contrast and anti-aliasing rules
 - [ ] Normalize text style contract
-- [ ] Add cross-gauge visual contract tests
-
-### VP4 Freeze + RC2
-
-- [ ] Publish before/after parity documentation
-- [ ] Freeze parity baselines in CI
-- [ ] Publish RC2 parity notes
+- [ ] Decide whether to activate strict threshold-based parity gates
 
 ## 6) Review Procedure
 
-For each parity PR:
+For each visual-fidelity PR:
 
 1. Run targeted gauge tests and visual suites.
 2. Attach before/after screenshots for changed fixtures.
-3. Include parity metric report deltas.
+3. Cite legacy source modules/constants used to drive implementation.
 4. Note any accepted drift with rationale.
 5. Confirm no unintended contract/API changes.
 
