@@ -18,6 +18,7 @@ export * from './math/geometry.js'
 export * from './animation/easing.js'
 export * from './animation/timeline.js'
 export * from './animation/scheduler.js'
+export * from './render/context.js'
 
 export const radialGaugeConfigSchema = sharedGaugeConfigSchema
 
