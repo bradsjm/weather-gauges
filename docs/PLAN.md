@@ -1,115 +1,108 @@
-# SteelSeries v3 Delivery Plan (Phases 0-3)
+# SteelSeries v3 Visual Parity Plan (Next Pass)
 
 Namespace: `@bradsjm`  
 Monorepo: `pnpm` workspaces + `turbo`  
-Architecture model: library-first, clean-break v3 API, CSS custom properties
+Focus: visual fidelity hardening to match legacy SteelSeries identity
 
-## 1) Milestone Overview
+## 1) Context
 
-- **Phase 0 - Foundation:** monorepo, tooling, CI, release plumbing, docs skeleton
-- **Phase 1 - Core Engine:** typed schemas, rendering primitives, animation scheduler, core package alpha
-- **Phase 2 - Radial Slice:** first end-to-end gauge from core -> element -> docs -> tests
-- **Phase 3 - Expand + Harden:** linear and compass gauges, cross-gauge consistency, API freeze prep
+- Phases 0-3 are complete; this plan tracks the visual parity follow-up work.
+- Current v3 gauges are functionally complete but stylistically simplified.
+- This plan targets parity of chrome, glass, shadows, typography, and material depth.
 
-## 2) Backlog
+## 2) Milestone Overview
 
-### Progress Tracker (updated by implementation)
+- **VP0 - Baseline & Instrumentation:** lock current visuals, add parity measurement fixtures and metrics.
+- **VP1 - Radial Material Fidelity:** implement legacy-style frame/background/foreground passes for radial.
+- **VP2 - Linear & Compass Material Fidelity:** port same chrome system into linear and compass renderers.
+- **VP3 - Cross-Gauge Visual Consistency:** normalize typography, color ramps, tick hierarchy, and alert presentation.
+- **VP4 - Parity Freeze & RC2 Prep:** freeze parity baselines, publish parity docs, and cut RC2 contract.
 
-| ID    | Status   | Notes                                                                                                                                                                |
-| ----- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0-01 | Complete | Monorepo packages + workspace scripts are in place.                                                                                                                  |
-| P0-02 | Complete | Strict TypeScript baseline is configured across packages.                                                                                                            |
-| P0-03 | Complete | ESLint/Prettier/typecheck scripts are active.                                                                                                                        |
-| P0-04 | Complete | CI runs lint, typecheck, test, and build checks.                                                                                                                     |
-| P0-05 | Complete | Changesets and release/version scripts are configured.                                                                                                               |
-| P0-06 | Complete | API conventions are documented in `docs/API_CONVENTIONS.md`.                                                                                                         |
-| P0-07 | Complete | CSS token contract v1 is documented in `docs/CSS_TOKENS.md` and consumed by the radial sample element.                                                               |
-| P0-08 | Complete | Docs/playground package and app shell are bootstrapped.                                                                                                              |
-| P0-09 | Complete | Playwright-based fixture + screenshot baseline pipeline is implemented and wired to CI.                                                                              |
-| P1-01 | Complete | Shared zod schema modules are implemented in `packages/core/src/schemas`, with structured validation helpers and unit tests.                                         |
-| P1-02 | Complete | Math and scale primitives are implemented in `packages/core/src/math` with edge-case tests in `packages/core/test/math-primitives.test.ts`.                          |
-| P1-03 | Complete | Animation timeline, easing, and scheduler modules are implemented in `packages/core/src/animation` with fake-timer transition tests.                                 |
-| P1-04 | Complete | Render context abstraction is implemented in `packages/core/src/render/context.ts` with canvas/offscreen strategy and deterministic tests.                           |
-| P1-05 | Complete | Theme resolution pipeline is implemented in `packages/core/src/theme/tokens.ts` with deterministic override/default tests.                                           |
-| P1-06 | Complete | Extension interfaces and registry are implemented in `packages/core/src/extensions/interfaces.ts` with sample compile/use tests.                                     |
-| P1-07 | Complete | Core alpha API contract is reviewed and frozen via `docs/CORE_ALPHA_CONTRACT.md` and `packages/core/test/public-api-contract.test.ts`.                               |
-| P2-01 | Complete | Radial renderer pipeline is implemented in `packages/core/src/radial` with ticks, segments, threshold, alerts, and animation support.                                |
-| P2-02 | Complete | `packages/elements/src/index.ts` integrates core radial rendering on canvas with schema-driven config updates and animated value transitions.                        |
-| P2-03 | Complete | Radial wrapper theming and label styling are applied in `packages/elements/src/index.ts` and token override demos are published in `packages/docs-site/src/main.ts`. |
-| P2-04 | Complete | Canonical radial fixtures and golden baselines are expanded in `packages/test-assets`, with stable screenshot diffs verified in visual CI checks.                    |
-| P2-05 | Complete | Radial performance benchmark and frame budgets are enforced by `packages/core/test/radial-performance.test.ts` and `bench:radial` script.                            |
-| P2-06 | Complete | Radial API docs and minimal/full/high-update examples are published in `docs/RADIAL.md` and `packages/docs-site/src/main.ts`.                                        |
-| P3-01 | Complete | Linear renderer and `<steelseries-linear-v3>` are implemented in `packages/core/src/linear` and `packages/elements/src/index.ts` with renderer tests.                |
-| P3-02 | Complete | Compass renderer and `<steelseries-compass-v3>` are implemented in `packages/core/src/compass` and `packages/elements/src/index.ts` with renderer tests.             |
-| P3-03 | Complete | Cross-gauge contracts are normalized via `packages/core/src/contracts/gauge-contract.ts` and value/error events are unified across elements.                         |
-| P3-04 | Complete | Visual regression coverage now includes radial, linear, and compass fixtures and goldens in `packages/test-assets/visual`.                                           |
-| P3-05 | Complete | Legacy migration guidance is published in `docs/MIGRATION_V2_TO_V3.md` with 12 practical conversion examples.                                                        |
-| P3-06 | Complete | Phase 0-3 API is frozen for RC using `packages/core/src/contracts/phase3-rc-runtime-exports.ts` and documented in `docs/PHASE3_RC.md`.                               |
+## 3) Backlog
 
-## Phase 0 - Foundation
+### Progress Tracker
 
-| ID    | Task                                             | Deliverable                                    | Acceptance Criteria                                     | Dependencies |
-| ----- | ------------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------- | ------------ |
-| P0-01 | Create monorepo skeleton with package workspaces | `packages/*`, workspace config, shared scripts | `pnpm -r build` and `pnpm -r test` run on clean clone   | None         |
-| P0-02 | Configure strict TypeScript baseline             | `tsconfig.base.json` + per-package extends     | strict compile succeeds, no implicit `any` allowed      | P0-01        |
-| P0-03 | Establish lint/format/typecheck standards        | ESLint, Prettier, root scripts                 | CI fails on lint/type violations                        | P0-01        |
-| P0-04 | Set up CI pipeline and required checks           | GitHub workflow(s) for lint/type/test/build    | PR checks are required and reproducible                 | P0-02, P0-03 |
-| P0-05 | Add release/version management                   | changesets config + publish scripts            | version PR and npm publish dry-run work                 | P0-01        |
-| P0-06 | Define v3 API conventions document               | Naming/default/behavior standard doc           | conventions approved before gauge implementation        | P0-02        |
-| P0-07 | Define CSS custom property contract v1           | token list + fallback semantics                | documented tokens consumed by sample component          | P0-06        |
-| P0-08 | Bootstrap docs/playground                        | docs app shell with example component mount    | docs run locally and in CI preview                      | P0-01        |
-| P0-09 | Bootstrap visual regression harness              | fixture format + baseline generation scripts   | screenshot test pipeline generates and compares goldens | P0-08        |
+| ID     | Status  | Notes                                                                                                                                  |
+| ------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| VP0-01 | Pending | Add dedicated parity fixture set for radial/linear/compass in `packages/test-assets`.                                                  |
+| VP0-02 | Pending | Add visual metric script (pixel diff + threshold report) for parity gates.                                                             |
+| VP0-03 | Pending | Establish target tolerances per gauge family and theme mode; populate threshold table in `docs/VISUAL_PARITY.md`.                      |
+| VP1-01 | Pending | Implement radial frame material presets from legacy `src/drawFrame.js` gradients (metal/chrome/brass/steel/etc.).                      |
+| VP1-02 | Pending | Implement radial glass/foreground highlight and bezel shadow passes using masks from legacy `src/drawForeground.js`.                   |
+| VP1-03 | Pending | Implement radial label/tick typography parity (weight, spacing, scale).                                                                |
+| VP1-04 | Pending | Capture radial parity goldens and lock in CI.                                                                                          |
+| VP2-01 | Pending | Port frame/bezel/glass painter pipeline to linear renderer using `src/drawLinearFrameImage.js` and `src/drawLinearBackgroundImage.js`. |
+| VP2-02 | Pending | Port rose/ring/chrome painter pipeline to compass renderer using `src/drawRoseImage.js` and `src/Compass.js`.                          |
+| VP2-03 | Pending | Align pointer/needle thickness and cap styling across gauges.                                                                          |
+| VP2-04 | Pending | Capture linear/compass parity goldens and lock in CI.                                                                                  |
+| VP3-01 | Pending | Normalize tone mapping (accent/warning/danger) visual behavior across gauges.                                                          |
+| VP3-02 | Pending | Normalize tick major/minor contrast and anti-aliasing strategy.                                                                        |
+| VP3-03 | Pending | Normalize text rendering contract (family, fallback, letter spacing, LCD style) against legacy tick/title layout behavior.             |
+| VP3-04 | Pending | Add cross-gauge visual contract tests for shared styling rules.                                                                        |
+| VP4-01 | Pending | Publish visual parity documentation with before/after references.                                                                      |
+| VP4-02 | Pending | Freeze parity baseline artifacts and add API+visual freeze checks.                                                                     |
+| VP4-03 | Pending | Prepare RC2 notes with parity deltas and known non-parity gaps.                                                                        |
 
-## Phase 1 - Core Engine
+### VP0 - Baseline & Instrumentation
 
-| ID    | Task                                 | Deliverable                                            | Acceptance Criteria                                    | Dependencies |
-| ----- | ------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------ | ------------ |
-| P1-01 | Implement shared zod config schemas  | schema modules for shared primitives                   | invalid input returns structured errors and messages   | P0-06        |
-| P1-02 | Implement math and scale primitives  | clamp/normalize/range/tick geometry modules            | edge-case unit tests pass                              | P1-01        |
-| P1-03 | Implement animation scheduler        | timeline module with easing and timing controls        | fake-timer tests verify transitions                    | P1-02        |
-| P1-04 | Implement render context abstraction | canvas context + offscreen buffer strategy             | deterministic behavior in test env and browser         | P1-02        |
-| P1-05 | Implement theme resolution pipeline  | CSS-token to typed-paint resolver                      | token overrides change rendered outputs predictably    | P0-07, P1-04 |
-| P1-06 | Define extension interfaces          | typed hook points for overlays/markers/needle variants | extension sample compiles without internal imports     | P1-01        |
-| P1-07 | Publish core alpha contract          | `@bradsjm/steelseries-v3-core` alpha release           | API report reviewed and baseline frozen for next phase | P1-01..P1-06 |
+| ID     | Task                        | Deliverable                                                             | Acceptance Criteria                              | Dependencies |
+| ------ | --------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ | ------------ |
+| VP0-01 | Build parity fixture matrix | Expanded fixtures by gauge + theme + state                              | At least 5 canonical parity fixtures per gauge   | None         |
+| VP0-02 | Add parity metric reporter  | Script outputting diff summary per fixture                              | CI artifact includes fixture-level metric report | VP0-01       |
+| VP0-03 | Define parity thresholds    | Documented tolerances (`warning` and `fail`) in `docs/VISUAL_PARITY.md` | Thresholds approved and referenced by visual CI  | VP0-02       |
 
-## Phase 2 - Radial Gauge Vertical Slice
+### VP1 - Radial Material Fidelity
 
-| ID    | Task                                       | Deliverable                                   | Acceptance Criteria                                | Dependencies |
-| ----- | ------------------------------------------ | --------------------------------------------- | -------------------------------------------------- | ------------ |
-| P2-01 | Build radial renderer in core              | radial draw pipeline using v3 config          | supports ticks/segments/threshold/alerts/animation | P1-07        |
-| P2-02 | Build Lit radial element                   | `<steelseries-radial-v3>` custom element      | prop updates re-render correctly and efficiently   | P2-01        |
-| P2-03 | Apply CSS token contract to radial wrapper | themed host and label styling                 | token overrides documented and demoed              | P0-07, P2-02 |
-| P2-04 | Add radial fixture + golden suite          | canonical fixture configs and baseline images | CI screenshot diff check passes on stable baseline | P0-09, P2-01 |
-| P2-05 | Add radial performance checks              | benchmark script and budget thresholds        | frame/render budget is within agreed limits        | P2-01        |
-| P2-06 | Publish radial docs and examples           | API docs + minimal/full/high-update examples  | docs include copy-ready examples and caveats       | P2-02, P2-03 |
+| ID     | Task                            | Deliverable                            | Acceptance Criteria                                               | Dependencies |
+| ------ | ------------------------------- | -------------------------------------- | ----------------------------------------------------------------- | ------------ |
+| VP1-01 | Frame material painter          | Reusable radial frame painter module   | Chrome ring depth and edge contrast visibly match target fixtures | VP0-03       |
+| VP1-02 | Foreground/glass painter        | Highlight + reflection + shadow passes | Foreground pass improves depth without clipping text/ticks        | VP1-01       |
+| VP1-03 | Typography/tick parity          | Updated tick and label renderer        | Visual hierarchy matches legacy reference in parity fixtures      | VP1-02       |
+| VP1-04 | Parity baseline freeze (radial) | New radial goldens + CI lock           | Radial parity suite passes all fixtures at approved tolerance     | VP1-03       |
 
-## Phase 3 - Linear and Compass + Hardening
+### VP2 - Linear & Compass Material Fidelity
 
-| ID    | Task                                  | Deliverable                                        | Acceptance Criteria                                 | Dependencies        |
-| ----- | ------------------------------------- | -------------------------------------------------- | --------------------------------------------------- | ------------------- |
-| P3-01 | Build linear renderer + element       | core linear renderer + `<steelseries-linear-v3>`   | shared primitives reused with no undocumented drift | P1-07               |
-| P3-02 | Build compass renderer + element      | core compass renderer + `<steelseries-compass-v3>` | heading/rose behavior validated with tests          | P1-07               |
-| P3-03 | Normalize cross-gauge contracts       | unified event names/defaults/error semantics       | contract tests pass across radial/linear/compass    | P2-06, P3-01, P3-02 |
-| P3-04 | Expand visual regression coverage     | fixture sets for linear + compass themes           | CI stable across all three gauges                   | P3-01, P3-02        |
-| P3-05 | Author migration guide (legacy -> v3) | mapping doc with examples and rationale            | includes at least 10 conversion examples            | P3-03               |
-| P3-06 | Freeze Phase 0-3 API and cut RC       | release candidate notes + tagged versions          | API diff clean and RC packages publish successfully | P3-03, P3-04, P3-05 |
+| ID     | Task                             | Deliverable                                        | Acceptance Criteria                                          | Dependencies   |
+| ------ | -------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ | -------------- |
+| VP2-01 | Linear chrome pipeline           | Linear frame/background/foreground material passes | Linear fixtures show equivalent depth to radial parity pass  | VP1-04         |
+| VP2-02 | Compass chrome pipeline          | Compass ring/rose/foreground material passes       | Compass fixtures show equivalent depth + rose readability    | VP1-04         |
+| VP2-03 | Pointer/needle parity            | Shared pointer style profile and geometry tuning   | Pointer and cap treatment consistent across all three gauges | VP2-01, VP2-02 |
+| VP2-04 | Baseline freeze (linear/compass) | Updated visual goldens and CI checks               | Linear/compass parity suites pass at approved tolerance      | VP2-03         |
 
-## 3) Sequencing Notes
+### VP3 - Cross-Gauge Visual Consistency
 
-- Phase 1 begins only after API conventions and token contract are approved.
-- Radial (phase 2) is the reference implementation for all quality gates.
-- Linear and compass must pass the same contract/visual/performance standards before RC.
+| ID     | Task                         | Deliverable                       | Acceptance Criteria                                       | Dependencies           |
+| ------ | ---------------------------- | --------------------------------- | --------------------------------------------------------- | ---------------------- |
+| VP3-01 | Tone mapping consistency     | Shared paint mapping utilities    | Same alert tone semantics produce same visual severity    | VP2-04                 |
+| VP3-02 | Tick contrast normalization  | Shared tick style contract        | Major/minor tick hierarchy is consistent and legible      | VP2-04                 |
+| VP3-03 | Text rendering normalization | Shared text style resolver        | Equivalent text roles render with consistent style family | VP2-04                 |
+| VP3-04 | Visual contract tests        | Cross-gauge visual contract suite | Contract tests fail on drift and pass on intended changes | VP3-01, VP3-02, VP3-03 |
 
-## 4) Done Criteria for Phase 0-3
+### VP4 - Parity Freeze & RC2 Prep
 
-- Core and elements packages are publishable under `@bradsjm`.
-- Three gauges are implemented (`radial`, `linear`, `compass`) with typed v3 APIs.
-- CSS custom property contract is documented and tested in real examples.
-- CI enforces lint/type/unit/visual gates.
-- Legacy migration documentation exists for adopters.
+| ID     | Task                   | Deliverable                                                             | Acceptance Criteria                              | Dependencies |
+| ------ | ---------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ | ------------ |
+| VP4-01 | Publish parity docs    | `docs/VISUAL_PARITY.md` with before/after examples and threshold policy | Docs include known gaps and tuning guidance      | VP3-04       |
+| VP4-02 | Freeze parity baseline | RC2 parity freeze artifact + tests                                      | API + visual freeze checks pass in CI            | VP4-01       |
+| VP4-03 | RC2 release notes      | `docs/PHASE4_RC2.md` parity summary                                     | Includes fixture diffs, risks, and rollout notes | VP4-02       |
 
-## 5) Deferred to Later Phases
+## 4) Sequencing Notes
 
-- Complete Home Assistant card productization and advanced editor UX
-- Full legacy gauge catalog parity
-- Additional rendering enhancements and optional plugin ecosystem
+- Start with radial as the visual reference implementation, then propagate to linear/compass.
+- Do not modify public API shape unless unavoidable; this pass is visual-first.
+- Every painter change must include updated fixture evidence and parity metric output.
+- Keep performance budgets enforced while increasing visual fidelity.
+
+## 5) Done Criteria (Visual Parity Pass)
+
+- All three gauges pass parity fixture suites within approved thresholds.
+- Material/chrome/foreground depth is present and consistent across gauges.
+- Typography and tick hierarchy match documented visual contract.
+- CI enforces unit + visual + parity metrics + API contract freeze checks.
+- Parity and RC2 docs are published for adopters.
+
+## 6) Deferred Beyond This Pass
+
+- Full legacy gauge catalog parity (altimeter, horizon, wind-direction, etc.).
+- Advanced editor UX and Home Assistant productization enhancements.
+- Optional plugin-driven custom painter ecosystem.
