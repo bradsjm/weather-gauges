@@ -1,0 +1,96 @@
+body {
+  margin: 0;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  background: linear-gradient(160deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #0f172a;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.1rem;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.topbar a {
+  color: #93c5fd;
+  text-decoration: none;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.lead {
+  color: #334155;
+  margin-top: 0.25rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 0.9rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.controls {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.controls label {
+  font-size: 0.8rem;
+  color: #334155;
+}
+
+.controls input[type='range'] {
+  width: 100%;
+}
+
+.event-log {
+  margin-top: 0.7rem;
+  padding: 0.7rem;
+  background: #0b1120;
+  color: #cbd5e1;
+  border-radius: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  min-height: 80px;
+  max-height: 170px;
+  overflow: auto;
+}
+
+.inline-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 0.75rem 0;
+}
+
+.inline-links a {
+  text-decoration: none;
+  color: #0c4a6e;
+  border: 1px solid #7dd3fc;
+  background: #ecfeff;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+}

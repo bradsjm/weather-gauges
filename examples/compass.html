@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compass Demo - SteelSeries v3</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./common.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@bradsjm/steelseries-v3-core": "../packages/core/dist/index.js",
+          "@bradsjm/steelseries-v3-elements": "../packages/elements/dist/index.js",
+          "lit": "https://esm.sh/lit@3.2.1",
+          "lit/": "https://esm.sh/lit@3.2.1/",
+          "zod": "https://esm.sh/zod@3.24.1"
+        }
+      }
+    </script>
+    <script type="module">
+      import '@bradsjm/steelseries-v3-elements'
+
+      const gauge = document.querySelector('steelseries-compass-v3')
+      const headingInput = document.getElementById('heading')
+      const out = document.getElementById('out')
+      const log = document.getElementById('log')
+
+      const write = (line) => {
+        const stamp = new Date().toLocaleTimeString()
+        log.textContent = `[${stamp}] ${line}\n${log.textContent}`.trim()
+      }
+
+      const sync = () => {
+        const heading = Number(headingInput.value)
+        gauge.setAttribute('heading', String(heading))
+        out.textContent = String(heading)
+      }
+
+      headingInput.addEventListener('input', sync)
+
+      gauge.addEventListener('ss3-value-change', (event) => {
+        write(`value-change ${JSON.stringify(event.detail)}`)
+      })
+      gauge.addEventListener('ss3-error', (event) => {
+        write(`error ${JSON.stringify(event.detail)}`)
+      })
+
+      let autoHeading = 0
+      window.setInterval(() => {
+        autoHeading = (autoHeading + 12) % 360
+        headingInput.value = String(autoHeading)
+        sync()
+      }, 900)
+
+      sync()
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <strong>Compass Gauge Demo</strong>
+      <a href="./index.html">Back to index</a>
+    </header>
+    <main class="container">
+      <p class="lead">Animated heading updates with unified v3 event payloads.</p>
+
+      <div class="card" style="max-width: 430px">
+        <steelseries-compass-v3
+          title="Bearing"
+          unit="deg"
+          heading="90"
+          size="260"
+          style="
+            --ss3-background-color: #1e293b;
+            --ss3-frame-color: #334155;
+            --ss3-text-color: #e2e8f0;
+            --ss3-accent-color: #38bdf8;
+            --ss3-warning-color: #f59e0b;
+            --ss3-danger-color: #ef4444;
+          "
+        ></steelseries-compass-v3>
+        <div class="controls">
+          <label>Heading</label>
+          <input id="heading" type="range" min="0" max="359" value="90" />
+          <div>Current: <strong id="out">90</strong></div>
+        </div>
+        <pre id="log" class="event-log"></pre>
+      </div>
+    </main>
+  </body>
+</html>
