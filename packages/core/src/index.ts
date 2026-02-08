@@ -12,6 +12,9 @@ import {
 export * from './schemas/primitives.js'
 export * from './schemas/shared.js'
 export * from './schemas/validation.js'
+export * from './math/range.js'
+export * from './math/ticks.js'
+export * from './math/geometry.js'
 
 export const radialGaugeConfigSchema = sharedGaugeConfigSchema
 
