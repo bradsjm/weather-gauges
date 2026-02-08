@@ -5,14 +5,19 @@ const searchParams = new URLSearchParams(window.location.search)
 
 if (app) {
   if (searchParams.get('view') === 'visual') {
+    const kind = searchParams.get('kind') ?? 'radial'
     const id = searchParams.get('id') ?? 'baseline-mid'
     const value = Number(searchParams.get('value') ?? '50')
+    const heading = Number(searchParams.get('heading') ?? '90')
     const min = Number(searchParams.get('min') ?? '0')
     const max = Number(searchParams.get('max') ?? '100')
     const threshold = Number(searchParams.get('threshold') ?? '80')
     const title = searchParams.get('title') ?? 'Radial'
     const unit = searchParams.get('unit') ?? ''
     const label = searchParams.get('label') ?? id
+    const size = Number(searchParams.get('size') ?? '220')
+    const width = Number(searchParams.get('width') ?? '140')
+    const height = Number(searchParams.get('height') ?? '300')
 
     const tokenStyle = [
       searchParams.get('fontFamily')
@@ -40,11 +45,30 @@ if (app) {
       .filter((value): value is string => value !== undefined)
       .join(' ')
 
-    app.innerHTML = `
-      <main style="font-family: 'Avenir Next', 'Segoe UI', sans-serif; padding: 24px; background: #f3f4f6; min-height: 100vh; box-sizing: border-box;">
-        <section data-testid="radial-fixture" style="width: 240px; background: white; border-radius: 16px; padding: 16px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);">
-          <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #334155; margin-bottom: 8px;">Fixture ${label}</div>
-          <steelseries-radial-v3
+    const fixtureTag =
+      kind === 'linear'
+        ? `<steelseries-linear-v3
+            title="${title}"
+            unit="${unit}"
+            value="${value}"
+            min-value="${min}"
+            max-value="${max}"
+            threshold="${threshold}"
+            width="${width}"
+            height="${height}"
+            animate-value="false"
+            style="${tokenStyle}"
+          ></steelseries-linear-v3>`
+        : kind === 'compass'
+          ? `<steelseries-compass-v3
+            title="${title}"
+            unit="${unit}"
+            heading="${heading}"
+            size="${size}"
+            animate-value="false"
+            style="${tokenStyle}"
+          ></steelseries-compass-v3>`
+          : `<steelseries-radial-v3
             title="${title}"
             unit="${unit}"
             value="${value}"
@@ -53,7 +77,15 @@ if (app) {
             threshold="${threshold}"
             animate-value="false"
             style="${tokenStyle}"
-          ></steelseries-radial-v3>
+          ></steelseries-radial-v3>`
+
+    const testId = `${kind}-fixture`
+
+    app.innerHTML = `
+      <main style="font-family: 'Avenir Next', 'Segoe UI', sans-serif; padding: 24px; background: #f3f4f6; min-height: 100vh; box-sizing: border-box;">
+        <section data-testid="${testId}" style="width: 320px; background: white; border-radius: 16px; padding: 16px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14); display: grid; place-items: center;">
+          <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #334155; margin-bottom: 8px;">Fixture ${label}</div>
+          ${fixtureTag}
         </section>
       </main>
     `

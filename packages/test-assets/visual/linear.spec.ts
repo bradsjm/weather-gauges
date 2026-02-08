@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 
-import { radialFixtures } from '../src/index'
+import { linearFixtures } from '../src/index'
 
-for (const fixture of radialFixtures) {
-  test(`radial fixture ${fixture.id}`, async ({ page }) => {
+for (const fixture of linearFixtures) {
+  test(`linear fixture ${fixture.id}`, async ({ page }) => {
     const params = new URLSearchParams({
       view: 'visual',
       kind: fixture.kind,
@@ -12,9 +12,11 @@ for (const fixture of radialFixtures) {
       title: fixture.title,
       unit: fixture.unit,
       value: String(fixture.value),
-      min: String(fixture.min),
-      max: String(fixture.max),
-      threshold: String(fixture.threshold)
+      min: String(fixture.min ?? 0),
+      max: String(fixture.max ?? 100),
+      threshold: String(fixture.threshold ?? 70),
+      width: String(fixture.width),
+      height: String(fixture.height)
     })
 
     if (fixture.tokenOverrides) {
@@ -27,7 +29,7 @@ for (const fixture of radialFixtures) {
 
     await page.goto(`/?${params.toString()}`)
 
-    const fixtureCard = page.getByTestId('radial-fixture')
+    const fixtureCard = page.getByTestId('linear-fixture')
     await expect(fixtureCard).toBeVisible()
     await expect(fixtureCard).toHaveScreenshot(`${fixture.id}.png`, {
       animations: 'disabled'
