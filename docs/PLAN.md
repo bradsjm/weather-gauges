@@ -31,6 +31,7 @@ Architecture model: library-first, clean-break v3 API, CSS custom properties
 | P1-03 | Complete | Animation timeline, easing, and scheduler modules are implemented in `packages/core/src/animation` with fake-timer transition tests.        |
 | P1-04 | Complete | Render context abstraction is implemented in `packages/core/src/render/context.ts` with canvas/offscreen strategy and deterministic tests.  |
 | P1-05 | Complete | Theme resolution pipeline is implemented in `packages/core/src/theme/tokens.ts` with deterministic override/default tests.                  |
+| P1-06 | Complete | Extension interfaces and registry are implemented in `packages/core/src/extensions/interfaces.ts` with sample compile/use tests.            |
 
 ## Phase 0 - Foundation
 
