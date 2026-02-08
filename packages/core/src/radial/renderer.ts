@@ -173,24 +173,24 @@ const drawTicks = (
     const line = createTickLine(
       centerX,
       centerY,
-      radius * (isMajor ? 0.6 : 0.67),
+      radius * (isMajor ? 0.73 : 0.75),
       radius * 0.79,
       angle
     )
 
     context.beginPath()
-    context.lineWidth = isMajor ? Math.max(2, radius * 0.011) : Math.max(1, radius * 0.006)
+    context.lineWidth = isMajor ? 1.5 : 1
     context.moveTo(line.start.x, line.start.y)
     context.lineTo(line.end.x, line.end.y)
     context.stroke()
 
     if (isMajor) {
       const labelValue = Math.round(tick.value)
-      const labelLine = createTickLine(centerX, centerY, radius * 0.52, radius * 0.52, angle)
+      const labelLine = createTickLine(centerX, centerY, radius * 0.625, radius * 0.625, angle)
       context.fillStyle = paint.textColor
       context.textAlign = 'center'
       context.textBaseline = 'middle'
-      context.font = `600 ${Math.max(9, Math.round(radius * 0.07))}px ${paint.fontFamily}`
+      context.font = `600 ${Math.max(8, Math.round(radius * 0.078))}px ${paint.fontFamily}`
       context.fillText(`${labelValue}`, labelLine.start.x, labelLine.start.y)
     }
   }
@@ -330,8 +330,10 @@ const drawLabels = (
     context.lineWidth = Math.max(1, radius * 0.006)
     context.strokeRect(lcdX, lcdY, lcdWidth, lcdHeight)
     context.fillStyle = '#1f2933'
+    context.textAlign = 'right'
     context.font = `700 ${Math.max(12, Math.round(radius * 0.14))}px ${paint.fontFamily}`
-    context.fillText(`${value.toFixed(2)}`, centerX, lcdY + lcdHeight * 0.58)
+    context.fillText(`${value.toFixed(2)}`, lcdX + lcdWidth * 0.94, lcdY + lcdHeight * 0.58)
+    context.textAlign = 'center'
   } else {
     context.font = `700 ${Math.max(14, Math.round(radius * 0.16))}px ${paint.fontFamily}`
     context.fillText(`${value.toFixed(2)}`, centerX, centerY + radius * 0.32)

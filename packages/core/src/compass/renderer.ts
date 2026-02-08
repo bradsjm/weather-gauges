@@ -24,6 +24,7 @@ export type CompassRenderResult = {
 export type CompassRenderOptions = {
   heading?: number
   paint?: Partial<ThemePaint>
+  showHeadingReadout?: boolean
 }
 
 export type CompassAnimationOptions = {
@@ -32,6 +33,7 @@ export type CompassAnimationOptions = {
   from: number
   to: number
   paint?: Partial<ThemePaint>
+  showHeadingReadout?: boolean
   onFrame?: (result: CompassRenderResult) => void
   onComplete?: (result: CompassRenderResult) => void
 }
@@ -103,7 +105,7 @@ const drawRose = (
 
   if (config.visibility.showBackground) {
     drawLegacyRadialBackgroundDark(context, centerX, centerY, radius)
-    drawLegacyCompassRose(context, centerX, centerY, radius)
+    drawLegacyCompassRose(context, centerX, centerY, radius, paint.textColor)
   }
 
   const degreeMode = config.rose.showDegreeLabels
@@ -122,66 +124,126 @@ const drawRose = (
     tickGradient.addColorStop(1, 'rgba(0,0,0,0.6)')
   }
   context.strokeStyle = tickGradient
+  const canTransform =
+    typeof context.translate === 'function' && typeof context.rotate === 'function'
+  const pointSymbols = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
 
-  for (let degree = 0; degree < 360; degree += 2.5) {
-    const normalized = degree / 10
-    const angle = valueToAngle(normalized, { min: 0, max: 36 }, -Math.PI / 2, (3 * Math.PI) / 2, {
-      clampToRange: false
-    })
-    const major = degreeMode ? degree % 10 === 0 : degree % 5 === 0
-    const cardinal = !degreeMode && degree % 45 === 0
+  if (canTransform) {
+    const imageWidth = radius * 2
+    const stdFont = `${Math.max(10, Math.floor(imageWidth * 0.12))}px serif`
+    const smallFont = `${Math.max(8, Math.floor(imageWidth * 0.06))}px serif`
 
-    const line = createTickLine(
-      centerX,
-      centerY,
-      radius * (cardinal ? 0.58 : major ? 0.62 : 0.68),
-      radius * 0.82,
-      angle
-    )
-
-    context.beginPath()
-    context.lineWidth = cardinal
-      ? Math.max(2.4, radius * 0.013)
-      : major
-        ? Math.max(1.6, radius * 0.009)
-        : 1
-    context.moveTo(line.start.x, line.start.y)
-    context.lineTo(line.end.x, line.end.y)
-    context.stroke()
-  }
-
-  if (!degreeMode && config.rose.showOrdinalMarkers) {
-    const markers = [
-      { label: 'N', angle: -Math.PI / 2 },
-      { label: 'NE', angle: -Math.PI / 4 },
-      { label: 'E', angle: 0 },
-      { label: 'SE', angle: Math.PI / 4 },
-      { label: 'S', angle: Math.PI / 2 },
-      { label: 'SW', angle: (3 * Math.PI) / 4 },
-      { label: 'W', angle: Math.PI },
-      { label: 'NW', angle: (-3 * Math.PI) / 4 }
-    ]
-
-    context.fillStyle = paint.textColor
+    context.save()
+    context.translate(centerX, centerY)
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    context.font = `600 ${Math.max(11, Math.round(radius * 0.11))}px ${paint.fontFamily}`
+    context.fillStyle = paint.textColor
 
-    for (const marker of markers) {
-      const point = polarToCartesian(centerX, centerY, radius * 0.51, marker.angle)
-      context.fillText(marker.label, point.x, point.y)
+    for (let degree = 0; degree < 360; degree += 2.5) {
+      if (degree % 5 === 0) {
+        context.beginPath()
+        context.lineWidth = 1
+        context.moveTo(imageWidth * 0.38, 0)
+        context.lineTo(imageWidth * 0.36, 0)
+        context.stroke()
+      }
+
+      if (degree % 10 === 0) {
+        context.save()
+
+        if (!degreeMode && config.rose.showOrdinalMarkers) {
+          let label = ''
+          let labelRadius = imageWidth * 0.37
+          let labelFont = smallFont
+
+          switch (degree) {
+            case 0:
+              label = pointSymbols[2] ?? 'E'
+              labelRadius = imageWidth * 0.35
+              labelFont = stdFont
+              break
+            case 45:
+              label = pointSymbols[3] ?? 'SE'
+              labelRadius = imageWidth * 0.29
+              labelFont = stdFont
+              break
+            case 90:
+              label = pointSymbols[4] ?? 'S'
+              labelRadius = imageWidth * 0.35
+              labelFont = stdFont
+              break
+            case 135:
+              label = pointSymbols[5] ?? 'SW'
+              labelRadius = imageWidth * 0.29
+              labelFont = stdFont
+              break
+            case 180:
+              label = pointSymbols[6] ?? 'W'
+              labelRadius = imageWidth * 0.35
+              labelFont = stdFont
+              break
+            case 225:
+              label = pointSymbols[7] ?? 'NW'
+              labelRadius = imageWidth * 0.29
+              labelFont = stdFont
+              break
+            case 270:
+              label = pointSymbols[0] ?? 'N'
+              labelRadius = imageWidth * 0.35
+              labelFont = stdFont
+              break
+            case 315:
+              label = pointSymbols[1] ?? 'NE'
+              labelRadius = imageWidth * 0.29
+              labelFont = stdFont
+              break
+          }
+
+          if (label) {
+            context.font = labelFont
+            context.translate(labelRadius, 0)
+            context.rotate(Math.PI / 2)
+            context.fillText(label, 0, 0)
+          }
+        } else if (degreeMode) {
+          context.font = smallFont
+          context.translate(imageWidth * 0.37, 0)
+          context.rotate(Math.PI / 2)
+          context.fillText(`${(degree + 90) % 360}`.padStart(3, '0'), 0, 0)
+        }
+
+        context.restore()
+      }
+
+      context.rotate((Math.PI / 180) * 2.5)
     }
-  }
 
-  if (degreeMode) {
-    context.fillStyle = paint.textColor
-    context.textAlign = 'center'
-    context.textBaseline = 'middle'
-    context.font = `500 ${Math.max(9, Math.round(radius * 0.075))}px ${paint.fontFamily}`
+    context.restore()
+  } else {
     for (let degree = 0; degree < 360; degree += 10) {
       const angle = (degree * Math.PI) / 180 - Math.PI / 2
-      const point = polarToCartesian(centerX, centerY, radius * 0.7, angle)
-      context.fillText(`${degree}`, point.x, point.y)
+      if (degree % 5 === 0) {
+        const tick = createTickLine(centerX, centerY, radius * 0.75, radius * 0.79, angle)
+        context.beginPath()
+        context.lineWidth = 1
+        context.moveTo(tick.start.x, tick.start.y)
+        context.lineTo(tick.end.x, tick.end.y)
+        context.stroke()
+      }
+
+      if (!degreeMode && config.rose.showOrdinalMarkers && degree % 45 === 0) {
+        const labels = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE']
+        const labelIndex = Math.floor(degree / 45)
+        const point = polarToCartesian(centerX, centerY, radius * 0.7, angle)
+        context.fillStyle = paint.textColor
+        context.textAlign = 'center'
+        context.textBaseline = 'middle'
+        context.font = `600 ${Math.max(11, Math.round(radius * 0.11))}px serif`
+        const label = labels[labelIndex]
+        if (label) {
+          context.fillText(label, point.x, point.y)
+        }
+      }
     }
   }
 }
@@ -298,11 +360,16 @@ const drawLabels = (
   config: CompassGaugeConfig,
   paint: ThemePaint,
   heading: number,
+  showHeadingReadout: boolean,
   _activeAlerts: CompassAlert[],
   centerX: number,
   centerY: number,
   radius: number
 ): void => {
+  if (!showHeadingReadout) {
+    return
+  }
+
   context.fillStyle = paint.textColor
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -341,6 +408,7 @@ export const renderCompassGauge = (
   options: CompassRenderOptions = {}
 ): CompassRenderResult => {
   const paint = mergePaint(options.paint)
+  const showHeadingReadout = options.showHeadingReadout ?? true
   const heading = normalizeHeading(
     clamp(options.heading ?? config.heading.current, config.heading.min, config.heading.max),
     config.heading.min,
@@ -355,7 +423,17 @@ export const renderCompassGauge = (
   context.clearRect(0, 0, config.size.width, config.size.height)
   drawRose(context, config, paint, centerX, centerY, radius)
   drawNeedle(context, config, paint, heading, tone, centerX, centerY, radius)
-  drawLabels(context, config, paint, heading, activeAlerts, centerX, centerY, radius)
+  drawLabels(
+    context,
+    config,
+    paint,
+    heading,
+    showHeadingReadout,
+    activeAlerts,
+    centerX,
+    centerY,
+    radius
+  )
   drawForeground(context, config, centerX, centerY, radius)
 
   return {
@@ -369,11 +447,13 @@ export const animateCompassGauge = (options: CompassAnimationOptions): Animation
   const scheduler = createAnimationScheduler()
 
   const renderWithHeading = (heading: number): CompassRenderResult => {
-    return renderCompassGauge(
-      options.context,
-      options.config,
-      options.paint ? { heading, paint: options.paint } : { heading }
-    )
+    return renderCompassGauge(options.context, options.config, {
+      heading,
+      ...(options.paint ? { paint: options.paint } : {}),
+      ...(options.showHeadingReadout !== undefined
+        ? { showHeadingReadout: options.showHeadingReadout }
+        : {})
+    })
   }
 
   return scheduler.run({

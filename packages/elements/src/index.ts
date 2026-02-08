@@ -662,6 +662,9 @@ export class SteelseriesCompassV3Element extends LitElement {
   @property({ type: String })
   unit = 'deg'
 
+  @property({ type: Boolean, attribute: 'show-heading-readout' })
+  showHeadingReadout = true
+
   @property({ type: Boolean, attribute: 'animate-value' })
   animateValue = true
 
@@ -707,6 +710,9 @@ export class SteelseriesCompassV3Element extends LitElement {
   }
 
   private buildConfig(current: number): CompassGaugeConfig {
+    const title = this.title.trim()
+    const unit = this.unit.trim()
+
     return compassGaugeConfigSchema.parse({
       heading: {
         min: 0,
@@ -718,8 +724,8 @@ export class SteelseriesCompassV3Element extends LitElement {
         height: this.size
       },
       text: {
-        title: this.title,
-        unit: this.unit
+        ...(title ? { title } : {}),
+        ...(unit ? { unit } : {})
       },
       indicators: {
         alerts: [
@@ -785,6 +791,7 @@ export class SteelseriesCompassV3Element extends LitElement {
           from: this.currentHeading,
           to: nextHeading,
           paint,
+          showHeadingReadout: this.showHeadingReadout,
           onFrame: (frame) => {
             this.currentHeading = frame.heading
             this.emitValueChange(frame)
@@ -798,7 +805,11 @@ export class SteelseriesCompassV3Element extends LitElement {
       }
 
       const renderConfig = this.buildConfig(nextHeading)
-      const result = renderCompassGauge(drawContext, renderConfig, { heading: nextHeading, paint })
+      const result = renderCompassGauge(drawContext, renderConfig, {
+        heading: nextHeading,
+        paint,
+        showHeadingReadout: this.showHeadingReadout
+      })
       this.currentHeading = nextHeading
       this.emitValueChange(result)
     } catch (error) {

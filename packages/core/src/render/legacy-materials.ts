@@ -657,7 +657,8 @@ export const drawLegacyCompassRose = (
   context: CanvasRenderingContext2D,
   centerX: number,
   centerY: number,
-  radius: number
+  radius: number,
+  symbolColor = 'rgba(230,230,230,0.9)'
 ): void => {
   const ringOuter = radius * 0.52
   const ringInner = radius * 0.46
@@ -671,8 +672,11 @@ export const drawLegacyCompassRose = (
     context.arc(centerX, centerY, ringOuter, start, end, false)
     context.arc(centerX, centerY, ringInner, end, start, true)
     safeClosePath(context)
-    context.fillStyle = brightSlice ? 'rgba(232,232,232,0.78)' : 'rgba(42,42,42,0.36)'
+    context.fillStyle = brightSlice ? 'rgba(210,210,210,0.72)' : 'rgba(36,36,36,0.34)'
     context.fill()
+    context.strokeStyle = symbolColor
+    context.lineWidth = Math.max(1, radius * 0.002)
+    context.stroke()
   }
 
   for (let degree = 0; degree < 360; degree += 90) {
@@ -704,19 +708,24 @@ export const drawLegacyCompassRose = (
       centerY + Math.sin(angle) * (radius * 0.27),
       centerX + Math.cos(angle) * (radius * 0.52),
       centerY + Math.sin(angle) * (radius * 0.52),
-      'rgba(220,220,220,0.8)'
+      symbolColor
     )
     addStops(markerGradient, [
-      [0, 'rgba(245,245,245,0.4)'],
-      [1, 'rgba(245,245,245,0.96)']
+      [0, 'rgba(222,223,218,0.75)'],
+      [0.48, 'rgba(222,223,218,0.9)'],
+      [0.49, symbolColor],
+      [1, symbolColor]
     ])
     context.fillStyle = markerGradient
     context.fill()
+    context.strokeStyle = symbolColor
+    context.lineWidth = Math.max(1, radius * 0.002)
+    context.stroke()
   }
 
   context.beginPath()
   context.arc(centerX, centerY, radius * 0.19, 0, Math.PI * 2)
-  context.strokeStyle = 'rgba(235,235,235,0.6)'
+  context.strokeStyle = symbolColor
   context.lineWidth = Math.max(1, radius * 0.022)
   context.stroke()
 }
