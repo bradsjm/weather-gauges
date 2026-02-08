@@ -1,0 +1,30 @@
+{
+  "name": "@bradsjm/steelseries-v3-elements",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Lit Web Components for SteelSeries v3 gauges",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:visual": "vitest run --passWithNoTests",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@bradsjm/steelseries-v3-core": "workspace:*",
+    "lit": "^3.3.2"
+  }
+}

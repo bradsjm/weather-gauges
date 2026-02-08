@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/elements" },
+    { "path": "./packages/ha-cards" },
+    { "path": "./packages/docs-site" },
+    { "path": "./packages/test-assets" }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "SteelSeries v3 Cards",
+  "content_in_root": false,
+  "filename": "dist/index.js",
+  "homeassistant": ">=2024.1.0",
+  "render_readme": true
+}

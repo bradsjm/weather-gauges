@@ -1,0 +1,19 @@
+{
+  "name": "@bradsjm/steelseries-v3-docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Documentation and playground site for SteelSeries v3",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:visual": "vitest run --passWithNoTests",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@bradsjm/steelseries-v3-elements": "workspace:*"
+  }
+}
