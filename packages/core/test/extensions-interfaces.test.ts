@@ -81,7 +81,7 @@ describe('extension interfaces and registry', () => {
     }
 
     extension.render({
-      gaugeKind: 'radial-bargraph',
+      gaugeKind: 'radial',
       config: {
         value: { min: 0, max: 100, current: 42 },
         size: { width: 200, height: 200 },
@@ -89,10 +89,10 @@ describe('extension interfaces and registry', () => {
         visibility: { showFrame: true, showBackground: true, showForeground: true, showLcd: true },
         text: { title: 'Pressure', unit: 'psi' },
         scale: {
-          startAngle: -0.75 * Math.PI,
-          endAngle: 0.75 * Math.PI,
-          majorTickCount: 9,
-          minorTicksPerMajor: 4
+          niceScale: true,
+          maxNoOfMajorTicks: 10,
+          maxNoOfMinorTicks: 10,
+          fractionalScaleDecimals: 1
         },
         style: {
           frameDesign: 'metal',
@@ -100,15 +100,24 @@ describe('extension interfaces and registry', () => {
           foregroundType: 'type1',
           labelNumberFormat: 'standard',
           lcdColor: 'STANDARD',
-          lcdDecimals: 1,
-          lcdVisible: false,
-          titleFontFamily: 'Arial',
-          unitFontFamily: 'Arial'
+          gaugeType: 'type4',
+          valueColor: 'RED',
+          digitalFont: false,
+          tickLabelOrientation: 'normal',
+          useSectionColors: false,
+          useValueGradient: false
         },
         sections: [],
         valueGradientStops: [],
-        indicatorBehavior: { glowOnThreshold: true, trackingEnabled: false },
-        indicators: { alerts: [], ledVisible: false, userLedVisible: false, threshold: undefined }
+        lcdDecimals: 1,
+        indicators: {
+          alerts: [],
+          ledVisible: false,
+          userLedVisible: false,
+          trendVisible: false,
+          trendState: 'off',
+          threshold: undefined
+        }
       },
       value: 42,
       surface: createMockSurface()
