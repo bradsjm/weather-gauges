@@ -3,6 +3,7 @@ node_modules/
 dist/
 coverage/
 .turbo/
+.code-search/
 playwright-report/
 test-results/
 .DS_Store
