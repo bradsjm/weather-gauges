@@ -1,2 +1,6 @@
 export * from './schema.js'
-export * from './renderer.js'
+export {
+  type RadialDrawContext,
+  type RadialRenderOptions,
+  type RadialRenderResult
+} from './renderer.js'

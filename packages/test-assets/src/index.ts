@@ -19,11 +19,6 @@ type BaseFixture = {
   tokenOverrides?: TokenOverrides
 }
 
-export type RadialFixture = BaseFixture & {
-  kind: 'radial'
-  value: number
-}
-
 export type CompassFixture = BaseFixture & {
   kind: 'compass'
   heading: number
@@ -102,51 +97,6 @@ export type RadialBargraphFixture = BaseFixture & {
   trendVisible?: boolean
   trendState?: 'up' | 'steady' | 'down' | 'off'
 }
-
-export const radialFixtures: RadialFixture[] = [
-  {
-    kind: 'radial',
-    id: 'baseline-mid',
-    label: 'Baseline Mid',
-    title: 'Pressure',
-    unit: 'psi',
-    value: 50,
-    min: 0,
-    max: 100,
-    threshold: 80
-  },
-  {
-    kind: 'radial',
-    id: 'baseline-low',
-    label: 'Baseline Low',
-    title: 'Flow',
-    unit: 'gpm',
-    value: 5,
-    min: 0,
-    max: 100,
-    threshold: 70
-  },
-  {
-    kind: 'radial',
-    id: 'baseline-high',
-    label: 'Baseline High',
-    title: 'Temperature',
-    unit: '°F',
-    value: 95,
-    min: 0,
-    max: 100,
-    threshold: 72,
-    tokenOverrides: {
-      fontFamily: 'IBM Plex Sans, sans-serif',
-      backgroundColor: '#e0f2fe',
-      frameColor: '#bae6fd',
-      textColor: '#0c4a6e',
-      accentColor: '#0f766e',
-      warningColor: '#ca8a04',
-      dangerColor: '#dc2626'
-    }
-  }
-]
 
 export const compassFixtures: CompassFixture[] = [
   {

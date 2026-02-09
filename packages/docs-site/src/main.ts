@@ -5,40 +5,17 @@ const searchParams = new URLSearchParams(window.location.search)
 
 if (app) {
   if (searchParams.get('view') === 'visual') {
-    const kind = searchParams.get('kind') ?? 'radial'
-    const id = searchParams.get('id') ?? 'baseline-mid'
+    const kind = searchParams.get('kind') ?? 'radial-bargraph'
+    const id = searchParams.get('id') ?? 'reference'
     const value = Number(searchParams.get('value') ?? '50')
     const heading = Number(searchParams.get('heading') ?? '90')
     const min = Number(searchParams.get('min') ?? '0')
     const max = Number(searchParams.get('max') ?? '100')
     const threshold = Number(searchParams.get('threshold') ?? '80')
-    const title = searchParams.get('title') ?? 'Radial'
+    const title = searchParams.get('title') ?? 'Gauge'
     const unit = searchParams.get('unit') ?? ''
     const label = searchParams.get('label') ?? id
     const size = Number(searchParams.get('size') ?? '220')
-
-    const radialAttributeString = [
-      searchParams.get('frameDesign')
-        ? `frame-design="${searchParams.get('frameDesign')}"`
-        : undefined,
-      searchParams.get('radialBackgroundColor')
-        ? `background-color="${searchParams.get('radialBackgroundColor')}"`
-        : undefined,
-      searchParams.get('radialForegroundType')
-        ? `foreground-type="${searchParams.get('radialForegroundType')}"`
-        : undefined,
-      searchParams.get('radialPointerType')
-        ? `pointer-type="${searchParams.get('radialPointerType')}"`
-        : undefined,
-      searchParams.get('radialGaugeType')
-        ? `gauge-type="${searchParams.get('radialGaugeType')}"`
-        : undefined,
-      searchParams.get('radialPointerColor')
-        ? `pointer-color="${searchParams.get('radialPointerColor')}"`
-        : undefined
-    ]
-      .filter((value): value is string => value !== undefined)
-      .join(' ')
 
     const radialBargraphAttributeString = [
       searchParams.get('frameDesign')
@@ -174,8 +151,17 @@ if (app) {
       .join(' ')
 
     const fixtureTag =
-      kind === 'radial-bargraph'
-        ? `<steelseries-radial-bargraph-v3
+      kind === 'compass'
+        ? `<steelseries-compass-v3
+            title="${title}"
+            unit="${unit}"
+            heading="${heading}"
+            size="${size}"
+            animate-value="false"
+            ${compassAttributeString}
+            style="${tokenStyle}"
+          ></steelseries-compass-v3>`
+        : `<steelseries-radial-bargraph-v3
             title="${title}"
             unit="${unit}"
             value="${value}"
@@ -187,27 +173,6 @@ if (app) {
             ${radialBargraphAttributeString}
             style="${tokenStyle}"
           ></steelseries-radial-bargraph-v3>`
-        : kind === 'compass'
-          ? `<steelseries-compass-v3
-            title="${title}"
-            unit="${unit}"
-            heading="${heading}"
-            size="${size}"
-            animate-value="false"
-            ${compassAttributeString}
-            style="${tokenStyle}"
-          ></steelseries-compass-v3>`
-          : `<steelseries-radial-v3
-            title="${title}"
-            unit="${unit}"
-            value="${value}"
-            min-value="${min}"
-            max-value="${max}"
-            threshold="${threshold}"
-            animate-value="false"
-            ${radialAttributeString}
-            style="${tokenStyle}"
-          ></steelseries-radial-v3>`
 
     const testId = `${kind}-fixture`
 
@@ -223,36 +188,54 @@ if (app) {
     app.innerHTML = `
       <main style="font-family: 'Avenir Next', 'Segoe UI', sans-serif; padding: 1.25rem; max-width: 980px; margin: 0 auto;">
         <h1 style="margin: 0;">SteelSeries v3 Demos</h1>
-        <p style="margin: 0.5rem 0 1rem; color: #334155;">Radial and compass demos with legacy parity options.</p>
+        <p style="margin: 0.5rem 0 1rem; color: #334155;">Radial bargraph and compass demos with legacy parity options.</p>
 
-        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; align-items: start;">
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: start;">
           <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Minimal</h2>
-            <steelseries-radial-v3 title="Pressure" unit="psi" value="42" threshold="80"></steelseries-radial-v3>
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Radial Bargraph Reference</h2>
+            <steelseries-radial-bargraph-v3 title="Pressure" unit="psi" value="75" threshold="80" size="220"></steelseries-radial-bargraph-v3>
           </article>
 
           <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Radial Legacy Style</h2>
-            <steelseries-radial-v3
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Radial Bargraph Type1</h2>
+            <steelseries-radial-bargraph-v3
+              title="Load"
+              unit="%"
+              value="42"
+              threshold="70"
+              size="240"
+              gauge-type="type1"
+              tick-label-orientation="tangent"
+              animate-value="false"
+            ></steelseries-radial-bargraph-v3>
+          </article>
+
+          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Radial Bargraph Gradient</h2>
+            <steelseries-radial-bargraph-v3
               title="Temperature"
-              unit="°F"
-              value="88"
-              threshold="72"
+              unit="°C"
+              value="76"
+              threshold="85"
+              size="240"
               frame-design="brass"
               background-color="BEIGE"
+              gauge-type="type3"
+              value-color="GREEN"
               foreground-type="type3"
+              lcd-color="BLUE"
+              use-value-gradient="true"
+              digital-font="true"
+              led-visible="true"
+              trend-visible="true"
+              trend-state="up"
+              animate-value="false"
               style="
-                --ss3-font-family: 'IBM Plex Sans', 'Avenir Next', sans-serif;
                 --ss3-accent-color: #0f766e;
                 --ss3-warning-color: #ca8a04;
                 --ss3-danger-color: #dc2626;
               "
-            ></steelseries-radial-v3>
-          </article>
-
-          <article style="padding: 1rem; border-radius: 14px; background: #0f172a; border: 1px solid #1e293b; color: #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">High Update</h2>
-            <steelseries-radial-v3 id="demo-high-update" title="Load" unit="%" value="15" threshold="70" style="--ss3-text-color:#e2e8f0; --ss3-background-color:#1e293b; --ss3-frame-color:#334155;"></steelseries-radial-v3>
+            ></steelseries-radial-bargraph-v3>
           </article>
         </section>
 
@@ -283,7 +266,7 @@ if (app) {
           </article>
         </section>
 
-        <pre style="margin-top: 1rem; font-size: 0.8rem; background: #0b1120; color: #cbd5e1; padding: 0.75rem; border-radius: 10px; overflow: auto;">steelseries-radial-v3 {
+        <pre style="margin-top: 1rem; font-size: 0.8rem; background: #0b1120; color: #cbd5e1; padding: 0.75rem; border-radius: 10px; overflow: auto;">steelseries-radial-bargraph-v3 {
   --ss3-font-family: 'IBM Plex Sans', sans-serif;
   --ss3-background-color: #e0f2fe;
   --ss3-frame-color: #bae6fd;
@@ -310,26 +293,9 @@ if (app) {
               <tr><td style="padding: 0.35rem;">animate-value</td><td style="padding: 0.35rem;">Enable/disable value transition animation</td></tr>
             </tbody>
           </table>
-          <p style="margin: 0.75rem 0 0; color: #475569; font-size: 0.8rem;">Caveat: use <code>animate-value=&quot;false&quot;</code> for deterministic screenshot capture in visual CI.</p>
+          <p style="margin: 0.75rem 0 0; color: #475569; font-size: 0.8rem;">Caveat: use <code>animate-value="false"</code> for deterministic screenshot capture in visual CI.</p>
         </section>
       </main>
     `
-
-    const highUpdateGauge = app.querySelector<HTMLElement>('#demo-high-update')
-    if (highUpdateGauge) {
-      let current = 15
-      let direction = 1
-
-      window.setInterval(() => {
-        current += direction * 5
-        if (current >= 95) {
-          direction = -1
-        } else if (current <= 10) {
-          direction = 1
-        }
-
-        highUpdateGauge.setAttribute('value', String(current))
-      }, 350)
-    }
   }
 }

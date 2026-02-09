@@ -13,12 +13,9 @@ export * from './extensions/interfaces.js'
 export * from './contracts/gauge-contract.js'
 export * from './compass/schema.js'
 export * from './compass/renderer.js'
-export * from './radial/schema.js'
-export * from './radial/renderer.js'
 export * from './radial-bargraph/schema.js'
 export * from './radial-bargraph/renderer.js'
 
-export type { RadialGaugeConfig } from './radial/schema.js'
 export type { CompassGaugeConfig } from './compass/schema.js'
 export type { RadialBargraphGaugeConfig } from './radial-bargraph/schema.js'
 

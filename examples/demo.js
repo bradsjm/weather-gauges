@@ -49,17 +49,12 @@ const wireRange = (rangeId, outputId, handler) => {
   update()
 }
 
-const radial = document.getElementById('radial-main')
 const radialBargraph = document.getElementById('radial-bargraph-main')
 const compass = document.getElementById('compass-main')
 
 if (compass) {
   compass.showHeadingReadout = false
 }
-
-wireRange('radial-value', 'radial-value-out', (value) => {
-  radial?.setAttribute('value', String(value))
-})
 
 wireRange('radial-bargraph-value', 'radial-bargraph-value-out', (value) => {
   radialBargraph?.setAttribute('value', String(value))
@@ -69,6 +64,5 @@ wireRange('compass-heading', 'compass-heading-out', (value) => {
   compass?.setAttribute('heading', String(value))
 })
 
-bindGaugeLog('#radial-main', 'radial-log')
 bindGaugeLog('#radial-bargraph-main', 'radial-bargraph-log')
 bindGaugeLog('#compass-main', 'compass-log')

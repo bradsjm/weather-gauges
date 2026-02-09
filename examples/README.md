@@ -24,7 +24,6 @@ python3 -m http.server 8080
 Then open:
 
 - `http://localhost:8080/examples/index.html`
-- `http://localhost:8080/examples/radial.html`
 - `http://localhost:8080/examples/radial-bargraph.html`
 - `http://localhost:8080/examples/compass.html`
 
@@ -45,8 +44,7 @@ Use the local server approach for normal development.
 
 ## What Each Demo Shows
 
-- `index.html`: a documentation-style landing page inspired by the original SteelSeries showcase, with three v3 gauges and live updates.
-- `radial.html`: radial gauge controls, threshold changes, and event stream.
+- `index.html`: a documentation-style landing page inspired by the original SteelSeries showcase, with v3 gauges and live updates.
 - `radial-bargraph.html`: radial bargraph controls, threshold changes, and event stream.
 - `compass.html`: heading updates, animated bearing changes, and normalized event output.
 

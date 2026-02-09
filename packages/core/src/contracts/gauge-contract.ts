@@ -1,7 +1,6 @@
 import type { z } from 'zod'
 
 import { compassGaugeConfigSchema, type CompassRenderResult } from '../compass/index.js'
-import { radialGaugeConfigSchema, type RadialRenderResult } from '../radial/index.js'
 import {
   radialBargraphGaugeConfigSchema,
   type RadialBargraphRenderResult
@@ -19,7 +18,7 @@ export const gaugeContract = {
   tones: ['accent', 'warning', 'danger'] as const
 } as const
 
-export type GaugeContractKind = 'radial' | 'compass' | 'radial-bargraph'
+export type GaugeContractKind = 'compass' | 'radial-bargraph'
 
 export type GaugeTone = (typeof gaugeContract.tones)[number]
 
@@ -56,12 +55,6 @@ const validateWithSchema = <T>(schema: z.ZodType<T>, input: unknown): Validation
   }
 }
 
-export const validateRadialConfig = (
-  input: unknown
-): ValidationResult<z.infer<typeof radialGaugeConfigSchema>> => {
-  return validateWithSchema(radialGaugeConfigSchema, input)
-}
-
 export const validateCompassConfig = (
   input: unknown
 ): ValidationResult<z.infer<typeof compassGaugeConfigSchema>> => {
@@ -76,7 +69,7 @@ export const validateRadialBargraphConfig = (
 
 export const toGaugeContractState = (
   kind: GaugeContractKind,
-  result: RadialRenderResult | CompassRenderResult | RadialBargraphRenderResult
+  result: CompassRenderResult | RadialBargraphRenderResult
 ): GaugeContractState => {
   const reading = 'heading' in result ? result.heading : result.value
 
@@ -84,11 +77,13 @@ export const toGaugeContractState = (
     kind,
     reading,
     tone: result.tone,
-    alerts: result.activeAlerts.map((alert) => ({
-      id: alert.id,
-      message: alert.message,
-      severity: alert.severity
-    }))
+    alerts: result.activeAlerts.map(
+      (alert: { id: string; message: string; severity: 'info' | 'warning' | 'critical' }) => ({
+        id: alert.id,
+        message: alert.message,
+        severity: alert.severity
+      })
+    )
   }
 }
 

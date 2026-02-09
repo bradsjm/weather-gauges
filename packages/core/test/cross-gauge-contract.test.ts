@@ -3,15 +3,15 @@ import { describe, expect, it } from 'vitest'
 import {
   compassGaugeConfigSchema,
   gaugeContract,
-  radialGaugeConfigSchema,
+  radialBargraphGaugeConfigSchema,
   toGaugeContractState,
   validateCompassConfig,
-  validateRadialConfig
+  validateRadialBargraphConfig
 } from '../src/index.js'
 
 describe('cross-gauge contracts', () => {
   it('normalizes render results into unified contract state', () => {
-    const radialState = toGaugeContractState('radial', {
+    const radialBargraphState = toGaugeContractState('radial-bargraph', {
       value: 42,
       tone: 'accent',
       activeAlerts: []
@@ -23,7 +23,11 @@ describe('cross-gauge contracts', () => {
       activeAlerts: [{ id: 'storm', heading: 130, message: 'storm', severity: 'critical' }]
     })
 
-    expect(radialState).toMatchObject({ kind: 'radial', reading: 42, tone: 'accent' })
+    expect(radialBargraphState).toMatchObject({
+      kind: 'radial-bargraph',
+      reading: 42,
+      tone: 'accent'
+    })
     expect(compassState).toMatchObject({ kind: 'compass', reading: 132, tone: 'danger' })
   })
 
@@ -34,14 +38,14 @@ describe('cross-gauge contracts', () => {
   })
 
   it('returns consistent structured validation semantics across gauges', () => {
-    const radial = validateRadialConfig({})
+    const radialBargraph = validateRadialBargraphConfig({})
     const compass = validateCompassConfig({})
 
-    expect(radial.success).toBe(false)
+    expect(radialBargraph.success).toBe(false)
     expect(compass.success).toBe(false)
 
-    if (!radial.success && !compass.success) {
-      expect(radial.errors[0]).toEqual(
+    if (!radialBargraph.success && !compass.success) {
+      expect(radialBargraph.errors[0]).toEqual(
         expect.objectContaining({
           code: 'invalid_type',
           path: 'value'
@@ -56,8 +60,8 @@ describe('cross-gauge contracts', () => {
     }
   })
 
-  it('keeps shared defaults aligned across radial/compass', () => {
-    const radial = radialGaugeConfigSchema.parse({
+  it('keeps shared defaults aligned across radial-bargraph/compass', () => {
+    const radialBargraph = radialBargraphGaugeConfigSchema.parse({
       value: { min: 0, max: 100, current: 5 },
       size: { width: 200, height: 200 },
       indicators: { alerts: [] }
@@ -69,7 +73,7 @@ describe('cross-gauge contracts', () => {
       indicators: { alerts: [] }
     })
 
-    expect(radial.animation.durationMs).toBe(gaugeContract.defaultAnimationDurationMs)
+    expect(radialBargraph.animation.durationMs).toBe(gaugeContract.defaultAnimationDurationMs)
     expect(compass.animation.durationMs).toBe(gaugeContract.defaultAnimationDurationMs)
   })
 })
