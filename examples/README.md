@@ -26,7 +26,6 @@ Then open:
 - `http://localhost:8080/examples/index.html`
 - `http://localhost:8080/examples/radial.html`
 - `http://localhost:8080/examples/radial-bargraph.html`
-- `http://localhost:8080/examples/linear.html`
 - `http://localhost:8080/examples/compass.html`
 
 ## Why this is needed
@@ -46,10 +45,9 @@ Use the local server approach for normal development.
 
 ## What Each Demo Shows
 
-- `index.html`: a documentation-style landing page inspired by the original SteelSeries showcase, with four v3 gauges and live updates.
+- `index.html`: a documentation-style landing page inspired by the original SteelSeries showcase, with three v3 gauges and live updates.
 - `radial.html`: radial gauge controls, threshold changes, and event stream.
 - `radial-bargraph.html`: radial bargraph controls, threshold changes, and event stream.
-- `linear.html`: linear gauge controls, value animation, and token override example.
 - `compass.html`: heading updates, animated bearing changes, and normalized event output.
 
 ## Notes

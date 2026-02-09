@@ -75,8 +75,6 @@ Legacy custom element tags found in `src/*`:
 - `steelseries-radial`
 - `steelseries-radial-bargraph`
 - `steelseries-radial-vertical`
-- `steelseries-linear`
-- `steelseries-linear-bargraph`
 - `steelseries-compass`
 - `steelseries-wind-direction`
 - `steelseries-clock`
@@ -401,7 +399,7 @@ Legacy `tools.js` + draw helpers -> v3 `core` typed modules:
 ### 17.4 Visual fidelity strategy (source-driven)
 
 - Treat legacy JavaScript painter modules as the visual source of truth.
-- Execute in fixed order: radial -> linear -> compass.
+- Execute in fixed order: radial -> compass.
 - Require algorithm-fidelity ports per gauge: preserve render pipeline order, geometry formulas, defaults/mode behavior, and compositing semantics.
 - Start with radial as the reference implementation, then propagate shared painter utilities.
 - Port frame/background/foreground helpers early because they drive identity.
@@ -419,8 +417,7 @@ Read first during implementation:
 6. `src/drawFrame.js`
 7. `src/drawForeground.js`
 8. `src/Radial.js`
-9. `src/Linear.js`
-10. `src/Compass.js`
+9. `src/Compass.js`
 
 Read next for behavior edge cases:
 
@@ -454,7 +451,7 @@ When implementing a v3 gauge:
 
 This approach lets v3 remain modern and maintainable while preserving the excellent visual and functional legacy behavior.
 
-For the current visual fidelity pass, implement gauges in strict sequence: radial -> linear -> compass.
+For the current visual fidelity pass, implement gauges in strict sequence: radial -> compass.
 
 ## 21) Visual Analysis
 

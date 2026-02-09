@@ -129,7 +129,6 @@ type GaugeTheme = {
 ### Gauge variant model
 
 - `RadialGaugeConfig`
-- `LinearGaugeConfig`
 - `CompassGaugeConfig`
 
 Variant schemas are validated with zod and composed from shared primitives.

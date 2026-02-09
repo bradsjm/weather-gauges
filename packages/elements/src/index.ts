@@ -1,14 +1,11 @@
 import {
   animateCompassGauge,
-  animateLinearGauge,
   animateRadialBargraphGauge,
   animateRadialGauge,
   compassGaugeConfigSchema,
   createStyleTokenSource,
   gaugeContract,
-  linearGaugeConfigSchema,
   renderCompassGauge,
-  renderLinearGauge,
   radialBargraphGaugeConfigSchema,
   renderRadialBargraphGauge,
   radialGaugeConfigSchema,
@@ -19,9 +16,6 @@ import {
   type CompassDrawContext,
   type CompassGaugeConfig,
   type CompassRenderResult,
-  type LinearDrawContext,
-  type LinearGaugeConfig,
-  type LinearRenderResult,
   type RadialBargraphDrawContext,
   type RadialBargraphGaugeConfig,
   type RadialBargraphRenderResult,
@@ -759,295 +753,6 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
   }
 }
 
-@customElement('steelseries-linear-v3')
-export class SteelseriesLinearV3Element extends LitElement {
-  @query('canvas')
-  private canvasElement?: HTMLCanvasElement
-
-  private currentValue = 0
-  private animationHandle: AnimationRunHandle | undefined
-
-  static override styles = css`
-    :host {
-      --ss3-font-family: system-ui, sans-serif;
-      --ss3-text-color: #e8ebef;
-      --ss3-accent-color: #c5162e;
-      --ss3-warning-color: #d97706;
-      --ss3-danger-color: #ef4444;
-      display: inline-block;
-      font-family: var(--ss3-font-family);
-      color: var(--ss3-text-color);
-    }
-
-    canvas {
-      display: block;
-    }
-  `
-
-  @property({ type: Number })
-  value = 0
-
-  @property({ type: Number, attribute: 'min-value' })
-  minValue = 0
-
-  @property({ type: Number, attribute: 'max-value' })
-  maxValue = 100
-
-  @property({ type: Number })
-  width = 130
-
-  @property({ type: Number })
-  height = 280
-
-  @property({ type: String })
-  override title = 'Linear'
-
-  @property({ type: String })
-  unit = ''
-
-  @property({ type: Number })
-  threshold = 70
-
-  @property({ type: String, attribute: 'frame-design' })
-  frameDesign:
-    | 'blackMetal'
-    | 'metal'
-    | 'shinyMetal'
-    | 'brass'
-    | 'steel'
-    | 'chrome'
-    | 'gold'
-    | 'anthracite'
-    | 'tiltedGray'
-    | 'tiltedBlack'
-    | 'glossyMetal' = 'metal'
-
-  @property({ type: String, attribute: 'background-color' })
-  backgroundColor:
-    | 'DARK_GRAY'
-    | 'SATIN_GRAY'
-    | 'LIGHT_GRAY'
-    | 'WHITE'
-    | 'BLACK'
-    | 'BEIGE'
-    | 'BROWN'
-    | 'RED'
-    | 'GREEN'
-    | 'BLUE'
-    | 'ANTHRACITE'
-    | 'MUD'
-    | 'PUNCHED_SHEET'
-    | 'CARBON'
-    | 'STAINLESS'
-    | 'BRUSHED_METAL'
-    | 'BRUSHED_STAINLESS'
-    | 'TURNED' = 'DARK_GRAY'
-
-  @property({ type: String, attribute: 'value-color' })
-  valueColor:
-    | 'RED'
-    | 'GREEN'
-    | 'BLUE'
-    | 'ORANGE'
-    | 'YELLOW'
-    | 'CYAN'
-    | 'MAGENTA'
-    | 'WHITE'
-    | 'GRAY'
-    | 'BLACK'
-    | 'RAITH'
-    | 'GREEN_LCD'
-    | 'JUG_GREEN' = 'RED'
-
-  @property({ type: String, attribute: 'gauge-type' })
-  gaugeType: 'type1' | 'type2' = 'type1'
-
-  @property({
-    type: Boolean,
-    attribute: 'animate-value',
-    converter: {
-      fromAttribute: (value: string | null) => value !== null && value !== 'false'
-    }
-  })
-  animateValue = true
-
-  override firstUpdated() {
-    this.currentValue = this.value
-    this.renderGauge(false)
-  }
-
-  override disconnectedCallback() {
-    this.animationHandle?.cancel()
-    this.animationHandle = undefined
-    super.disconnectedCallback()
-  }
-
-  override updated(changedProperties: Map<string, unknown>) {
-    if (changedProperties.size === 0) {
-      return
-    }
-
-    const valueChanged = changedProperties.has('value')
-    const onlyValueChanged = valueChanged && changedProperties.size === 1
-    this.renderGauge(onlyValueChanged && this.animateValue)
-  }
-
-  private getThemePaint(): ThemePaint {
-    const computedStyle = getComputedStyle(this)
-    return resolveThemePaint({
-      source: createStyleTokenSource(computedStyle)
-    })
-  }
-
-  private getDrawContext(): LinearDrawContext | undefined {
-    const canvas = this.renderRoot.querySelector('canvas')
-    if (!(canvas instanceof HTMLCanvasElement)) {
-      return undefined
-    }
-
-    const drawContext = canvas.getContext('2d')
-    if (!drawContext) {
-      return undefined
-    }
-
-    return drawContext as LinearDrawContext
-  }
-
-  private buildConfig(current: number): LinearGaugeConfig {
-    return linearGaugeConfigSchema.parse({
-      value: {
-        min: this.minValue,
-        max: this.maxValue,
-        current
-      },
-      size: {
-        width: this.width,
-        height: this.height
-      },
-      text: {
-        ...(this.title ? { title: this.title } : {}),
-        ...(this.unit ? { unit: this.unit } : {})
-      },
-      style: {
-        gaugeType: this.gaugeType,
-        frameDesign: this.frameDesign,
-        backgroundColor: this.backgroundColor,
-        valueColor: this.valueColor
-      },
-      indicators: {
-        threshold: {
-          value: this.threshold,
-          show: true
-        },
-        alerts: [
-          {
-            id: 'critical',
-            value: this.maxValue * 0.95,
-            message: 'critical',
-            severity: 'critical'
-          },
-          {
-            id: 'warning',
-            value: this.threshold,
-            message: 'warning',
-            severity: 'warning'
-          }
-        ]
-      },
-      segments: [
-        {
-          from: this.minValue,
-          to: this.threshold,
-          color: 'var(--ss3-accent-color)'
-        },
-        {
-          from: this.threshold,
-          to: this.maxValue,
-          color: 'var(--ss3-warning-color)'
-        }
-      ]
-    })
-  }
-
-  private emitValueChange(result: LinearRenderResult): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.valueChangeEvent, {
-        detail: toGaugeContractState('linear', result),
-        bubbles: true,
-        composed: true
-      })
-    )
-  }
-
-  private emitError(error: unknown): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.errorEvent, {
-        detail: {
-          kind: 'linear',
-          message: error instanceof Error ? error.message : 'Unknown linear rendering error'
-        },
-        bubbles: true,
-        composed: true
-      })
-    )
-  }
-
-  private renderGauge(animateValue: boolean): void {
-    const drawContext = this.getDrawContext()
-    const canvas = this.renderRoot.querySelector('canvas')
-    if (!drawContext || !(canvas instanceof HTMLCanvasElement)) {
-      return
-    }
-
-    canvas.width = this.width
-    canvas.height = this.height
-
-    const paint = this.getThemePaint()
-    const nextValue = this.value
-    this.animationHandle?.cancel()
-
-    try {
-      if (animateValue && this.currentValue !== nextValue) {
-        const animationConfig = this.buildConfig(nextValue)
-        this.animationHandle = animateLinearGauge({
-          context: drawContext,
-          config: animationConfig,
-          from: this.currentValue,
-          to: nextValue,
-          paint,
-          onFrame: (frame) => {
-            this.currentValue = frame.value
-            this.emitValueChange(frame)
-          },
-          onComplete: (frame) => {
-            this.currentValue = frame.value
-            this.emitValueChange(frame)
-          }
-        })
-        return
-      }
-
-      const renderConfig = this.buildConfig(nextValue)
-      const result = renderLinearGauge(drawContext, renderConfig, { value: nextValue, paint })
-      this.currentValue = nextValue
-      this.emitValueChange(result)
-    } catch (error) {
-      this.emitError(error)
-    }
-  }
-
-  override render() {
-    return html`
-      <canvas
-        width=${this.width}
-        height=${this.height}
-        role="img"
-        aria-label="${this.title || 'Linear Gauge'}"
-      ></canvas>
-    `
-  }
-}
-
 @customElement('steelseries-compass-v3')
 export class SteelseriesCompassV3Element extends LitElement {
   @query('canvas')
@@ -1392,7 +1097,6 @@ declare global {
   interface HTMLElementTagNameMap {
     'steelseries-radial-v3': SteelseriesRadialV3Element
     'steelseries-radial-bargraph-v3': SteelseriesRadialBargraphV3Element
-    'steelseries-linear-v3': SteelseriesLinearV3Element
     'steelseries-compass-v3': SteelseriesCompassV3Element
   }
 }

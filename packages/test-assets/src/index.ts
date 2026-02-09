@@ -24,13 +24,6 @@ export type RadialFixture = BaseFixture & {
   value: number
 }
 
-export type LinearFixture = BaseFixture & {
-  kind: 'linear'
-  value: number
-  width: number
-  height: number
-}
-
 export type CompassFixture = BaseFixture & {
   kind: 'compass'
   heading: number
@@ -151,40 +144,6 @@ export const radialFixtures: RadialFixture[] = [
       accentColor: '#0f766e',
       warningColor: '#ca8a04',
       dangerColor: '#dc2626'
-    }
-  }
-]
-
-export const linearFixtures: LinearFixture[] = [
-  {
-    kind: 'linear',
-    id: 'linear-mid',
-    label: 'Linear Mid',
-    title: 'Tank',
-    unit: '%',
-    value: 58,
-    min: 0,
-    max: 100,
-    threshold: 70,
-    width: 140,
-    height: 300
-  },
-  {
-    kind: 'linear',
-    id: 'linear-low',
-    label: 'Linear Low',
-    title: 'Reservoir',
-    unit: '%',
-    value: 12,
-    min: 0,
-    max: 100,
-    threshold: 65,
-    width: 140,
-    height: 300,
-    tokenOverrides: {
-      backgroundColor: '#ecfeff',
-      frameColor: '#a5f3fc',
-      textColor: '#164e63'
     }
   }
 ]

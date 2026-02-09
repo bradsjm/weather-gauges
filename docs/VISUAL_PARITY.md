@@ -1,6 +1,6 @@
 # Visual Parity Guide (Phase VP)
 
-Status: Active source-driven fidelity guide for radial, linear, and compass
+Status: Active source-driven fidelity guide for radial and compass
 
 ## 1) Purpose
 

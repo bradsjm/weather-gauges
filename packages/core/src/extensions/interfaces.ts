@@ -2,7 +2,7 @@ import type { RenderSurface } from '../render/context.js'
 
 export type ExtensionPoint = 'overlay' | 'marker' | 'needle'
 
-export type GaugeKind = 'radial' | 'linear' | 'compass'
+export type GaugeKind = 'radial' | 'compass'
 
 export type ExtensionRenderContext<TConfig> = {
   gaugeKind: GaugeKind
