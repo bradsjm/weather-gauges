@@ -1,0 +1,158 @@
+import { z } from 'zod'
+import {
+  radialFrameDesignSchema,
+  radialBackgroundColorSchema,
+  radialForegroundTypeSchema,
+  radialPointerTypeSchema,
+  radialPointerColorSchema
+} from '../radial/schema.js'
+import { sharedGaugeConfigSchema } from '../schemas/shared.js'
+
+export const windDirectionPointerSchema = z
+  .object({
+    type: radialPointerTypeSchema.default('type1'),
+    color: radialPointerColorSchema.default('RED')
+  })
+  .strict()
+
+export const windDirectionValueSchema = z
+  .object({
+    latest: z.number().finite().default(0),
+    average: z.number().finite().default(0)
+  })
+  .strict()
+
+export const windDirectionLcdTitlesSchema = z
+  .object({
+    latest: z.string().default('Latest'),
+    average: z.string().default('Average')
+  })
+  .strict()
+
+export const windDirectionSectionSchema = z
+  .object({
+    start: z.number().finite(),
+    stop: z.number().finite(),
+    color: z.string()
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.stop <= value.start) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['stop'],
+        message: 'stop must be greater than start'
+      })
+    }
+  })
+
+export const windDirectionCustomLayerSchema = z
+  .object({
+    image: z.instanceof(Image).optional(),
+    visible: z.boolean().default(true)
+  })
+  .strict()
+  .optional()
+
+export const windDirectionScaleSchema = z
+  .object({
+    degreeScaleHalf: z.boolean().default(false),
+    niceScale: z.boolean().default(true),
+    maxNoOfMajorTicks: z.number().int().min(2).default(12),
+    maxNoOfMinorTicks: z.number().int().min(1).default(10)
+  })
+  .strict()
+
+export const windDirectionStyleSchema = z
+  .object({
+    frameDesign: radialFrameDesignSchema.default('metal'),
+    backgroundColor: radialBackgroundColorSchema.default('DARK_GRAY'),
+    foregroundType: radialForegroundTypeSchema.default('type1'),
+    pointerLatest: windDirectionPointerSchema.default({ type: 'type1', color: 'RED' }),
+    pointerAverage: windDirectionPointerSchema.default({ type: 'type8', color: 'BLUE' }),
+    knobType: z.enum(['standardKnob', 'metalKnob']).default('standardKnob'),
+    knobStyle: z.enum(['black', 'brass', 'silver']).default('silver'),
+    pointSymbols: z
+      .array(z.string())
+      .length(8)
+      .default(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']),
+    lcdColor: z
+      .enum([
+        'STANDARD',
+        'STANDARD_GREEN',
+        'BLUE',
+        'ORANGE',
+        'RED',
+        'YELLOW',
+        'WHITE',
+        'GRAY',
+        'BLACK'
+      ])
+      .default('STANDARD'),
+    digitalFont: z.boolean().default(false),
+    useColorLabels: z.boolean().default(false),
+    customLayer: windDirectionCustomLayerSchema
+  })
+  .strict()
+
+export const windDirectionVisibilitySchema = z
+  .object({
+    showFrame: z.boolean().default(true),
+    showBackground: z.boolean().default(true),
+    showForeground: z.boolean().default(true),
+    showLcd: z.boolean().default(true),
+    showPointSymbols: z.boolean().default(true),
+    showDegreeScale: z.boolean().default(false),
+    showRose: z.boolean().default(false)
+  })
+  .strict()
+
+export const windDirectionGaugeConfigSchema = sharedGaugeConfigSchema
+  .extend({
+    value: windDirectionValueSchema,
+    scale: windDirectionScaleSchema.default(() => ({
+      degreeScaleHalf: false,
+      niceScale: true,
+      maxNoOfMajorTicks: 12,
+      maxNoOfMinorTicks: 10
+    })),
+    style: windDirectionStyleSchema.default({
+      frameDesign: 'metal',
+      backgroundColor: 'DARK_GRAY',
+      foregroundType: 'type1',
+      pointerLatest: { type: 'type1', color: 'RED' },
+      pointerAverage: { type: 'type8', color: 'BLUE' },
+      knobType: 'standardKnob',
+      knobStyle: 'silver',
+      pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+      lcdColor: 'STANDARD',
+      digitalFont: false,
+      useColorLabels: false
+    }),
+    visibility: windDirectionVisibilitySchema.default({
+      showFrame: true,
+      showBackground: true,
+      showForeground: true,
+      showLcd: true,
+      showPointSymbols: true,
+      showDegreeScale: false,
+      showRose: false
+    }),
+    lcdTitles: windDirectionLcdTitlesSchema.default({
+      latest: 'Latest',
+      average: 'Average'
+    }),
+    sections: z.array(windDirectionSectionSchema).default([]),
+    areas: z.array(windDirectionSectionSchema).default([])
+  })
+  .strict()
+
+export type WindDirectionPointer = z.infer<typeof windDirectionPointerSchema>
+export type WindDirectionValue = z.infer<typeof windDirectionValueSchema>
+export type WindDirectionLcdTitles = z.infer<typeof windDirectionLcdTitlesSchema>
+export type WindDirectionSection = z.infer<typeof windDirectionSectionSchema>
+export type WindDirectionCustomLayer = z.infer<typeof windDirectionCustomLayerSchema>
+export type WindDirectionScale = z.infer<typeof windDirectionScaleSchema>
+export type WindDirectionStyle = z.infer<typeof windDirectionStyleSchema>
+export type WindDirectionVisibility = z.infer<typeof windDirectionVisibilitySchema>
+export type WindDirectionGaugeConfig = z.infer<typeof windDirectionGaugeConfigSchema>

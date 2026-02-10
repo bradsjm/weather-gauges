@@ -266,6 +266,88 @@ if (app) {
           </article>
         </section>
 
+        <section style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: start;">
+          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Wind Direction Compass Style</h2>
+            <steelseries-wind-direction-v3
+              title="Wind"
+              unit="deg"
+              value-latest="45"
+              value-average="60"
+              size="240"
+              frame-design="shinyMetal"
+              background-color="SATIN_GRAY"
+              pointer-type-latest="type1"
+              pointer-type-average="type2"
+              pointer-color-latest="RED"
+              pointer-color-average="BLUE"
+              knob-type="metalKnob"
+              knob-style="silver"
+              foreground-type="type2"
+              show-degree-scale="true"
+              show-point-symbols="true"
+              show-rose="true"
+              show-lcd="true"
+              lcd-title-latest="Latest"
+              lcd-title-average="Average"
+              animate-value="false"
+            ></steelseries-wind-direction-v3>
+          </article>
+
+          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Wind Direction with Scale</h2>
+            <steelseries-wind-direction-v3
+              title="Wind Direction"
+              unit="deg"
+              value-latest="135"
+              value-average="120"
+              size="240"
+              frame-design="metal"
+              background-color="DARK_GRAY"
+              pointer-type-latest="type1"
+              pointer-type-average="type8"
+              pointer-color-latest="RED"
+              pointer-color-average="BLUE"
+              knob-type="standardKnob"
+              knob-style="silver"
+              foreground-type="type1"
+              show-degree-scale="true"
+              show-point-symbols="true"
+              show-rose="false"
+              lcd-title-latest="Latest"
+              lcd-title-average="Average"
+              animate-value="false"
+            ></steelseries-wind-direction-v3>
+          </article>
+
+          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Wind Direction Marine Style</h2>
+            <steelseries-wind-direction-v3
+              title="Wind"
+              unit=""
+              value-latest="270"
+              value-average="265"
+              size="240"
+              frame-design="brass"
+              background-color="BEIGE"
+              pointer-type-latest="type2"
+              pointer-type-average="type7"
+              pointer-color-latest="GREEN"
+              pointer-color-average="ORANGE"
+              knob-type="metalKnob"
+              knob-style="brass"
+              foreground-type="type3"
+              show-degree-scale="true"
+              show-rose="true"
+              lcd-color="STANDARD_GREEN"
+              digital-font="true"
+              lcd-title-latest="Current"
+              lcd-title-average="Avg"
+              animate-value="false"
+            ></steelseries-wind-direction-v3>
+          </article>
+        </section>
+
         <pre style="margin-top: 1rem; font-size: 0.8rem; background: #0b1120; color: #cbd5e1; padding: 0.75rem; border-radius: 10px; overflow: auto;">steelseries-radial-bargraph-v3 {
   --ss3-font-family: 'IBM Plex Sans', sans-serif;
   --ss3-background-color: #e0f2fe;
