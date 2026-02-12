@@ -3,7 +3,6 @@ import {
   drawCompassRose as drawSharedCompassRose,
   drawCompassTickmarks
 } from '../render/compass-scales.js'
-import { drawCompassPointer, resolveCompassPointerColor } from '../render/compass-pointer.js'
 import {
   drawGaugeRadialForegroundByType,
   drawGaugeRadialBackgroundByStyle,
@@ -15,7 +14,12 @@ import {
   resolveGaugePointerPalette,
   type GaugeBackgroundPalette
 } from '../render/gauge-color-palettes.js'
-import { closePathSafe, createRadialGradientSafe } from '../render/gauge-canvas-primitives.js'
+import {
+  addColorStops,
+  closePathSafe,
+  createLinearGradientSafe,
+  createRadialGradientSafe
+} from '../render/gauge-canvas-primitives.js'
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
 import { drawRadialLcdBox, resolveRadialLcdPalette } from '../render/radial-lcd.js'
 import {
@@ -230,6 +234,38 @@ const drawLcds = (
   )
 }
 
+const drawPointerShape = (
+  context: WindDirectionDrawContext,
+  pointer: WindDirectionPointer,
+  imageWidth: number
+): void => {
+  const colors = resolveGaugePointerPalette(pointer.color)
+  const pointerLength = imageWidth * 0.35
+  const pointerWidth = imageWidth * 0.05
+
+  context.beginPath()
+  context.moveTo(0, -pointerLength)
+  context.lineTo(pointerWidth / 2, pointerLength * 0.1)
+  context.lineTo(0, pointerLength * 0.2)
+  context.lineTo(-pointerWidth / 2, pointerLength * 0.1)
+  closePathSafe(context)
+
+  const gradient = addColorStops(
+    createLinearGradientSafe(context, -pointerWidth, 0, pointerWidth, 0, rgb(colors.medium)),
+    [
+      [0, rgb(colors.dark)],
+      [0.5, rgb(colors.medium)],
+      [1, rgb(colors.light)]
+    ]
+  )
+
+  context.fillStyle = gradient
+  context.fill()
+  context.strokeStyle = rgb(colors.dark)
+  context.lineWidth = 1
+  context.stroke()
+}
+
 const drawPointers = (
   context: WindDirectionDrawContext,
   config: WindDirectionGaugeConfig,
@@ -239,33 +275,37 @@ const drawPointers = (
   latestAngle: number,
   averageAngle: number
 ): void => {
+  context.save()
+  context.translate(centerX, centerY)
+
+  // Apply shadow effects before drawing pointers
   const shadowOffset = Math.max(2, imageWidth * 0.0075)
+  context.shadowColor = 'rgba(0, 0, 0, 0.8)'
+  context.shadowOffsetX = shadowOffset
+  context.shadowOffsetY = shadowOffset
+  context.shadowBlur = shadowOffset * 2
 
-  const drawPointerAtAngle = (pointer: WindDirectionPointer, angle: number): void => {
-    context.save()
-    context.translate(centerX, centerY)
-    context.rotate(angle * RAD_FACTOR)
-    context.translate(-centerX, -centerY)
+  // Step 1: Rotate to average position
+  context.rotate(averageAngle * RAD_FACTOR)
 
-    context.shadowColor = 'rgba(0, 0, 0, 0.8)'
-    context.shadowOffsetX = shadowOffset
-    context.shadowOffsetY = shadowOffset
-    context.shadowBlur = shadowOffset * 2
+  // Step 2: Draw average pointer
+  drawPointerShape(context, config.style.pointerAverage, imageWidth)
 
-    drawCompassPointer(context, pointer.type, resolveCompassPointerColor(pointer.color), imageWidth)
+  // Step 3: Calculate and apply RELATIVE rotation for latest
+  // CRITICAL: Subtract current rotation to get relative angle
+  const relativeAngle = (latestAngle - averageAngle) * RAD_FACTOR
+  context.rotate(relativeAngle)
 
-    context.restore()
-  }
+  // Step 4: Draw latest pointer
+  drawPointerShape(context, config.style.pointerLatest, imageWidth)
 
-  // draw average first, then latest on top
-  drawPointerAtAngle(config.style.pointerAverage, averageAngle)
-  drawPointerAtAngle(config.style.pointerLatest, latestAngle)
-
-  // clear shadow settings after drawing pointers
+  // Clear shadow after drawing
   context.shadowColor = 'transparent'
   context.shadowOffsetX = 0
   context.shadowOffsetY = 0
   context.shadowBlur = 0
+
+  context.restore()
 }
 
 const drawSectionsAndAreas = (
