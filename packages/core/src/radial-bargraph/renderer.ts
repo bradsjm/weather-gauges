@@ -20,6 +20,7 @@ import {
   configureGaugeTextLayout,
   drawGaugeText
 } from '../render/gauge-text-primitives.js'
+import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   RadialBargraphAlert,
@@ -336,36 +337,6 @@ const resolveGeometry = (
     degAngleRange: angleRange * DEG_FACTOR,
     angleStep: angleRange / Math.max(range, 1e-9)
   }
-}
-
-const resolveTone = (
-  value: number,
-  config: RadialBargraphGaugeConfig,
-  activeAlerts: RadialBargraphAlert[]
-): 'accent' | 'warning' | 'danger' => {
-  if (activeAlerts.some((alert) => alert.severity === 'critical')) {
-    return 'danger'
-  }
-
-  if (activeAlerts.some((alert) => alert.severity === 'warning')) {
-    return 'warning'
-  }
-
-  const threshold = config.indicators.threshold
-  if (threshold && threshold.show && value >= threshold.value) {
-    return 'warning'
-  }
-
-  return 'accent'
-}
-
-const resolveActiveAlerts = (
-  value: number,
-  alerts: RadialBargraphAlert[]
-): RadialBargraphAlert[] => {
-  return alerts
-    .filter((alert) => value >= alert.value)
-    .sort((left, right) => right.value - left.value)
 }
 
 const createGradientSampler = (
@@ -937,8 +908,11 @@ export const renderRadialBargraphGauge = (
     geometry.degAngleRange
   )
   const gradientSampler = createGradientSampler(config.valueGradientStops)
-  const activeAlerts = resolveActiveAlerts(clampedValue, config.indicators.alerts)
-  const tone = resolveTone(clampedValue, config, activeAlerts)
+  const activeAlerts = resolveGaugeValueAlerts(clampedValue, config.indicators.alerts)
+  const threshold = config.indicators.threshold
+  const thresholdBreached =
+    threshold !== undefined && threshold.show && clampedValue >= threshold.value
+  const tone = resolveGaugeToneFromAlerts(activeAlerts, thresholdBreached)
 
   const size = Math.min(config.size.width, config.size.height)
   const centerX = size * 0.5
