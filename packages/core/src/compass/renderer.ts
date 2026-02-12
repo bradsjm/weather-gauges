@@ -5,7 +5,7 @@ import {
   drawCompassCustomImage,
   drawCompassFrame,
   getCompassBackgroundPalette
-} from '../render/compass-materials.js'
+} from '../render/gauge-materials.js'
 import { drawCompassForeground } from '../render/compass-foreground.js'
 import { drawCompassLabels } from '../render/compass-labels.js'
 import { drawCompassPointer, resolveCompassPointerColor } from '../render/compass-pointer.js'

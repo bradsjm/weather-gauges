@@ -4,7 +4,7 @@ import {
   drawGaugeRadialBackgroundByStyle,
   drawGaugeRadialForegroundByType,
   drawGaugeRadialFrameByDesign
-} from '../render/gauge-radial-materials.js'
+} from '../render/gauge-materials.js'
 import {
   getGaugeBackgroundTextColor,
   resolveGaugePointerPalette,
