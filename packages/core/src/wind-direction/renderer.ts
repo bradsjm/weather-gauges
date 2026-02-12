@@ -4,6 +4,7 @@ import {
   drawGaugeRadialBackgroundByStyle,
   drawGaugeRadialFrameByDesign
 } from '../render/gauge-materials.js'
+import { drawRadialLcdBox, resolveRadialLcdPalette } from '../render/radial-lcd.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   WindDirectionGaugeConfig,
@@ -50,14 +51,6 @@ type PointerColor = {
   light: Rgb
   medium: Rgb
   dark: Rgb
-}
-type LcdColors = {
-  gradientStart: Rgb
-  gradientFraction1: Rgb
-  gradientFraction2: Rgb
-  gradientFraction3: Rgb
-  gradientStop: Rgb
-  text: Rgb
 }
 
 const PI = Math.PI
@@ -268,81 +261,6 @@ const POINTER_COLORS: Record<WindDirectionPointer['color'], PointerColor> = {
   JUG_GREEN: { dark: [0, 56, 0], medium: [50, 161, 0], light: [190, 231, 141] }
 }
 
-const LCD_COLORS: Record<WindDirectionGaugeConfig['style']['lcdColor'], LcdColors> = {
-  STANDARD: {
-    gradientStart: [131, 133, 119],
-    gradientFraction1: [176, 183, 167],
-    gradientFraction2: [165, 174, 153],
-    gradientFraction3: [166, 175, 156],
-    gradientStop: [175, 184, 165],
-    text: [35, 42, 52]
-  },
-  STANDARD_GREEN: {
-    gradientStart: [255, 255, 255],
-    gradientFraction1: [219, 230, 220],
-    gradientFraction2: [179, 194, 178],
-    gradientFraction3: [153, 176, 151],
-    gradientStop: [114, 138, 109],
-    text: [8, 12, 6]
-  },
-  BLUE: {
-    gradientStart: [255, 255, 255],
-    gradientFraction1: [231, 246, 255],
-    gradientFraction2: [170, 224, 255],
-    gradientFraction3: [136, 212, 255],
-    gradientStop: [192, 232, 255],
-    text: [18, 69, 100]
-  },
-  ORANGE: {
-    gradientStart: [255, 255, 255],
-    gradientFraction1: [255, 245, 225],
-    gradientFraction2: [255, 217, 147],
-    gradientFraction3: [255, 201, 104],
-    gradientStop: [255, 227, 173],
-    text: [80, 55, 0]
-  },
-  RED: {
-    gradientStart: [255, 255, 255],
-    gradientFraction1: [255, 225, 225],
-    gradientFraction2: [253, 152, 152],
-    gradientFraction3: [252, 114, 115],
-    gradientStop: [254, 178, 178],
-    text: [79, 12, 14]
-  },
-  YELLOW: {
-    gradientStart: [255, 255, 255],
-    gradientFraction1: [245, 255, 186],
-    gradientFraction2: [210, 255, 0],
-    gradientFraction3: [158, 205, 0],
-    gradientStop: [210, 255, 0],
-    text: [64, 83, 0]
-  },
-  WHITE: {
-    gradientStart: [255, 255, 255],
-    gradientFraction1: [255, 255, 255],
-    gradientFraction2: [241, 246, 242],
-    gradientFraction3: [229, 239, 244],
-    gradientStop: [255, 255, 255],
-    text: [0, 0, 0]
-  },
-  GRAY: {
-    gradientStart: [65, 65, 65],
-    gradientFraction1: [117, 117, 117],
-    gradientFraction2: [87, 87, 87],
-    gradientFraction3: [65, 65, 65],
-    gradientStop: [81, 81, 81],
-    text: [255, 255, 255]
-  },
-  BLACK: {
-    gradientStart: [65, 65, 65],
-    gradientFraction1: [102, 102, 102],
-    gradientFraction2: [51, 51, 51],
-    gradientFraction3: [0, 0, 0],
-    gradientStop: [51, 51, 51],
-    text: [204, 204, 204]
-  }
-}
-
 const drawPointSymbols = (
   context: WindDirectionDrawContext,
   pointSymbols: string[],
@@ -457,46 +375,16 @@ const drawDegreeScale = (
   context.restore()
 }
 
-const drawLcdBackground = (
-  context: WindDirectionDrawContext,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  lcdColors: LcdColors
-): void => {
-  context.save()
-
-  const gradient = addColorStops(
-    createLinearGradientSafe(context, x, y, x, y + height, rgb(lcdColors.gradientFraction2)),
-    [
-      [0, rgb(lcdColors.gradientStart)],
-      [0.03, rgb(lcdColors.gradientFraction1)],
-      [0.5, rgb(lcdColors.gradientFraction2)],
-      [0.52, rgb(lcdColors.gradientFraction3)],
-      [1, rgb(lcdColors.gradientStop)]
-    ]
-  )
-
-  context.fillStyle = gradient
-  context.beginPath()
-  context.roundRect(x, y, width, height, height * 0.1)
-  closePathSafe(context)
-  context.fill()
-
-  context.restore()
-}
-
 const drawLcdTitle = (
   context: WindDirectionDrawContext,
   title: string,
   x: number,
   y: number,
   width: number,
-  color: Rgb
+  color: string
 ): void => {
   context.save()
-  context.fillStyle = rgb(color)
+  context.fillStyle = color
   context.font = `bold ${width * 0.12}px Arial, sans-serif`
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -511,11 +399,11 @@ const drawLcdValue = (
   y: number,
   width: number,
   height: number,
-  lcdColors: LcdColors,
+  textColor: string,
   digitalFont: boolean
 ): void => {
   context.save()
-  context.fillStyle = rgb(lcdColors.text)
+  context.fillStyle = textColor
   context.font = `${width * 0.25}px ${digitalFont ? 'monospace' : 'Arial'}, sans-serif`
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -535,7 +423,7 @@ const drawLcds = (
   latest: number,
   average: number
 ): void => {
-  const lcdColors = LCD_COLORS[config.style.lcdColor]
+  const lcdPalette = resolveRadialLcdPalette(config.style.lcdColor)
   const lcdWidth = imageWidth * 0.25
   const lcdHeight = imageWidth * 0.09
   // Match v2 positioning: both LCDs centered horizontally, stacked vertically
@@ -545,14 +433,14 @@ const drawLcds = (
 
   // Determine title colors based on useColorLabels setting
   const latestTitleColor = config.style.useColorLabels
-    ? POINTER_COLORS[config.style.pointerLatest.color].medium
-    : lcdColors.text
+    ? rgb(POINTER_COLORS[config.style.pointerLatest.color].medium)
+    : lcdPalette.text
   const averageTitleColor = config.style.useColorLabels
-    ? POINTER_COLORS[config.style.pointerAverage.color].medium
-    : lcdColors.text
+    ? rgb(POINTER_COLORS[config.style.pointerAverage.color].medium)
+    : lcdPalette.text
 
   // Latest LCD (top)
-  drawLcdBackground(context, lcdX, lcdY1, lcdWidth, lcdHeight, lcdColors)
+  drawRadialLcdBox(context, lcdX, lcdY1, lcdWidth, lcdHeight, lcdPalette)
   if (config.lcdTitles.latest) {
     drawLcdTitle(
       context,
@@ -570,12 +458,12 @@ const drawLcds = (
     lcdY1,
     lcdWidth,
     lcdHeight,
-    lcdColors,
+    lcdPalette.text,
     config.style.digitalFont
   )
 
   // Average LCD (bottom)
-  drawLcdBackground(context, lcdX, lcdY2, lcdWidth, lcdHeight, lcdColors)
+  drawRadialLcdBox(context, lcdX, lcdY2, lcdWidth, lcdHeight, lcdPalette)
   if (config.lcdTitles.average) {
     drawLcdTitle(
       context,
@@ -593,7 +481,7 @@ const drawLcds = (
     lcdY2,
     lcdWidth,
     lcdHeight,
-    lcdColors,
+    lcdPalette.text,
     config.style.digitalFont
   )
 }

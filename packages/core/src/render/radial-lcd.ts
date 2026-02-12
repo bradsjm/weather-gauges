@@ -3,7 +3,7 @@ import type { ThemePaint } from '../theme/tokens.js'
 import { buildGaugeFont, configureGaugeTextLayout, drawGaugeText } from './gauge-text-primitives.js'
 import { createLinearGradientSafe } from './gauge-canvas-primitives.js'
 
-type LcdPalette = {
+export type RadialLcdPalette = {
   gradientStart: string
   gradientFraction1: string
   gradientFraction2: string
@@ -12,7 +12,7 @@ type LcdPalette = {
   text: string
 }
 
-const LCD_COLORS: Record<RadialBargraphLcdColorName, LcdPalette> = {
+const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
   STANDARD: {
     gradientStart: 'rgb(131, 133, 119)',
     gradientFraction1: 'rgb(176, 183, 167)',
@@ -87,29 +87,40 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, LcdPalette> = {
   }
 }
 
-export const drawRadialLcd = (
+const drawRoundedRect = (
   context: CanvasRenderingContext2D,
-  lcdColor: RadialBargraphLcdColorName,
-  digitalFont: boolean,
-  lcdDecimals: number,
-  value: number,
-  size: number,
-  paint: ThemePaint
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
 ): void => {
-  const lcdPalette = LCD_COLORS[lcdColor]
-  const lcdWidth = 0.4 * size
-  const lcdHeight = 0.13 * size
-  const lcdX = (size - lcdWidth) * 0.5
-  const lcdY = size * 0.5 - lcdHeight * 0.5
+  context.beginPath()
+  context.moveTo(x + radius, y)
+  context.lineTo(x + width - radius, y)
+  context.quadraticCurveTo(x + width, y, x + width, y + radius)
+  context.lineTo(x + width, y + height - radius)
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+  context.lineTo(x + radius, y + height)
+  context.quadraticCurveTo(x, y + height, x, y + height - radius)
+  context.lineTo(x, y + radius)
+  context.quadraticCurveTo(x, y, x + radius, y)
+  context.closePath()
+}
 
-  const outerFrameGradient = createLinearGradientSafe(
-    context,
-    0,
-    lcdY,
-    0,
-    lcdY + lcdHeight,
-    '#666666'
-  )
+export const resolveRadialLcdPalette = (lcdColor: RadialBargraphLcdColorName): RadialLcdPalette => {
+  return LCD_COLORS[lcdColor]
+}
+
+export const drawRadialLcdBox = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  lcdPalette: RadialLcdPalette
+): void => {
+  const outerFrameGradient = createLinearGradientSafe(context, 0, y, 0, y + height, '#666666')
   if (typeof outerFrameGradient !== 'string') {
     outerFrameGradient.addColorStop(0, '#4c4c4c')
     outerFrameGradient.addColorStop(0.08, '#666666')
@@ -117,35 +128,15 @@ export const drawRadialLcd = (
     outerFrameGradient.addColorStop(1, '#e6e6e6')
   }
 
-  const outerRadius = Math.min(lcdWidth, lcdHeight) * 0.095
+  const outerRadius = Math.min(width, height) * 0.095
   const innerRadius = Math.max(outerRadius - 1, 0)
-  const innerX = lcdX + 1
-  const innerY = lcdY + 1
-  const innerWidth = Math.max(lcdWidth - 2, 0)
-  const innerHeight = Math.max(lcdHeight - 2, 0)
-
-  const roundedRect = (
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    radius: number
-  ): void => {
-    context.beginPath()
-    context.moveTo(x + radius, y)
-    context.lineTo(x + width - radius, y)
-    context.quadraticCurveTo(x + width, y, x + width, y + radius)
-    context.lineTo(x + width, y + height - radius)
-    context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
-    context.lineTo(x + radius, y + height)
-    context.quadraticCurveTo(x, y + height, x, y + height - radius)
-    context.lineTo(x, y + radius)
-    context.quadraticCurveTo(x, y, x + radius, y)
-    context.closePath()
-  }
+  const innerX = x + 1
+  const innerY = y + 1
+  const innerWidth = Math.max(width - 2, 0)
+  const innerHeight = Math.max(height - 2, 0)
 
   context.fillStyle = outerFrameGradient
-  roundedRect(lcdX, lcdY, lcdWidth, lcdHeight, outerRadius)
+  drawRoundedRect(context, x, y, width, height, outerRadius)
   context.fill()
 
   const backgroundGradient = createLinearGradientSafe(
@@ -164,8 +155,26 @@ export const drawRadialLcd = (
     backgroundGradient.addColorStop(1, lcdPalette.gradientStop)
   }
   context.fillStyle = backgroundGradient
-  roundedRect(innerX, innerY, innerWidth, innerHeight, innerRadius)
+  drawRoundedRect(context, innerX, innerY, innerWidth, innerHeight, innerRadius)
   context.fill()
+}
+
+export const drawRadialLcd = (
+  context: CanvasRenderingContext2D,
+  lcdColor: RadialBargraphLcdColorName,
+  digitalFont: boolean,
+  lcdDecimals: number,
+  value: number,
+  size: number,
+  paint: ThemePaint
+): void => {
+  const lcdPalette = resolveRadialLcdPalette(lcdColor)
+  const lcdWidth = 0.4 * size
+  const lcdHeight = 0.13 * size
+  const lcdX = (size - lcdWidth) * 0.5
+  const lcdY = size * 0.5 - lcdHeight * 0.5
+
+  drawRadialLcdBox(context, lcdX, lcdY, lcdWidth, lcdHeight, lcdPalette)
 
   configureGaugeTextLayout(context, {
     color: lcdPalette.text,
