@@ -90,9 +90,13 @@ const pointerColorOptions: SelectOption[] = [
   'JUG_GREEN'
 ].map((value) => ({ value, label: value }))
 
-const foregroundTypeOptions: SelectOption[] = ['type1', 'type2', 'type3', 'type4', 'type5'].map(
-  (value) => ({ value, label: value })
-)
+const foregroundTypeOptions: SelectOption[] = [
+  { value: 'type1', label: 'type1 - Classic top highlight' },
+  { value: 'type2', label: 'type2 - Wide dome highlight' },
+  { value: 'type3', label: 'type3 - Deep arc highlight' },
+  { value: 'type4', label: 'type4 - Lens + side flare' },
+  { value: 'type5', label: 'type5 - Curved sweep highlight' }
+]
 
 const knobTypeOptions: SelectOption[] = ['standardKnob', 'metalKnob'].map((value) => ({
   value,
