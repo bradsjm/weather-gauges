@@ -1,0 +1,296 @@
+import type { CompassGaugeConfig } from '../compass/schema.js'
+import type { RadialDrawContext } from '../radial/renderer.js'
+
+type Rgb = readonly [number, number, number]
+
+const PI = Math.PI
+const HALF_PI = PI * 0.5
+const TWO_PI = PI * 2
+const RAD_FACTOR = PI / 180
+
+const rgb = (value: Rgb): string => `rgb(${value[0]}, ${value[1]}, ${value[2]})`
+
+const closePathSafe = (context: RadialDrawContext): void => {
+  if (typeof context.closePath === 'function') {
+    context.closePath()
+  }
+}
+
+const createLinearGradientSafe = (
+  context: RadialDrawContext,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  fallback: string
+): CanvasGradient | string => {
+  if (typeof context.createLinearGradient !== 'function') {
+    return fallback
+  }
+
+  return context.createLinearGradient(x0, y0, x1, y1)
+}
+
+const addColorStops = (
+  gradient: CanvasGradient | string,
+  stops: Array<readonly [number, string]>
+): CanvasGradient | string => {
+  if (typeof gradient === 'string') {
+    return gradient
+  }
+
+  for (const [offset, color] of stops) {
+    gradient.addColorStop(offset, color)
+  }
+
+  return gradient
+}
+
+export const drawCompassRose = (
+  context: RadialDrawContext,
+  centerX: number,
+  centerY: number,
+  imageWidth: number,
+  imageHeight: number,
+  symbolColor: Rgb
+): void => {
+  context.save()
+  context.lineWidth = 1
+  context.strokeStyle = rgb(symbolColor)
+  context.fillStyle = rgb(symbolColor)
+  context.translate(centerX, centerY)
+
+  let fill = true
+  for (let i = 0; i < 360; i += 15) {
+    context.beginPath()
+    context.moveTo(
+      0.26 * imageWidth * Math.cos(i * RAD_FACTOR),
+      0.26 * imageWidth * Math.sin(i * RAD_FACTOR)
+    )
+    context.lineTo(
+      0.23 * imageWidth * Math.cos(i * RAD_FACTOR),
+      0.23 * imageWidth * Math.sin(i * RAD_FACTOR)
+    )
+    context.arc(0, 0, 0.23 * imageWidth, i * RAD_FACTOR, (i + 15) * RAD_FACTOR, false)
+    context.lineTo(
+      0.26 * imageWidth * Math.cos((i + 15) * RAD_FACTOR),
+      0.26 * imageWidth * Math.sin((i + 15) * RAD_FACTOR)
+    )
+    context.arc(0, 0, 0.26 * imageWidth, (i + 15) * RAD_FACTOR, i * RAD_FACTOR, true)
+    closePathSafe(context)
+    if (fill) {
+      context.fill()
+    }
+    context.stroke()
+    fill = !fill
+  }
+
+  context.translate(-centerX, -centerY)
+
+  for (let i = 0; i <= 360; i += 90) {
+    context.beginPath()
+    context.moveTo(0.560747 * imageWidth, 0.584112 * imageHeight)
+    context.lineTo(0.640186 * imageWidth, 0.644859 * imageHeight)
+    context.lineTo(0.584112 * imageWidth, 0.560747 * imageHeight)
+    closePathSafe(context)
+    context.fillStyle = rgb(symbolColor)
+    context.fill()
+    context.stroke()
+
+    context.beginPath()
+    context.moveTo(0.523364 * imageWidth, 0.397196 * imageHeight)
+    context.lineTo(0.5 * imageWidth, 0.196261 * imageHeight)
+    context.lineTo(0.471962 * imageWidth, 0.397196 * imageHeight)
+    closePathSafe(context)
+    context.fillStyle = addColorStops(
+      createLinearGradientSafe(
+        context,
+        0.476635 * imageWidth,
+        0,
+        0.518691 * imageWidth,
+        0,
+        rgb(symbolColor)
+      ),
+      [
+        [0, 'rgb(222, 223, 218)'],
+        [0.48, 'rgb(222, 223, 218)'],
+        [0.49, rgb(symbolColor)],
+        [1, rgb(symbolColor)]
+      ]
+    )
+    context.fill()
+    context.stroke()
+
+    context.translate(centerX, centerY)
+    context.rotate(i * RAD_FACTOR)
+    context.translate(-centerX, -centerY)
+  }
+
+  context.translate(centerX, centerY)
+  context.beginPath()
+  context.arc(0, 0, 0.1 * imageWidth, 0, TWO_PI)
+  closePathSafe(context)
+  context.lineWidth = 0.022 * imageWidth
+  context.strokeStyle = rgb(symbolColor)
+  context.stroke()
+  context.restore()
+}
+
+export const drawCompassTickmarks = (
+  context: RadialDrawContext,
+  config: CompassGaugeConfig,
+  imageWidth: number,
+  pointSymbols: readonly [string, string, string, string, string, string, string, string],
+  labelColor: Rgb,
+  symbolColor: Rgb
+): void => {
+  const degreeScale = config.style.degreeScale || config.rose.showDegreeLabels
+  const pointSymbolsVisible = config.style.pointSymbolsVisible && config.rose.showOrdinalMarkers
+
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.strokeStyle = rgb(labelColor)
+  context.fillStyle = rgb(labelColor)
+  context.save()
+  context.translate(imageWidth / 2, imageWidth / 2)
+
+  if (!degreeScale) {
+    const stdFont = `${Math.floor(0.12 * imageWidth)}px serif`
+    const smlFont = `${Math.floor(0.06 * imageWidth)}px serif`
+
+    for (let i = 0; i < 360; i += 2.5) {
+      if (i % 5 === 0) {
+        context.beginPath()
+        context.moveTo(0.38 * imageWidth, 0)
+        context.lineTo(0.36 * imageWidth, 0)
+        closePathSafe(context)
+        context.lineWidth = 1
+        context.strokeStyle = rgb(labelColor)
+        context.stroke()
+      }
+
+      if (pointSymbolsVisible) {
+        context.save()
+        switch (i) {
+          case 0:
+            context.font = stdFont
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[2], 0, 0)
+            break
+          case 45:
+            context.font = smlFont
+            context.translate(0.29 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[3], 0, 0)
+            break
+          case 90:
+            context.font = stdFont
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[4], 0, 0)
+            break
+          case 135:
+            context.font = smlFont
+            context.translate(0.29 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[5], 0, 0)
+            break
+          case 180:
+            context.font = stdFont
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[6], 0, 0)
+            break
+          case 225:
+            context.font = smlFont
+            context.translate(0.29 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[7], 0, 0)
+            break
+          case 270:
+            context.font = stdFont
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[0], 0, 0)
+            break
+          case 315:
+            context.font = smlFont
+            context.translate(0.29 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[1], 0, 0)
+            break
+        }
+        context.restore()
+      }
+
+      if (config.style.roseVisible && (i === 360 || i % 22.5 === 0)) {
+        context.beginPath()
+        context.moveTo(i % 45 === 0 ? 0.38 * imageWidth : 0.29 * imageWidth, 0)
+        context.lineTo(0.1 * imageWidth, 0)
+        closePathSafe(context)
+        context.lineWidth = 1
+        context.strokeStyle = rgb(symbolColor)
+        context.stroke()
+      }
+
+      context.rotate(RAD_FACTOR * 2.5)
+    }
+  } else {
+    const stdFont = `${Math.floor(0.08 * imageWidth)}px serif`
+    const smlFont = `${Math.floor(0.033 * imageWidth)}px serif`
+    context.rotate(10 * RAD_FACTOR)
+
+    for (let i = 10; i <= 360; i += 10) {
+      context.save()
+
+      if (pointSymbolsVisible) {
+        switch (i) {
+          case 360:
+            context.font = stdFont
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[2], 0, 0)
+            break
+          case 90:
+            context.font = stdFont
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[4], 0, 0)
+            break
+          case 180:
+            context.font = stdFont
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[6], 0, 0)
+            break
+          case 270:
+            context.font = stdFont
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[0], 0, 0)
+            break
+          default: {
+            const val = (i + 90) % 360
+            context.font = smlFont
+            context.translate(0.37 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(`${val >= 100 ? '' : '0'}${val}`, 0, 0)
+            break
+          }
+        }
+      } else {
+        const val = (i + 90) % 360
+        context.font = smlFont
+        context.translate(0.37 * imageWidth, 0)
+        context.rotate(HALF_PI)
+        context.fillText(`${val >= 100 ? '' : '0'}${val}`, 0, 0)
+      }
+
+      context.restore()
+      context.rotate(10 * RAD_FACTOR)
+    }
+  }
+
+  context.restore()
+}
