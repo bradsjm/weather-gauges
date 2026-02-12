@@ -288,20 +288,16 @@ if (app) {
               show-point-symbols="true"
               show-rose="true"
               show-lcd="true"
-              lcd-title-latest="Latest"
-              lcd-title-average="Average"
               animate-value="false"
             ></steelseries-wind-direction-v3>
           </article>
 
           <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Wind Direction with Scale</h2>
+            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Wind Direction (v2 Demo Match)</h2>
             <steelseries-wind-direction-v3
-              title="Wind Direction"
-              unit="deg"
-              value-latest="135"
-              value-average="120"
-              size="240"
+              value-latest="25"
+              value-average="75"
+              size="200"
               frame-design="metal"
               background-color="DARK_GRAY"
               pointer-type-latest="type1"
@@ -314,8 +310,8 @@ if (app) {
               show-degree-scale="true"
               show-point-symbols="true"
               show-rose="false"
-              lcd-title-latest="Latest"
-              lcd-title-average="Average"
+              show-lcd="true"
+              lcd-color="STANDARD"
               animate-value="false"
             ></steelseries-wind-direction-v3>
           </article>
@@ -341,8 +337,6 @@ if (app) {
               show-rose="true"
               lcd-color="STANDARD_GREEN"
               digital-font="true"
-              lcd-title-latest="Current"
-              lcd-title-average="Avg"
               animate-value="false"
             ></steelseries-wind-direction-v3>
           </article>

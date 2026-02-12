@@ -57,6 +57,7 @@ type LcdColors = {
 
 const PI = Math.PI
 const TWO_PI = Math.PI * 2
+const HALF_PI = Math.PI / 2
 const RAD_FACTOR = PI / 180
 
 const rgb = (value: Rgb): string => `rgb(${value[0]},${value[1]},${value[2]})`
@@ -546,36 +547,63 @@ const drawBackground = (
   backgroundColor: WindDirectionGaugeConfig['style']['backgroundColor'],
   centerX: number,
   centerY: number,
-  radius: number
+  imageWidth: number
 ): void => {
   const palette = BACKGROUND_COLORS[backgroundColor]
+  // Match compass: use imageWidth-based background radius
+  const backgroundRadius = (0.831775 * imageWidth) / 2
+
   context.save()
   context.beginPath()
-  context.arc(centerX, centerY, radius, 0, TWO_PI)
+  context.arc(centerX, centerY, backgroundRadius, 0, TWO_PI)
   closePathSafe(context)
 
-  const fillBackground = (gradient: CanvasGradient | string): void => {
-    context.fillStyle = gradient
-    context.fill()
-  }
-
-  fillBackground(
-    addColorStops(
-      createLinearGradientSafe(
-        context,
-        centerX - radius,
-        centerY - radius,
-        centerX + radius,
-        centerY + radius,
-        rgb(palette.gradientFraction)
-      ),
-      [
-        [0, rgb(palette.gradientStart)],
-        [0.5, rgb(palette.gradientFraction)],
-        [1, rgb(palette.gradientStop)]
-      ]
-    )
+  // Match compass: vertical gradient with imageWidth-based calculations
+  const gradient = addColorStops(
+    createLinearGradientSafe(
+      context,
+      0,
+      0.084112 * imageWidth,
+      0,
+      backgroundRadius * 2,
+      rgb(palette.gradientFraction)
+    ),
+    [
+      [0, rgb(palette.gradientStart)],
+      [0.4, rgb(palette.gradientFraction)], // v2 uses 0.4, not 0.5
+      [1, rgb(palette.gradientStop)]
+    ]
   )
+  context.fillStyle = gradient
+  context.fill()
+
+  // Add inner shadow (v2 feature)
+  const innerShadow = addColorStops(
+    createRadialGradientSafe(
+      context,
+      centerX,
+      centerY,
+      0,
+      centerX,
+      centerY,
+      backgroundRadius,
+      'rgba(0,0,0,0)'
+    ),
+    [
+      [0, 'rgba(0, 0, 0, 0)'],
+      [0.7, 'rgba(0, 0, 0, 0)'],
+      [0.71, 'rgba(0, 0, 0, 0)'],
+      [0.86, 'rgba(0, 0, 0, 0.03)'],
+      [0.92, 'rgba(0, 0, 0, 0.07)'],
+      [0.97, 'rgba(0, 0, 0, 0.15)'],
+      [1, 'rgba(0, 0, 0, 0.3)']
+    ]
+  )
+  context.fillStyle = innerShadow
+  context.beginPath()
+  context.arc(centerX, centerY, backgroundRadius, 0, TWO_PI)
+  closePathSafe(context)
+  context.fill()
 
   context.restore()
 }
@@ -584,38 +612,96 @@ const drawCompassRose = (
   context: WindDirectionDrawContext,
   centerX: number,
   centerY: number,
-  radius: number,
+  imageWidth: number,
+  imageHeight: number,
   palette: BackgroundPalette
 ): void => {
+  const symbolColor = palette.symbolColor
   context.save()
+  context.lineWidth = 1
+  context.strokeStyle = rgb(symbolColor)
+  context.fillStyle = rgb(symbolColor)
   context.translate(centerX, centerY)
 
-  const rIn = radius * 0.25
-  const rOut = radius * 0.75
-  const strokeWidth = radius * 0.02
-
-  context.lineWidth = strokeWidth
-  context.strokeStyle = rgb(palette.symbolColor)
-  context.fillStyle = rgb(palette.symbolColor)
-
-  for (let angle = 0; angle < 360; angle += 45) {
-    context.save()
-    context.rotate(angle * RAD_FACTOR)
-
+  // Broken ring - alternating filled/unfilled segments every 15 degrees
+  // Match v2 compass exactly using imageWidth like compass does
+  let fill = true
+  for (let i = 0; i < 360; i += 15) {
     context.beginPath()
-    context.moveTo(0, -rOut)
-    context.lineTo(-radius * 0.05, -rIn)
-    context.lineTo(radius * 0.05, -rIn)
+    context.moveTo(
+      0.26 * imageWidth * Math.cos(i * RAD_FACTOR),
+      0.26 * imageWidth * Math.sin(i * RAD_FACTOR)
+    )
+    context.lineTo(
+      0.23 * imageWidth * Math.cos(i * RAD_FACTOR),
+      0.23 * imageWidth * Math.sin(i * RAD_FACTOR)
+    )
+    context.arc(0, 0, 0.23 * imageWidth, i * RAD_FACTOR, (i + 15) * RAD_FACTOR, false)
+    context.lineTo(
+      0.26 * imageWidth * Math.cos((i + 15) * RAD_FACTOR),
+      0.26 * imageWidth * Math.sin((i + 15) * RAD_FACTOR)
+    )
+    context.arc(0, 0, 0.26 * imageWidth, (i + 15) * RAD_FACTOR, i * RAD_FACTOR, true)
     closePathSafe(context)
-
-    if (angle % 90 === 0) {
+    if (fill) {
       context.fill()
-    } else {
-      context.stroke()
     }
-
-    context.restore()
+    context.stroke()
+    fill = !fill
   }
+
+  context.translate(-centerX, -centerY)
+
+  // Draw pointers for cardinal directions (N, E, S, W)
+  for (let i = 0; i <= 360; i += 90) {
+    // Small pointers (triangles)
+    context.beginPath()
+    context.moveTo(0.560747 * imageWidth, 0.584112 * imageHeight)
+    context.lineTo(0.640186 * imageWidth, 0.644859 * imageHeight)
+    context.lineTo(0.584112 * imageWidth, 0.560747 * imageHeight)
+    closePathSafe(context)
+    context.fillStyle = rgb(symbolColor)
+    context.fill()
+    context.stroke()
+
+    // Large pointers with gradient
+    context.beginPath()
+    context.moveTo(0.523364 * imageWidth, 0.397196 * imageHeight)
+    context.lineTo(0.5 * imageWidth, 0.196261 * imageHeight)
+    context.lineTo(0.471962 * imageWidth, 0.397196 * imageHeight)
+    closePathSafe(context)
+    context.fillStyle = addColorStops(
+      createLinearGradientSafe(
+        context,
+        0.476635 * imageWidth,
+        0,
+        0.518691 * imageWidth,
+        0,
+        rgb(symbolColor)
+      ),
+      [
+        [0, 'rgb(222, 223, 218)'],
+        [0.48, 'rgb(222, 223, 218)'],
+        [0.49, rgb(symbolColor)],
+        [1, rgb(symbolColor)]
+      ]
+    )
+    context.fill()
+    context.stroke()
+
+    context.translate(centerX, centerY)
+    context.rotate(i * RAD_FACTOR)
+    context.translate(-centerX, -centerY)
+  }
+
+  // Central ring
+  context.translate(centerX, centerY)
+  context.beginPath()
+  context.arc(0, 0, 0.1 * imageWidth, 0, TWO_PI, false)
+  context.closePath()
+  context.lineWidth = 0.022 * imageWidth
+  context.strokeStyle = rgb(symbolColor)
+  context.stroke()
 
   context.restore()
 }
@@ -625,27 +711,52 @@ const drawPointSymbols = (
   pointSymbols: string[],
   centerX: number,
   centerY: number,
-  radius: number,
+  imageWidth: number,
   palette: BackgroundPalette
 ): void => {
   context.save()
+  context.translate(centerX, centerY)
   context.fillStyle = rgb(palette.symbolColor)
   context.textAlign = 'center'
   context.textBaseline = 'middle'
 
-  const symbolRadius = radius * 0.92
-  const angles = [0, 45, 90, 135, 180, 225, 270, 315] as const
+  // Cardinal directions (N, S, E, W)
+  const cardinalAngles = [270, 90, 0, 180] as const
+  const cardinalSymbols = [pointSymbols[0], pointSymbols[4], pointSymbols[2], pointSymbols[6]]
 
-  for (let i = 0; i < 8; i++) {
-    const angleDeg = angles[i]!
-    const angleRad = angleDeg * RAD_FACTOR
-    const x = centerX + Math.cos(angleRad - Math.PI / 2) * symbolRadius
-    const y = centerY + Math.sin(angleRad - Math.PI / 2) * symbolRadius
+  context.font = `${0.12 * imageWidth}px serif`
 
-    context.font = `${radius * 0.08}px Arial, sans-serif`
-    const symbol = pointSymbols[i]
+  for (let i = 0; i < 4; i++) {
+    const angle = cardinalAngles[i]! * RAD_FACTOR
+    const symbol = cardinalSymbols[i]
+
     if (symbol) {
-      context.fillText(symbol, x, y)
+      context.save()
+      context.rotate(angle)
+      context.translate(0, -0.35 * imageWidth)
+      context.rotate(HALF_PI)
+      context.fillText(symbol, 0, 0)
+      context.restore()
+    }
+  }
+
+  // Intercardinal directions (NE, SE, SW, NW)
+  const intercardinalAngles = [315, 45, 135, 225] as const
+  const intercardinalSymbols = [pointSymbols[1], pointSymbols[3], pointSymbols[5], pointSymbols[7]]
+
+  context.font = `${0.06 * imageWidth}px serif`
+
+  for (let i = 0; i < 4; i++) {
+    const angle = intercardinalAngles[i]! * RAD_FACTOR
+    const symbol = intercardinalSymbols[i]
+
+    if (symbol) {
+      context.save()
+      context.rotate(angle)
+      context.translate(0, -0.29 * imageWidth)
+      context.rotate(HALF_PI)
+      context.fillText(symbol, 0, 0)
+      context.restore()
     }
   }
 
@@ -656,46 +767,54 @@ const drawDegreeScale = (
   context: WindDirectionDrawContext,
   centerX: number,
   centerY: number,
-  radius: number,
+  imageWidth: number,
+  imageHeight: number,
   degreeScaleHalf: boolean,
   palette: BackgroundPalette
 ): void => {
   context.save()
+  context.translate(centerX, centerY)
   context.strokeStyle = rgb(palette.symbolColor)
   context.fillStyle = rgb(palette.symbolColor)
   context.textAlign = 'center'
   context.textBaseline = 'middle'
+  context.font = `${0.06 * imageWidth}px serif`
 
-  const majorTickRadius = radius * 0.78
-  const minorTickRadius = radius * 0.82
-  const labelRadius = radius * 0.68
+  // Tick marks every 2.5 degrees (matching compass)
+  for (let i = 0; i < 360; i += 2.5) {
+    const angle = i * RAD_FACTOR
+    const isMajor = i % 10 === 0
+    const isMedium = i % 5 === 0
 
-  context.font = `${radius * 0.04}px Arial, sans-serif`
+    context.save()
+    context.rotate(angle)
 
-  for (let angle = 0; angle < 360; angle += 10) {
-    const angleRad = angle * RAD_FACTOR
-    const isMajor = angle % 30 === 0
-
-    const innerR = isMajor ? majorTickRadius : minorTickRadius
-    const outerR = radius * 0.85
+    // Draw tick mark
+    const innerR = isMajor ? 0.36 * imageWidth : isMedium ? 0.36 * imageWidth : 0.38 * imageWidth
+    const outerR = 0.38 * imageWidth
 
     context.beginPath()
-    context.moveTo(
-      centerX + Math.cos(angleRad - Math.PI / 2) * innerR,
-      centerY + Math.sin(angleRad - Math.PI / 2) * innerR
-    )
-    context.lineTo(
-      centerX + Math.cos(angleRad - Math.PI / 2) * outerR,
-      centerY + Math.sin(angleRad - Math.PI / 2) * outerR
-    )
-    context.lineWidth = isMajor ? 2 : 1
+    context.moveTo(0, -innerR)
+    context.lineTo(0, -outerR)
+    context.lineWidth = isMajor ? 2 : isMedium ? 1.5 : 1
     context.stroke()
 
-    if (isMajor && !degreeScaleHalf) {
-      const labelX = centerX + Math.cos(angleRad - Math.PI / 2) * labelRadius
-      const labelY = centerY + Math.sin(angleRad - Math.PI / 2) * labelRadius
-      context.fillText(angle.toString(), labelX, labelY)
+    // Draw degree label on major ticks (every 10°)
+    if (isMajor) {
+      // Handle degreeScaleHalf: wrap 180-360° to -180-0°
+      let displayAngle = i
+      if (degreeScaleHalf && i > 180) {
+        displayAngle = i - 360
+      }
+
+      context.save()
+      context.translate(0, -0.29 * imageWidth)
+      context.rotate(HALF_PI)
+      context.fillText(displayAngle.toString(), 0, 0)
+      context.restore()
     }
+
+    context.restore()
   }
 
   context.restore()
@@ -737,10 +856,10 @@ const drawLcdTitle = (
   x: number,
   y: number,
   width: number,
-  lcdColors: LcdColors
+  color: Rgb
 ): void => {
   context.save()
-  context.fillStyle = rgb(lcdColors.text)
+  context.fillStyle = rgb(color)
   context.font = `bold ${width * 0.12}px Arial, sans-serif`
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -764,7 +883,7 @@ const drawLcdValue = (
   context.textAlign = 'center'
   context.textBaseline = 'middle'
 
-  const valueStr = value.toFixed(0).padStart(3, '0') + '\u00B0'
+  const valueStr = value.toFixed(0).padStart(3, '0')
   context.fillText(valueStr, x + width / 2, y + height / 2)
 
   context.restore()
@@ -775,53 +894,66 @@ const drawLcds = (
   config: WindDirectionGaugeConfig,
   centerX: number,
   centerY: number,
-  radius: number,
+  imageWidth: number,
   latest: number,
   average: number
 ): void => {
   const lcdColors = LCD_COLORS[config.style.lcdColor]
-  const lcdWidth = radius * 0.5
-  const lcdHeight = radius * 0.18
-  const lcdY = centerY - radius * 0.35
-  const spacing = radius * 0.08
+  const lcdWidth = imageWidth * 0.25
+  const lcdHeight = imageWidth * 0.09
+  // Match v2 positioning: both LCDs centered horizontally, stacked vertically
+  const lcdX = centerX - lcdWidth / 2
+  const lcdY1 = centerY - imageWidth * 0.175 // Upper LCD (above center)
+  const lcdY2 = centerY + imageWidth * 0.075 // Lower LCD (below center, avoiding knob overlap)
 
-  const latestX = centerX - lcdWidth - spacing / 2
-  const averageX = centerX + spacing / 2
+  // Determine title colors based on useColorLabels setting
+  const latestTitleColor = config.style.useColorLabels
+    ? POINTER_COLORS[config.style.pointerLatest.color].medium
+    : lcdColors.text
+  const averageTitleColor = config.style.useColorLabels
+    ? POINTER_COLORS[config.style.pointerAverage.color].medium
+    : lcdColors.text
 
-  drawLcdBackground(context, latestX, lcdY, lcdWidth, lcdHeight, lcdColors)
-  drawLcdTitle(
-    context,
-    config.lcdTitles.latest,
-    latestX,
-    lcdY - lcdHeight * 0.15,
-    lcdWidth,
-    lcdColors
-  )
+  // Latest LCD (top)
+  drawLcdBackground(context, lcdX, lcdY1, lcdWidth, lcdHeight, lcdColors)
+  if (config.lcdTitles.latest) {
+    drawLcdTitle(
+      context,
+      config.lcdTitles.latest,
+      lcdX,
+      lcdY1 - lcdHeight * 0.15,
+      lcdWidth,
+      latestTitleColor
+    )
+  }
   drawLcdValue(
     context,
     latest,
-    latestX,
-    lcdY,
+    lcdX,
+    lcdY1,
     lcdWidth,
     lcdHeight,
     lcdColors,
     config.style.digitalFont
   )
 
-  drawLcdBackground(context, averageX, lcdY, lcdWidth, lcdHeight, lcdColors)
-  drawLcdTitle(
-    context,
-    config.lcdTitles.average,
-    averageX,
-    lcdY - lcdHeight * 0.15,
-    lcdWidth,
-    lcdColors
-  )
+  // Average LCD (bottom)
+  drawLcdBackground(context, lcdX, lcdY2, lcdWidth, lcdHeight, lcdColors)
+  if (config.lcdTitles.average) {
+    drawLcdTitle(
+      context,
+      config.lcdTitles.average,
+      lcdX,
+      lcdY2 - lcdHeight * 0.15,
+      lcdWidth,
+      averageTitleColor
+    )
+  }
   drawLcdValue(
     context,
     average,
-    averageX,
-    lcdY,
+    lcdX,
+    lcdY2,
     lcdWidth,
     lcdHeight,
     lcdColors,
@@ -829,21 +961,14 @@ const drawLcds = (
   )
 }
 
-const drawPointer = (
+const drawPointerShape = (
   context: WindDirectionDrawContext,
   pointer: WindDirectionPointer,
-  angle: number,
-  centerX: number,
-  centerY: number,
-  radius: number
+  imageWidth: number
 ): void => {
   const colors = POINTER_COLORS[pointer.color]
-  const pointerLength = radius * 0.7
-  const pointerWidth = radius * 0.1
-
-  context.save()
-  context.translate(centerX, centerY)
-  context.rotate(angle * RAD_FACTOR)
+  const pointerLength = imageWidth * 0.35
+  const pointerWidth = imageWidth * 0.05
 
   context.beginPath()
   context.moveTo(0, -pointerLength)
@@ -866,6 +991,46 @@ const drawPointer = (
   context.strokeStyle = rgb(colors.dark)
   context.lineWidth = 1
   context.stroke()
+}
+
+const drawPointers = (
+  context: WindDirectionDrawContext,
+  config: WindDirectionGaugeConfig,
+  centerX: number,
+  centerY: number,
+  imageWidth: number,
+  latestAngle: number,
+  averageAngle: number
+): void => {
+  context.save()
+  context.translate(centerX, centerY)
+
+  // Apply shadow effects before drawing pointers
+  const shadowOffset = Math.max(2, imageWidth * 0.0075)
+  context.shadowColor = 'rgba(0, 0, 0, 0.8)'
+  context.shadowOffsetX = shadowOffset
+  context.shadowOffsetY = shadowOffset
+  context.shadowBlur = shadowOffset * 2
+
+  // Step 1: Rotate to average position
+  context.rotate(averageAngle * RAD_FACTOR)
+
+  // Step 2: Draw average pointer
+  drawPointerShape(context, config.style.pointerAverage, imageWidth)
+
+  // Step 3: Calculate and apply RELATIVE rotation for latest
+  // CRITICAL: Subtract current rotation to get relative angle
+  const relativeAngle = (latestAngle - averageAngle) * RAD_FACTOR
+  context.rotate(relativeAngle)
+
+  // Step 4: Draw latest pointer
+  drawPointerShape(context, config.style.pointerLatest, imageWidth)
+
+  // Clear shadow after drawing
+  context.shadowColor = 'transparent'
+  context.shadowOffsetX = 0
+  context.shadowOffsetY = 0
+  context.shadowBlur = 0
 
   context.restore()
 }
@@ -875,7 +1040,7 @@ const drawForeground = (
   foregroundType: WindDirectionGaugeConfig['style']['foregroundType'],
   centerX: number,
   centerY: number,
-  radius: number
+  imageWidth: number
 ): void => {
   context.save()
 
@@ -888,7 +1053,7 @@ const drawForeground = (
         0,
         centerX,
         centerY,
-        radius,
+        imageWidth * 0.48,
         'rgba(255,255,255,0)'
       ),
       [
@@ -900,14 +1065,14 @@ const drawForeground = (
     )
     context.fillStyle = gradient
     context.beginPath()
-    context.arc(centerX, centerY, radius, 0, TWO_PI)
+    context.arc(centerX, centerY, imageWidth * 0.48, 0, TWO_PI)
     closePathSafe(context)
     context.fill()
   }
 
   if (foregroundType === 'type5') {
     context.beginPath()
-    context.arc(centerX, centerY, radius * 0.95, 0, TWO_PI)
+    context.arc(centerX, centerY, imageWidth * 0.456, 0, TWO_PI)
     closePathSafe(context)
     context.strokeStyle = 'rgba(0,0,0,0.1)'
     context.lineWidth = 2
@@ -923,9 +1088,9 @@ const drawKnob = (
   knobStyle: WindDirectionGaugeConfig['style']['knobStyle'],
   centerX: number,
   centerY: number,
-  radius: number
+  imageWidth: number
 ): void => {
-  const knobRadius = radius * 0.08
+  const knobRadius = imageWidth * 0.04
 
   context.save()
 
@@ -1057,7 +1222,7 @@ export const renderWindDirectionGauge = (
   }
 
   if (config.visibility.showBackground) {
-    drawBackground(context, config.style.backgroundColor, centerX, centerY, radius)
+    drawBackground(context, config.style.backgroundColor, centerX, centerY, width)
 
     if (config.style.customLayer?.image && config.style.customLayer.visible) {
       context.drawImage(config.style.customLayer.image, 0, 0, width, height)
@@ -1088,31 +1253,38 @@ export const renderWindDirectionGauge = (
     }
 
     if (config.visibility.showRose) {
-      drawCompassRose(context, centerX, centerY, radius, palette)
+      drawCompassRose(context, centerX, centerY, width, height, palette)
     }
 
     if (config.visibility.showDegreeScale) {
-      drawDegreeScale(context, centerX, centerY, radius, config.scale.degreeScaleHalf, palette)
+      drawDegreeScale(
+        context,
+        centerX,
+        centerY,
+        width,
+        height,
+        config.scale.degreeScaleHalf,
+        palette
+      )
     }
 
     if (config.visibility.showPointSymbols) {
-      drawPointSymbols(context, config.style.pointSymbols, centerX, centerY, radius, palette)
+      drawPointSymbols(context, config.style.pointSymbols, centerX, centerY, width, palette)
     }
   }
 
   if (config.visibility.showLcd) {
-    drawLcds(context, config, centerX, centerY, radius, latest, average)
+    drawLcds(context, config, centerX, centerY, width, latest, average)
   }
 
-  drawPointer(context, config.style.pointerAverage, average, centerX, centerY, radius)
-  drawPointer(context, config.style.pointerLatest, latest, centerX, centerY, radius)
+  drawPointers(context, config, centerX, centerY, width, latest, average)
 
   if (config.visibility.showForeground) {
-    drawForeground(context, config.style.foregroundType, centerX, centerY, radius)
+    drawForeground(context, config.style.foregroundType, centerX, centerY, width)
 
     const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
     if (showKnob) {
-      drawKnob(context, config.style.knobType, config.style.knobStyle, centerX, centerY, radius)
+      drawKnob(context, config.style.knobType, config.style.knobStyle, centerX, centerY, width)
     }
   }
 

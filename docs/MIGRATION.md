@@ -2,13 +2,11 @@
 
 ## Target Audience
 
-This document is designed for **Large Language Models** performing migration tasks. It provides explicit, detailed instructions with complete code examples, exact file paths, and actionable patterns for converting legacy SteelSeries v2 gauge components to v3 architecture.
+This document is designed for **Large Language Models** performing migration tasks. It provides explicit instructions with complete code examples and actionable patterns for converting legacy SteelSeries v2 gauge components to v3 architecture.
 
 ---
 
 ## Executive Summary
-
-The SteelSeries v3 represents a **complete architectural overhaul** from v2:
 
 | Aspect               | v2 (Legacy)                     | v3 (Modern)                          |
 | -------------------- | ------------------------------- | ------------------------------------ |
@@ -21,11 +19,79 @@ The SteelSeries v3 represents a **complete architectural overhaul** from v2:
 
 ---
 
+## Critical Pre-Flight: Visual Behavior Enforcement
+
+**⚠️ ROOT CAUSE OF PREVIOUS FAILURES**: Migrations succeeded at code structure (properties mapped, functions exist, render order correct) but **failed at visual output**. A function can exist and be called correctly yet produce completely different visual results.
+
+### The Problem
+
+**WindDirection example:**
+
+- ✅ Property `degreeScale` mapped correctly
+- ✅ Function `drawDegreeScale` implemented
+- ✅ Called in correct render order
+- ❌ **VISUAL FAILURE**: v2 shows cardinal directions (N, NE, E...) but v3 showed degree numbers (0, 10, 20...)
+
+### Mandatory Visual Verification Protocol
+
+**For EVERY drawing function, verify:**
+
+```
+FUNCTION: drawTickmarksImage / drawDegreeScale / drawCompassRose
+├── What pixels does this function draw?
+│   ├── v2: Cardinal directions at 45° intervals
+│   └── v3: Must match exactly
+├── What happens when property X = true vs false?
+│   ├── v2: degreeScale=true → degree numbers around edge
+│   └── v3: Must match v2 behavior exactly
+├── What text/labels are drawn?
+│   ├── v2: LCD titles? Labels above displays?
+│   └── v3: Must match presence/absence and positioning
+├── What is the tick/scale resolution?
+│   ├── v2: 1° resolution with 10° major labels
+│   └── v3: Must match resolution exactly
+└── What number formatting?
+    ├── v2: "025" vs "25" vs "025°"
+    └── v3: Must match exact formatting
+```
+
+### Visual Comparison Procedure
+
+**MANDATORY - Before declaring migration complete:**
+
+1. **Render both versions side-by-side**
+
+   ```bash
+   open legacy_code/srcdocs/index.html  # v2
+   pnpm --filter @bradsjm/steelseries-v3-docs dev  # v3
+   ```
+
+2. **Compare pixel-by-pixel for default configuration**
+3. **Verify conditional rendering** - Toggle each boolean, verify v2/v3 match
+4. **Check text rendering** - Labels, number formatting, font sizes
+
+### Critical Visual Failures to Avoid
+
+| Property          | v2 Behavior                           | Common v3 Error                          |
+| ----------------- | ------------------------------------- | ---------------------------------------- |
+| `degreeScale`     | Shows degree numbers (0, 10, 20...)   | Shows cardinal directions or wrong scale |
+| `roseVisible`     | Shows 16-point compass rose           | Shows 8-point or wrong style             |
+| `lcdTitleStrings` | Shows text labels above LCDs          | Missing labels or wrong defaults         |
+| `pointSymbols`    | Shows cardinal directions around edge | Missing or wrong symbols                 |
+| LCD values        | "025" (no ° symbol)                   | "025°" or "25" (wrong formatting)        |
+
+---
+
 ## Phase 1: Research and Analysis
 
-### 1.1 Identify Legacy Source Files
+### 1.1 Read Complete Legacy Source
 
-**CRITICAL**: Always start by reading the complete legacy implementation.
+**CRITICAL**: Read the ENTIRE legacy file. Do not skim.
+
+```bash
+cat legacy_code/src/{GaugeName}.js | wc -l  # Note total lines
+# Read every line: imports, properties, constructor, all draw functions, animation
+```
 
 **Legacy radial-bargraph location:**
 
@@ -39,268 +105,137 @@ legacy_code/src/drawBackground.js
 legacy_code/src/drawForeground.js
 ```
 
-**Legacy v2 property schema pattern:**
+**Legacy property pattern:**
 
 ```javascript
-// legacy_code/src/RadialBargraph.js
 static get properties () {
   return {
     size: { type: Number, defaultValue: 200 },
     value: { type: Number, defaultValue: 0 },
-    real_value: { state: true },
-    // NEGATIVE BOOLEAN PATTERN - will be inverted in v3
+    // NEGATIVE BOOLEAN PATTERN - invert in v3
     noFrameVisible: { type: Boolean, defaultValue: false },
     noBackgroundVisible: { type: Boolean, defaultValue: false },
-    noLcdVisible: { type: Boolean, defaultValue: false },
-    // Enum pattern with objectEnum mapping
+    // Enum pattern
     frameDesign: { type: String, objectEnum: FrameDesign, defaultValue: 'METAL' },
     backgroundColor: { type: String, objectEnum: BackgroundColor, defaultValue: 'DARK_GRAY' },
-    gaugeType: { type: String, objectEnum: GaugeType, defaultValue: 'TYPE4' },
-    valueColor: { type: String, objectEnum: ColorDef, defaultValue: 'RED' },
-    // ... 30+ more properties
   }
 }
 ```
 
-**Key insight**: Legacy uses **`noXVisible`** negative booleans. v3 uses **`showX`** positive booleans.
+### 1.2 Visual Layers Order
 
-### 1.2 Document Visual Layers
+Every gauge renders in this exact order:
 
-Every SteelSeries gauge renders in this exact order:
-
-1. **Frame** (bezel/ring) - `drawFrame.js`
-2. **Background** (dial face material) - `drawBackground.js`
+1. **Frame** (bezel/ring)
+2. **Background** (dial face)
 3. **Static elements** (ticks, labels, title, unit)
-4. **Dynamic elements** (bargraph LEDs, pointers, LCD)
-5. **Foreground** (glass overlay, knob) - `drawForeground.js`
+4. **Dynamic elements** (pointers, LEDs, LCD)
+5. **Foreground** (glass overlay, knob)
 
-**MANDATORY**: Preserve this exact rendering order in v3.
+**MANDATORY**: Preserve this exact rendering order.
+
+### 1.3 Phase 1 Checklist
+
+- [ ] Read complete legacy file (every line)
+- [ ] List all properties with defaults
+- [ ] Identify enum types and values
+- [ ] Note negative boolean patterns (noXVisible)
+- [ ] List all drawing functions in render order
+- [ ] Identify tick mark resolution (1°? 10°?)
+- [ ] Note number formatting patterns
+- [ ] Check for multiple pointers/indicators
 
 ---
 
 ## Phase 2: Schema Design (v3 Core)
 
-### 2.1 Create Schema File
+**File location:** `packages/core/src/{gauge-type}/schema.ts`
 
-**File location:** `packages/core/src/radial-bargraph/schema.ts`
-
-**Step-by-step schema construction:**
+### 2.1 Schema Construction Pattern
 
 ```typescript
 import { z } from 'zod'
-import { radialBackgroundColorSchema, radialFrameDesignSchema } from '../radial/schema.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
-// Step 1: Define enum schemas first (string literals, NOT objects)
-export const radialBargraphLabelNumberFormatSchema = z.enum([
-  'standard',
-  'fractional',
-  'scientific'
-])
+// Step 1: Enum schemas (string literals, NOT objects)
+export const labelNumberFormatSchema = z.enum(['standard', 'fractional', 'scientific'])
 
-export const radialBargraphTickLabelOrientationSchema = z.enum(['horizontal', 'tangent', 'normal'])
-
-// Step 2: Define LCD color enum (legacy compatible)
-export const radialBargraphLcdColorSchema = z.enum([
-  'STANDARD',
-  'STANDARD_GREEN',
-  'BLUE',
-  'ORANGE',
-  'RED',
-  'YELLOW',
-  'WHITE',
-  'GRAY',
-  'BLACK'
-])
-
-// Step 3: Define section schema with validation
-export const radialBargraphSectionSchema = z
+// Step 2: Nested schemas with .strict() and .default()
+export const styleSchema = z
   .object({
-    from: z.number().finite(),
-    to: z.number().finite(),
-    color: z.string().trim().min(1)
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    if (value.to <= value.from) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['to'],
-        message: 'to must be greater than from'
-      })
-    }
-  })
-
-// Step 4: Define gradient stop schema
-export const radialBargraphValueGradientStopSchema = z
-  .object({
-    fraction: z.number().min(0).max(1),
-    color: z.string().trim().min(1)
-  })
-  .strict()
-
-// Step 5: Define alert schema with severity levels (v3 enhancement)
-export const radialBargraphAlertSchema = z
-  .object({
-    id: z.string().trim().min(1),
-    value: z.number().finite(),
-    message: z.string().trim().min(1),
-    severity: z.enum(['info', 'warning', 'critical']).default('warning')
-  })
-  .strict()
-
-// Step 6: Define threshold with show flag
-export const radialBargraphThresholdSchema = z
-  .object({
-    value: z.number().finite(),
-    show: z.boolean().default(true)
-  })
-  .strict()
-
-// Step 7: Define indicators container
-export const radialBargraphIndicatorsSchema = z
-  .object({
-    threshold: radialBargraphThresholdSchema.optional(),
-    alerts: z.array(radialBargraphAlertSchema).default([]),
-    ledVisible: z.boolean().default(false),
-    userLedVisible: z.boolean().default(false),
-    trendVisible: z.boolean().default(false),
-    trendState: z.enum(['up', 'steady', 'down', 'off']).default('off')
-  })
-  .strict()
-  .default({
-    alerts: [],
-    ledVisible: false,
-    userLedVisible: false,
-    trendVisible: false,
-    trendState: 'off'
-  })
-
-// Step 8: Define scale configuration
-export const radialBargraphScaleSchema = z
-  .object({
-    niceScale: z.boolean().default(true),
-    maxNoOfMajorTicks: z.number().int().min(2).default(10),
-    maxNoOfMinorTicks: z.number().int().min(1).default(10),
-    fractionalScaleDecimals: z.number().int().min(0).max(8).default(1)
-  })
-  .strict()
-
-// Step 9: Define style configuration (v3 groups related properties)
-export const radialBargraphStyleSchema = z
-  .object({
-    frameDesign: radialFrameDesignSchema.default('metal'),
-    backgroundColor: radialBackgroundColorSchema.default('DARK_GRAY'),
+    frameDesign: z.enum(['metal', 'brass', 'steel']).default('metal'),
+    backgroundColor: z.enum(['DARK_GRAY', 'SATIN_GRAY']).default('DARK_GRAY'),
     foregroundType: z.enum(['type1', 'type2', 'type3', 'type4', 'type5']).default('type1'),
     gaugeType: z.enum(['type1', 'type2', 'type3', 'type4']).default('type4'),
-    valueColor: z
-      .enum([
-        'RED',
-        'GREEN',
-        'BLUE',
-        'ORANGE',
-        'YELLOW',
-        'CYAN',
-        'MAGENTA',
-        'WHITE',
-        'GRAY',
-        'BLACK',
-        'RAITH',
-        'GREEN_LCD',
-        'JUG_GREEN'
-      ])
-      .default('RED'),
-    lcdColor: radialBargraphLcdColorSchema.default('STANDARD'),
-    digitalFont: z.boolean().default(false),
-    labelNumberFormat: radialBargraphLabelNumberFormatSchema.default('standard'),
-    tickLabelOrientation: radialBargraphTickLabelOrientationSchema.default('normal'),
-    useSectionColors: z.boolean().default(false),
-    useValueGradient: z.boolean().default(false)
+    valueColor: z.enum(['RED', 'GREEN', 'BLUE', 'ORANGE', 'YELLOW']).default('RED'),
+    digitalFont: z.boolean().default(false)
   })
   .strict()
 
-// Step 10: Compose final config schema
-export const radialBargraphGaugeConfigSchema = sharedGaugeConfigSchema
+// Step 3: Compose final config
+export const gaugeConfigSchema = sharedGaugeConfigSchema
   .extend({
-    scale: radialBargraphScaleSchema.default(() => ({
-      niceScale: true,
-      maxNoOfMajorTicks: 10,
-      maxNoOfMinorTicks: 10,
-      fractionalScaleDecimals: 1
-    })),
-    style: radialBargraphStyleSchema.default({
-      frameDesign: 'metal',
-      backgroundColor: 'DARK_GRAY',
-      foregroundType: 'type1',
-      gaugeType: 'type4',
-      valueColor: 'RED',
-      lcdColor: 'STANDARD',
-      digitalFont: false,
-      labelNumberFormat: 'standard',
-      tickLabelOrientation: 'normal',
-      useSectionColors: false,
-      useValueGradient: false
+    style: styleSchema.default({
+      /* defaults */
     }),
-    sections: z.array(radialBargraphSectionSchema).default([]),
-    valueGradientStops: z.array(radialBargraphValueGradientStopSchema).default([]),
-    lcdDecimals: z.number().int().min(0).max(6).default(2),
-    indicators: radialBargraphIndicatorsSchema
+    scale: scaleSchema.default({
+      /* defaults */
+    }),
+    indicators: indicatorsSchema
   })
   .strict()
 
-// Step 11: Export inferred types (TYPE SAFETY SOURCE OF TRUTH)
-export type RadialBargraphGaugeConfig = z.infer<typeof radialBargraphGaugeConfigSchema>
-export type RadialBargraphSection = z.infer<typeof radialBargraphSectionSchema>
-export type RadialBargraphAlert = z.infer<typeof radialBargraphAlertSchema>
-// ... export all other types
+// Step 4: Export types
+export type GaugeConfig = z.infer<typeof gaugeConfigSchema>
 ```
 
-### 2.2 Schema Design Rules
-
-**CRITICAL RULES:**
+### 2.2 Schema Rules
 
 1. **Always use `.strict()`** - Prevents unexpected properties
-2. **Always provide defaults** - Match legacy defaults exactly
-3. **Use positive boolean names** - `showFrame`, not `noFrameVisible`
-4. **Group related properties** - Use nested objects (style, scale, indicators)
-5. **Add refinement validation** - Use `.superRefine()` for cross-field validation
-6. **Export both schema and type** - Types are inferred from schemas via `z.infer<>`
+2. **Always provide defaults** - Match legacy exactly
+3. **Use positive boolean names** - `showX`, not `noXVisible`
+4. **Group related properties** - style, scale, visibility, indicators
+5. **Export both schema and type** via `z.infer<>`
+
+### 2.3 Property Migration Reference
+
+| Legacy (v2)                                  | v3                             | Notes                         |
+| -------------------------------------------- | ------------------------------ | ----------------------------- |
+| `noFrameVisible: false`                      | `showFrame: true`              | Invert negative boolean       |
+| `noBackgroundVisible: false`                 | `showBackground: true`         | Invert negative boolean       |
+| `frameDesign: FrameDesign.METAL`             | `frameDesign: 'metal'`         | String literal, lowercase     |
+| `backgroundColor: BackgroundColor.DARK_GRAY` | `backgroundColor: 'DARK_GRAY'` | String literal, preserve case |
+| `gaugeType: GaugeType.TYPE4`                 | `gaugeType: 'type4'`           | String literal, lowercase     |
+
+### 2.4 Phase 2 Checklist
+
+- [ ] Every legacy property in schema
+- [ ] Default values match legacy exactly
+- [ ] Enum values match legacy objectEnum
+- [ ] Negative booleans → positive
+- [ ] All `.strict()` calls present
+- [ ] Type exports for all schemas
 
 ---
 
 ## Phase 3: Renderer Implementation (v3 Core)
 
-### 3.1 Create Renderer File
+**File location:** `packages/core/src/{gauge-type}/renderer.ts`
 
-**File location:** `packages/core/src/radial-bargraph/renderer.ts`
-
-**Architecture overview:**
+### 3.1 Main Render Function Pattern
 
 ```typescript
-// Type definitions
-export type RadialBargraphDrawContext = CanvasRenderingContext2D
-export type RadialBargraphRenderResult = {
-  value: number
-  tone: 'accent' | 'warning' | 'danger'
-  activeAlerts: RadialBargraphAlert[]
-}
-export type RadialBargraphRenderOptions = {
-  value?: number
-  paint?: Partial<ThemePaint>
-}
-
-// Main render function - PURE FUNCTION, NO SIDE EFFECTS
-export const renderRadialBargraphGauge = (
-  context: RadialBargraphDrawContext,
-  config: RadialBargraphGaugeConfig,
-  options: RadialBargraphRenderOptions = {}
-): RadialBargraphRenderResult => {
-  // 1. Resolve all computed values
+export const renderGauge = (
+  context: CanvasRenderingContext2D,
+  config: GaugeConfig,
+  options?: { value?: number; paint?: Partial<ThemePaint> }
+): RenderResult => {
+  // 1. Resolve computed values
   const resolvedScale = resolveScale(config)
   const clampedValue = clamp(
-    options.value ?? config.value.current,
-    resolvedScale.minValue,
-    resolvedScale.maxValue
+    options?.value ?? config.value.current,
+    resolvedScale.min,
+    resolvedScale.max
   )
   const geometry = resolveGeometry(config.style.gaugeType, resolvedScale.range)
 
@@ -309,38 +244,174 @@ export const renderRadialBargraphGauge = (
 
   // 3. Render in EXACT legacy order
   drawFrameBackground(context, config, size, centerX, centerY, radius, paint)
-  drawTrackAndInactiveLeds(context, size, geometry, centerX, centerY)
-  drawTickMarks(context, config, geometry, resolvedScale, size, centerX, centerY)
-  drawTitleAndUnit(context, config, size, centerX)
-  drawActiveLeds(
-    context,
-    config,
-    clampedValue,
-    size,
-    geometry,
-    resolvedScale,
-    sectionAngles,
-    gradientSampler
-  )
-  drawLcd(context, config, clampedValue, size, paint)
-  drawSimpleLed(context, ledX, ledY, ledSize, '#ff2a2a', config.indicators.ledVisible)
-  drawTrendIndicator(context, config, size)
+  drawStaticElements(context, config, geometry, resolvedScale, size, centerX, centerY)
+  drawDynamicElements(context, config, clampedValue, size, geometry, resolvedScale)
   drawForeground(context, config, centerX, centerY, radius)
 
-  // 4. Return result with computed state
   return { value: clampedValue, tone, activeAlerts }
 }
 ```
 
-### 3.2 Geometry Resolution (CRITICAL - Exact Legacy Math)
+### 3.2 Visual Fidelity Analysis Methodology
 
-**Copy this function EXACTLY from legacy:**
+**Before writing ANY drawing function, analyze the legacy code using this methodology:**
+
+#### Trace Conditional Rendering: "When Property X=true, What Draws?"
+
+**For each boolean property, create a conditional rendering map:**
+
+```
+PROPERTY: degreeScale (boolean)
+├── WHEN true:
+│   ├── drawDegreeScale() is CALLED
+│   │   ├── Draws numbers: 0, 10, 20, ..., 350 around outer edge
+│   │   ├── Position: radius * 0.85 from center
+│   │   ├── Font: sans-serif 10px
+│   │   └── Color: #000000 (black)
+│   └── Cardinal directions HIDDEN or shown INSIDE degree scale
+│
+└── WHEN false:
+    ├── drawDegreeScale() is SKIPPED
+    └── Cardinal directions shown at radius * 0.75 instead
+
+PROPERTY: roseVisible (boolean)
+├── WHEN true:
+│   └── drawCompassRose() is CALLED
+│       ├── Draws 16-point compass rose at center
+│       ├── Radius: size * 0.25
+│       └── Colors: N/S in red, E/W in black, others in gray
+│
+└── WHEN false:
+    └── drawCompassRose() is SKIPPED entirely
+
+PROPERTY: showLcd (boolean)  [Negative in v2: noLcdVisible]
+├── WHEN true:
+│   ├── drawLcd() is CALLED for EACH LCD display
+│   │   ├── Draws background rectangle
+│   │   ├── Draws value text (formatted with lcdDecimals)
+│   │   └── Position: depends on gauge type
+│   └── lcdTitleStrings displayed ABOVE LCDs if provided
+│
+└── WHEN false:
+    └── drawLcd() is SKIPPED
+```
+
+**Procedure:**
+
+1. Find all boolean properties in legacy `properties()`
+2. For each property, grep for its usage in the `draw()` function
+3. Map exactly what drawing calls are made when true vs false
+4. Verify v3 implements identical conditional logic
+
+**Gap Detection:**
+
+```bash
+# Find all conditionals in legacy draw()
+grep -n "if.*degreeScale\|if.*roseVisible\|if.*showLcd" legacy_code/src/WindDirection.js
+# Each conditional MUST have corresponding v3 conditional
+```
+
+#### Check Every Draw Call: "What Pixels Does This Function Actually Change?"
+
+**For EACH drawing function in legacy, document pixel-level behavior:**
+
+```
+FUNCTION: drawDegreeScale(ctx, config)
+├── PURPOSE: Draw degree numbers around gauge edge
+├── CALLED BY: draw() when degreeScale === true
+├── PIXELS CHANGED:
+│   ├── Text pixels: Numbers 0, 10, 20, ..., 350
+│   ├── Positions: 36 locations at radius * 0.85
+│   ├── Angles: Every 10 degrees (0°, 10°, 20°...)
+│   └── Font: "10px sans-serif", fillStyle: "#000000"
+├── PARAMETERS:
+│   ├── ctx: CanvasRenderingContext2D
+│   ├── centerX: number (center of gauge)
+│   ├── centerY: number (center of gauge)
+│   └── radius: number (gauge radius)
+└── SIDE EFFECTS: None (no context.save/restore in legacy)
+
+FUNCTION: drawCompassRose(ctx, config)
+├── PURPOSE: Draw 16-point compass rose at center
+├── CALLED BY: draw() when roseVisible === true
+├── PIXELS CHANGED:
+│   ├── 16 directional labels: N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW
+│   ├── Arranged in circle at radius * 0.25
+│   ├── N and S: red (#ff0000)
+│   ├── E and W: black (#000000)
+│   ├── Others: gray (#808080)
+│   └── Font: "12px sans-serif"
+├── PARAMETERS:
+│   ├── ctx: CanvasRenderingContext2D
+│   ├── centerX: number
+│   └── centerY: number
+└── SIDE EFFECTS: Rotates canvas context (must restore!)
+
+FUNCTION: drawPointer(ctx, type, color, size)
+├── PURPOSE: Draw pointer/indicator at current value position
+├── CALLED BY: draw() for each value (latest, average)
+├── PIXELS CHANGED:
+│   ├── Pointer shape based on type parameter
+│   ├── Type1: Triangle pointer
+│   ├── Type8: Thin needle with counterweight
+│   ├── Color: from color parameter (RED, BLUE, etc.)
+│   ├── Shadow: applied before drawing (context.shadow*)
+│   └── Position: rotated to current value angle
+├── PARAMETERS:
+│   ├── ctx: CanvasRenderingContext2D (already translated to center)
+│   ├── type: string (pointer type identifier)
+│   ├── color: string (color constant)
+│   └── size: number (gauge size for scaling)
+└── SIDE EFFECTS: Modifies context path, fills, may apply shadow
+```
+
+**Critical Questions for Each Function:**
+
+1. **What shape does it draw?** (circle, line, text, path)
+2. **Where does it draw?** (coordinates, relative to center/size)
+3. **What color?** (fillStyle, strokeStyle, gradients)
+4. **What font?** (font family, size, weight)
+5. **Any shadows/effects?** (shadowColor, shadowBlur, shadowOffset)
+6. **Does it transform context?** (save/restore, translate, rotate)
+7. **Is it conditional?** (if/switch statements)
+8. **How many times called?** (once per render? per tick? per value?)
+
+**Line-by-Line Comparison Procedure:**
 
 ```typescript
-const resolveGeometry = (
-  gaugeType: RadialBargraphGaugeConfig['style']['gaugeType'],
-  range: number
-): GaugeGeometry => {
+// Step 1: Copy legacy function to scratchpad
+// Step 2: Implement v3 version
+// Step 3: Compare LINE BY LINE:
+
+// Legacy (line 234-238):
+ctx.font = '10px sans-serif'
+ctx.fillStyle = '#000000'
+ctx.textAlign = 'center'
+ctx.textBaseline = 'middle'
+ctx.fillText(angle.toString(), x, y)
+
+// v3 (MUST match exactly):
+context.font = '10px sans-serif' // Same font
+context.fillStyle = '#000000' // Same color
+context.textAlign = 'center' // Same alignment
+context.textBaseline = 'middle' // Same baseline
+context.fillText(angle.toString(), x, y) // Same text
+```
+
+**Common Visual Failures from Draw Call Differences:**
+
+| Function          | Legacy Behavior                     | Common v3 Error                   |
+| ----------------- | ----------------------------------- | --------------------------------- |
+| `drawDegreeScale` | Shows degree numbers (0, 10, 20...) | Shows cardinal directions instead |
+| `drawLcd`         | Value format "025" (no ° symbol)    | Format "25" or "025°"             |
+| `drawPointer`     | Shadow offset = size \* 0.015       | No shadow or wrong offset         |
+| `drawTickmarks`   | 1° resolution with 10° labels       | Only draws 10° marks              |
+| `drawTitle`       | Title centered above gauge          | Title below or wrong position     |
+
+### 3.3 Geometry Resolution (Copy EXACTLY from Legacy)
+
+```typescript
+const resolveGeometry = (gaugeType: string, range: number): Geometry => {
   const PI = Math.PI
   const HALF_PI = PI * 0.5
   const TWO_PI = PI * 2
@@ -352,7 +423,6 @@ const resolveGeometry = (
   let angleRange = TWO_PI - freeAreaAngle
   let bargraphOffset = -TWO_PI / 6
 
-  // LEGACY: Switch on gauge type with exact angle calculations
   if (gaugeType === 'type1') {
     rotationOffset = PI
     angleRange = HALF_PI
@@ -366,21 +436,17 @@ const resolveGeometry = (
     angleRange = PI * 1.5
     bargraphOffset = -HALF_PI
   }
-  // type4 uses defaults calculated above
 
   return {
     rotationOffset,
     bargraphOffset,
     angleRange,
-    degAngleRange: angleRange * (180 / PI),
     angleStep: angleRange / Math.max(range, 1e-9)
   }
 }
 ```
 
-### 3.3 Scale Resolution (Legacy Nice Number Algorithm)
-
-**CRITICAL**: Port the exact nice number algorithm:
+### 3.4 Scale Resolution (Nice Number Algorithm)
 
 ```typescript
 const calcNiceNumber = (range: number, round: boolean): number => {
@@ -402,114 +468,51 @@ const calcNiceNumber = (range: number, round: boolean): number => {
 
   return niceFraction * 10 ** exponent
 }
+```
 
-const resolveScale = (config: RadialBargraphGaugeConfig) => {
-  const min = config.value.min
-  const max = config.value.max
-  const rawRange = Math.max(1e-9, max - min)
+### 3.5 Multi-Pointer Pattern (CRITICAL)
 
-  if (config.scale.niceScale) {
-    // LEGACY: Nice scale calculation
-    const niceRange = calcNiceNumber(rawRange, false)
-    const majorTickSpacing = calcNiceNumber(niceRange / (config.scale.maxNoOfMajorTicks - 1), true)
-    const niceMin = Math.floor(min / majorTickSpacing) * majorTickSpacing
-    const niceMax = Math.ceil(max / majorTickSpacing) * majorTickSpacing
-    const minorTickSpacing = calcNiceNumber(
-      majorTickSpacing / (config.scale.maxNoOfMinorTicks - 1),
-      true
-    )
+**WindDirection, Compass gauges use relative rotation:**
 
-    return {
-      minValue: niceMin,
-      maxValue: niceMax,
-      range: niceMax - niceMin,
-      majorTickSpacing,
-      minorTickSpacing
-    }
-  }
+```typescript
+const drawPointers = (context: CanvasRenderingContext2D, config: WindDirectionConfig): void => {
+  const angleStep = (2 * Math.PI) / 360
+  const angleAverage = config.value.average * angleStep
+  const angleLatest = config.value.latest * angleStep
 
-  // Non-nice scale
-  const majorTickSpacing = calcNiceNumber(rawRange / (config.scale.maxNoOfMajorTicks - 1), true)
-  const minorTickSpacing = calcNiceNumber(
-    majorTickSpacing / (config.scale.maxNoOfMinorTicks - 1),
-    true
-  )
+  context.save()
+  context.translate(centerX, centerY)
 
-  return {
-    minValue: min,
-    maxValue: max,
-    range: rawRange,
-    majorTickSpacing,
-    minorTickSpacing
-  }
+  // Apply shadow
+  const shadowOffset = Math.max(2, size * 0.015)
+  context.shadowColor = 'rgba(0, 0, 0, 0.8)'
+  context.shadowOffsetX = shadowOffset
+  context.shadowOffsetY = shadowOffset
+  context.shadowBlur = shadowOffset * 2
+
+  // Step 1: Rotate to average position
+  context.rotate(angleAverage)
+  drawPointer(context, config.style.pointerAverage.type, config.style.pointerAverage.color, size)
+
+  // Step 2: RELATIVE rotation for latest (KEY: subtract current rotation)
+  const relativeAngle = angleLatest - angleAverage
+  context.rotate(relativeAngle)
+  drawPointer(context, config.style.pointerLatest.type, config.style.pointerLatest.color, size)
+
+  // Clear shadow
+  context.shadowColor = 'transparent'
+  context.restore()
 }
 ```
 
-### 3.4 Drawing Functions Pattern
-
-**Each draw function follows this pattern:**
+### 3.6 Animation Function
 
 ```typescript
-const drawFrameBackground = (
-  context: RadialBargraphDrawContext,
-  config: RadialBargraphGaugeConfig,
-  size: number,
-  centerX: number,
-  centerY: number,
-  radius: number,
-  paint: ThemePaint
-): void => {
-  // 1. Check visibility flags
-  if (config.visibility.showFrame) {
-    // 2. Use legacy material drawing functions
-    if (isChromeLikeFrame(config.style.frameDesign)) {
-      drawLegacyRadialFrame(context, centerX, centerY, radius)
-    } else {
-      drawLegacyRadialFrameMetal(context, centerX, centerY, radius)
-    }
-  }
-
-  if (!config.visibility.showBackground) {
-    return
-  }
-
-  // 3. Apply legacy background with theme integration
-  const patchedPaint: ThemePaint = {
-    ...paint,
-    textColor: LEGACY_BACKGROUND_TEXT[config.style.backgroundColor],
-    backgroundColor: paint.backgroundColor
-  }
-
-  // 4. Draw background material
-  drawLegacyRadialBackground(
-    context,
-    config.style.backgroundColor,
-    size,
-    centerX,
-    centerY,
-    radius,
-    patchedPaint
-  )
-}
-```
-
-### 3.5 Animation Function
-
-**File location**: Same renderer.ts file
-
-```typescript
-export const animateRadialBargraphGauge = (
-  options: RadialBargraphAnimationOptions
-): AnimationRunHandle => {
+export const animateGauge = (options: AnimationOptions): AnimationRunHandle => {
   const scheduler = createAnimationScheduler()
 
-  // Helper to render with a specific value
-  const renderWithValue = (value: number): RadialBargraphRenderResult => {
-    return renderRadialBargraphGauge(
-      options.context,
-      options.config,
-      options.paint ? { value, paint: options.paint } : { value }
-    )
+  const renderWithValue = (value: number): RenderResult => {
+    return renderGauge(options.context, options.config, { value, paint: options.paint })
   }
 
   return scheduler.run({
@@ -517,92 +520,78 @@ export const animateRadialBargraphGauge = (
     to: options.to,
     durationMs: options.config.animation.enabled ? options.config.animation.durationMs : 0,
     easing: options.config.animation.easing,
-    onUpdate: (sample) => {
-      const result = renderWithValue(sample.value)
-      options.onFrame?.(result)
-    },
-    onComplete: () => {
-      const result = renderWithValue(options.to)
-      options.onComplete?.(result)
-    }
+    onUpdate: (sample) => options.onFrame?.(renderWithValue(sample.value)),
+    onComplete: () => options.onComplete?.(renderWithValue(options.to))
   })
 }
 ```
 
-### 3.6 Renderer Export Pattern
+### 3.7 Phase 3 Checklist
 
-**File location**: `packages/core/src/radial-bargraph/index.ts`
+#### Source Analysis
 
-```typescript
-export * from './schema.js'
-export * from './renderer.js'
-```
+- [ ] Read legacy source line-by-line (3 passes minimum)
+- [ ] Create function mapping table (Section 3.2)
+- [ ] Cross-reference EVERY function with renderer
+
+#### Conditional Rendering Trace (Section 3.2)
+
+- [ ] Listed all boolean properties from legacy
+- [ ] Mapped what draws when each property is true
+- [ ] Mapped what draws when each property is false
+- [ ] Verified v3 implements identical conditional logic
+
+#### Draw Call Pixel Audit (Section 3.2)
+
+- [ ] Documented what each draw function draws (shape, position, color)
+- [ ] Documented text content and formatting for each label
+- [ ] Documented shadow/effects applied before each draw
+- [ ] Documented context transforms (save/restore, translate, rotate)
+- [ ] Compared line-by-line: legacy vs v3 draw functions
+
+#### Geometry & Math
+
+- [ ] Geometry uses exact legacy constants (copy/paste verify)
+- [ ] All legacy `properties()` in schema
+- [ ] Render order: Frame → Background → Static → Dynamic → Foreground
+- [ ] **Multi-pointer uses relative rotation** (`angleLatest - angleAverage`)
+- [ ] Shadow effects on dynamic elements (size \* 0.015, min 2)
+- [ ] Tick resolution matches legacy (1° for WindDirection)
+- [ ] LCD number formatting exact ("025" not "25" or "025°")
 
 ---
 
 ## Phase 4: Element Wrapper (v3 Elements)
 
-### 4.1 Create Element File
+**File location:** `packages/elements/src/{gauge-type}.ts`
 
-**File location:** `packages/elements/src/index.ts` (or dedicated file)
-
-**Complete element implementation:**
+### 4.1 Complete Element Implementation
 
 ```typescript
 import {
-  animateRadialBargraphGauge,
-  radialBargraphGaugeConfigSchema,
-  renderRadialBargraphGauge,
-  resolveThemePaint,
-  createStyleTokenSource,
-  gaugeContract,
-  toGaugeContractState,
+  animateGauge,
+  gaugeConfigSchema,
+  renderGauge,
   type AnimationRunHandle,
-  type RadialBargraphDrawContext,
-  type RadialBargraphGaugeConfig,
-  type RadialBargraphRenderResult,
-  type ThemePaint
+  type GaugeConfig,
+  type RenderResult
 } from '@bradsjm/steelseries-v3-core'
 import { LitElement, css, html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 
-// Boolean converter for proper 'false' string handling
 const booleanAttributeConverter = {
   fromAttribute: (value: string | null) => value !== null && value !== 'false'
 }
 
-// Helper to read CSS custom property with fallback
-const readCssCustomPropertyColor = (
-  element: Element,
-  propertyName: string,
-  fallback: string
-): string => {
-  const value = getComputedStyle(element).getPropertyValue(propertyName).trim()
-  return value.length > 0 ? value : fallback
-}
-
-@customElement('steelseries-radial-bargraph-v3')
-export class SteelseriesRadialBargraphV3Element extends LitElement {
-  // Canvas reference using Lit query decorator
+@customElement('steelseries-{gauge}-v3')
+export class SteelseriesGaugeV3Element extends LitElement {
   @query('canvas') private canvasElement?: HTMLCanvasElement
-
-  // Current animated value (internal state)
   private currentValue = 0
-
-  // Animation handle for cancellation
   private animationHandle: AnimationRunHandle | undefined
 
-  // CSS styles with CSS custom property contract
   static override styles = css`
     :host {
-      --ss3-font-family: system-ui, sans-serif;
-      --ss3-text-color: #eceff3;
-      --ss3-accent-color: #c5162e;
-      --ss3-warning-color: #d97706;
-      --ss3-danger-color: #ef4444;
       display: inline-block;
-      font-family: var(--ss3-font-family);
-      color: var(--ss3-text-color);
     }
     canvas {
       display: block;
@@ -610,779 +599,389 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
   `
 
   // === PUBLIC PROPERTIES ===
-  // All properties MUST have converters for boolean attributes
-
   @property({ type: Number }) value = 0
   @property({ type: Number, attribute: 'min-value' }) minValue = 0
   @property({ type: Number, attribute: 'max-value' }) maxValue = 100
   @property({ type: Number }) size = 220
-  @property({ type: String }) override title = 'Radial Bargraph'
+  @property({ type: String }) title = ''
   @property({ type: String }) unit = ''
-  @property({ type: Number }) threshold = 80
-  @property({ type: Number, attribute: 'lcd-decimals' }) lcdDecimals = 2
 
-  // Frame design enum
+  // Enums
   @property({ type: String, attribute: 'frame-design' })
-  frameDesign: 'metal' | 'brass' | 'steel' | 'chrome' | 'blackMetal' | 'shinyMetal' = 'metal'
+  frameDesign: 'metal' | 'brass' | 'steel' | 'chrome' = 'metal'
 
-  // Background color enum (legacy values preserved)
-  @property({ type: String, attribute: 'background-color' })
-  backgroundColor: 'DARK_GRAY' | 'SATIN_GRAY' | 'LIGHT_GRAY' | 'WHITE' | 'BLACK' = 'DARK_GRAY'
-
-  // Foreground type enum
-  @property({ type: String, attribute: 'foreground-type' })
-  foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
-
-  // Gauge type enum
-  @property({ type: String, attribute: 'gauge-type' })
-  gaugeType: 'type1' | 'type2' | 'type3' | 'type4' = 'type4'
-
-  // Value color enum
-  @property({ type: String, attribute: 'value-color' })
-  valueColor: 'RED' | 'GREEN' | 'BLUE' | 'ORANGE' | 'YELLOW' = 'RED'
-
-  // LCD color enum
-  @property({ type: String, attribute: 'lcd-color' })
-  lcdColor: 'STANDARD' | 'BLUE' | 'RED' | 'GREEN' = 'STANDARD'
-
-  // Format options
-  @property({ type: String, attribute: 'label-number-format' })
-  labelNumberFormat: 'standard' | 'fractional' | 'scientific' = 'standard'
-
-  @property({ type: String, attribute: 'tick-label-orientation' })
-  tickLabelOrientation?: 'horizontal' | 'tangent' | 'normal'
-
-  @property({ type: Number, attribute: 'fractional-scale-decimals' })
-  fractionalScaleDecimals = 1
-
-  // === VISIBILITY FLAGS (POSITIVE BOOLEANS) ===
+  // Visibility flags (USE booleanAttributeConverter!)
   @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
   showFrame = true
 
   @property({ type: Boolean, attribute: 'show-background', converter: booleanAttributeConverter })
   showBackground = true
 
-  @property({ type: Boolean, attribute: 'show-foreground', converter: booleanAttributeConverter })
-  showForeground = true
-
-  @property({ type: Boolean, attribute: 'show-lcd', converter: booleanAttributeConverter })
-  showLcd = true
-
-  // === INDICATOR FLAGS ===
-  @property({ type: Boolean, attribute: 'led-visible', converter: booleanAttributeConverter })
-  ledVisible = false
-
-  @property({ type: Boolean, attribute: 'user-led-visible', converter: booleanAttributeConverter })
-  userLedVisible = false
-
-  @property({ type: Boolean, attribute: 'trend-visible', converter: booleanAttributeConverter })
-  trendVisible = false
-
-  @property({ type: String, attribute: 'trend-state' })
-  trendState: 'up' | 'steady' | 'down' | 'off' = 'off'
-
-  // === STYLE FLAGS ===
-  @property({ type: Boolean, attribute: 'digital-font', converter: booleanAttributeConverter })
-  digitalFont = false
-
-  @property({
-    type: Boolean,
-    attribute: 'use-section-colors',
-    converter: booleanAttributeConverter
-  })
-  useSectionColors = false
-
-  @property({
-    type: Boolean,
-    attribute: 'use-value-gradient',
-    converter: booleanAttributeConverter
-  })
-  useValueGradient = false
-
   @property({ type: Boolean, attribute: 'animate-value', converter: booleanAttributeConverter })
   animateValue = true
 
-  // === LIFECYCLE METHODS ===
-
+  // === LIFECYCLE ===
   override firstUpdated() {
     this.currentValue = this.value
     this.renderGauge(false)
   }
 
   override disconnectedCallback() {
-    // CRITICAL: Cancel animation on disconnect to prevent memory leaks
-    this.animationHandle?.cancel()
+    this.animationHandle?.cancel() // CRITICAL: Prevent memory leaks
     this.animationHandle = undefined
     super.disconnectedCallback()
   }
 
   override updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.size === 0) return
-
-    const valueChanged = changedProperties.has('value')
-    const onlyValueChanged = valueChanged && changedProperties.size === 1
-
-    // Animate only if value changed and no other properties changed
+    const onlyValueChanged = changedProperties.has('value') && changedProperties.size === 1
     this.renderGauge(onlyValueChanged && this.animateValue)
   }
 
   // === PRIVATE METHODS ===
-
-  private getThemePaint(): ThemePaint {
-    const computedStyle = getComputedStyle(this)
-    return resolveThemePaint({
-      source: createStyleTokenSource(computedStyle)
-    })
-  }
-
-  private getDrawContext(): RadialBargraphDrawContext | undefined {
-    const canvas = this.renderRoot.querySelector('canvas')
-    if (!(canvas instanceof HTMLCanvasElement)) return undefined
-    const drawContext = canvas.getContext('2d')
-    if (!drawContext) return undefined
-    return drawContext as RadialBargraphDrawContext
-  }
-
-  private buildConfig(current: number): RadialBargraphGaugeConfig {
-    // Read theme colors from CSS custom properties
-    const accentColor = readCssCustomPropertyColor(this, '--ss3-accent-color', '#d97706')
-    const warningColor = readCssCustomPropertyColor(this, '--ss3-warning-color', '#c5162e')
-    const dangerColor = readCssCustomPropertyColor(this, '--ss3-danger-color', '#ef4444')
-
-    // Build sections from configuration
-    const sections = this.useSectionColors
-      ? [
-          { from: this.minValue, to: this.threshold, color: accentColor },
-          { from: this.threshold, to: this.maxValue, color: warningColor }
-        ]
-      : []
-
-    // Build gradient stops from configuration
-    const valueGradientStops = this.useValueGradient
-      ? [
-          { fraction: 0, color: accentColor },
-          { fraction: 0.75, color: warningColor },
-          { fraction: 1, color: dangerColor }
-        ]
-      : []
-
-    // Default tick label orientation depends on gauge type (LEGACY BEHAVIOR)
-    const defaultTickLabelOrientation = this.gaugeType === 'type1' ? 'tangent' : 'normal'
-
-    // Parse and validate configuration using Zod schema
-    return radialBargraphGaugeConfigSchema.parse({
+  private buildConfig(current: number): GaugeConfig {
+    return gaugeConfigSchema.parse({
       value: { min: this.minValue, max: this.maxValue, current },
       size: { width: this.size, height: this.size },
-      text: {
-        ...(this.title ? { title: this.title } : {}),
-        ...(this.unit ? { unit: this.unit } : {})
-      },
-      visibility: {
-        showFrame: this.showFrame,
-        showBackground: this.showBackground,
-        showForeground: this.showForeground,
-        showLcd: this.showLcd
-      },
-      scale: {
-        niceScale: true,
-        maxNoOfMajorTicks: 10,
-        maxNoOfMinorTicks: 10,
-        fractionalScaleDecimals: this.fractionalScaleDecimals
-      },
-      style: {
-        frameDesign: this.frameDesign,
-        backgroundColor: this.backgroundColor,
-        foregroundType: this.foregroundType,
-        gaugeType: this.gaugeType,
-        valueColor: this.valueColor,
-        lcdColor: this.lcdColor,
-        digitalFont: this.digitalFont,
-        labelNumberFormat: this.labelNumberFormat,
-        tickLabelOrientation: this.tickLabelOrientation ?? defaultTickLabelOrientation,
-        useSectionColors: this.useSectionColors,
-        useValueGradient: this.useValueGradient
-      },
-      sections,
-      valueGradientStops,
-      lcdDecimals: this.lcdDecimals,
-      indicators: {
-        threshold: { value: this.threshold, show: true },
-        alerts: [
-          {
-            id: 'critical',
-            value: this.maxValue * 0.95,
-            message: 'critical',
-            severity: 'critical'
-          },
-          { id: 'warning', value: this.threshold, message: 'warning', severity: 'warning' }
-        ],
-        ledVisible: this.ledVisible,
-        userLedVisible: this.userLedVisible,
-        trendVisible: this.trendVisible,
-        trendState: this.trendState
-      }
+      text: { title: this.title, unit: this.unit },
+      visibility: { showFrame: this.showFrame, showBackground: this.showBackground },
+      style: { frameDesign: this.frameDesign }
     })
-  }
-
-  private emitValueChange(result: RadialBargraphRenderResult): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.valueChangeEvent, {
-        detail: toGaugeContractState('radial-bargraph', result),
-        bubbles: true,
-        composed: true
-      })
-    )
-  }
-
-  private emitError(error: unknown): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.errorEvent, {
-        detail: {
-          kind: 'radial-bargraph',
-          message:
-            error instanceof Error ? error.message : 'Unknown radial bargraph rendering error'
-        },
-        bubbles: true,
-        composed: true
-      })
-    )
   }
 
   private renderGauge(animateValue: boolean): void {
-    const drawContext = this.getDrawContext()
     const canvas = this.renderRoot.querySelector('canvas')
+    if (!canvas) return
 
-    if (!drawContext || !(canvas instanceof HTMLCanvasElement)) return
-
-    // Set canvas size
+    // Set canvas size FIRST (clears canvas)
     canvas.width = this.size
     canvas.height = this.size
 
-    const paint = this.getThemePaint()
-    const nextValue = this.value
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
 
-    // Cancel any existing animation
     this.animationHandle?.cancel()
 
-    try {
-      if (animateValue && this.currentValue !== nextValue) {
-        // Animate from current to next value
-        const animationConfig = this.buildConfig(nextValue)
-
-        this.animationHandle = animateRadialBargraphGauge({
-          context: drawContext,
-          config: animationConfig,
-          from: this.currentValue,
-          to: nextValue,
-          paint,
-          onFrame: (frame) => {
-            this.currentValue = frame.value
-            this.emitValueChange(frame)
-          },
-          onComplete: (frame) => {
-            this.currentValue = frame.value
-            this.emitValueChange(frame)
-            this.animationHandle = undefined
-          }
-        })
-      } else {
-        // Render immediately without animation
-        const config = this.buildConfig(nextValue)
-        const result = renderRadialBargraphGauge(drawContext, config, { paint })
-        this.currentValue = result.value
-        this.emitValueChange(result)
-      }
-    } catch (error) {
-      this.emitError(error)
+    if (animateValue && this.currentValue !== this.value) {
+      this.animationHandle = animateGauge({
+        context: ctx,
+        config: this.buildConfig(this.value),
+        from: this.currentValue,
+        to: this.value,
+        onFrame: (frame) => {
+          this.currentValue = frame.value
+        },
+        onComplete: () => {
+          this.animationHandle = undefined
+        }
+      })
+    } else {
+      renderGauge(ctx, this.buildConfig(this.value))
+      this.currentValue = this.value
     }
   }
-
-  // === RENDER TEMPLATE ===
 
   override render() {
     return html`<canvas></canvas>`
   }
 }
-
-// TypeScript declaration for custom element registry
-declare global {
-  interface HTMLElementTagNameMap {
-    'steelseries-radial-bargraph-v3': SteelseriesRadialBargraphV3Element
-  }
-}
 ```
+
+### 4.2 Phase 4 Checklist
+
+- [ ] ALL schema properties have `@property()` decorators
+- [ ] Boolean attributes use `booleanAttributeConverter`
+- [ ] Enum properties have correct TypeScript union types
+- [ ] `firstUpdated()` calls render with initial value
+- [ ] `disconnectedCallback()` cancels animation
+- [ ] `updated()` only animates when ONLY value changes
+- [ ] Canvas size set BEFORE rendering
+- [ ] `buildConfig()` includes ALL schema properties
 
 ---
 
-## Phase 5: Critical Migration Patterns
+## Phase 5: Common Pitfalls
 
-### 5.1 Property Name Migration
+### 5.1 Boolean Attribute Converter (CRITICAL)
 
-**Legacy v2 → v3 mapping:**
-
-| Legacy (v2)                                  | v3                             | Notes                          |
-| -------------------------------------------- | ------------------------------ | ------------------------------ |
-| `noFrameVisible: false`                      | `showFrame: true`              | Inverted negative boolean      |
-| `noBackgroundVisible: false`                 | `showBackground: true`         | Inverted negative boolean      |
-| `noForegroundVisible: false`                 | `showForeground: true`         | Inverted negative boolean      |
-| `noLcdVisible: false`                        | `showLcd: true`                | Inverted negative boolean      |
-| `frameDesign: FrameDesign.METAL`             | `frameDesign: 'metal'`         | String literal, lowercase      |
-| `backgroundColor: BackgroundColor.DARK_GRAY` | `backgroundColor: 'DARK_GRAY'` | String literal, preserved case |
-| `gaugeType: GaugeType.TYPE4`                 | `gaugeType: 'type4'`           | String literal, lowercase      |
-| `valueColor: ColorDef.RED`                   | `valueColor: 'RED'`            | String literal, preserved case |
-| `lcdColor: LcdColor.STANDARD`                | `lcdColor: 'STANDARD'`         | String literal, preserved case |
-
-### 5.2 Config Structure Migration
-
-**Legacy flat config:**
-
-```javascript
-{
-  size: 200,
-  minValue: 0,
-  maxValue: 100,
-  value: 50,
-  frameDesign: FrameDesign.METAL,
-  backgroundColor: BackgroundColor.DARK_GRAY,
-  foregroundType: ForegroundType.TYPE1,
-  gaugeType: GaugeType.TYPE4,
-  valueColor: ColorDef.RED,
-  lcdColor: LcdColor.STANDARD,
-  niceScale: true,
-  lcdDecimals: 2,
-  // ... 30 more properties
-}
-```
-
-**v3 nested config:**
-
-```typescript
-{
-  value: { min: 0, max: 100, current: 50 },
-  size: { width: 200, height: 200 },
-  text: { title: 'Title', unit: 'Unit' },
-  visibility: {
-    showFrame: true,
-    showBackground: true,
-    showForeground: true,
-    showLcd: true
-  },
-  style: {
-    frameDesign: 'metal',
-    backgroundColor: 'DARK_GRAY',
-    foregroundType: 'type1',
-    gaugeType: 'type4',
-    valueColor: 'RED',
-    lcdColor: 'STANDARD',
-    digitalFont: false,
-    labelNumberFormat: 'standard',
-    tickLabelOrientation: 'normal',
-    useSectionColors: false,
-    useValueGradient: false
-  },
-  scale: {
-    niceScale: true,
-    maxNoOfMajorTicks: 10,
-    maxNoOfMinorTicks: 10,
-    fractionalScaleDecimals: 1
-  },
-  sections: [],
-  valueGradientStops: [],
-  lcdDecimals: 2,
-  indicators: {
-    threshold: { value: 80, show: true },
-    alerts: [],
-    ledVisible: false,
-    userLedVisible: false,
-    trendVisible: false,
-    trendState: 'off'
-  }
-}
-```
-
-### 5.3 Animation Migration
-
-**Legacy v2 animation (D3-based):**
-
-```javascript
-import { timer, now } from 'd3-timer'
-import { scaleLinear } from 'd3-scale'
-import { easeCubicInOut } from 'd3-ease'
-
-updated(changedProperties) {
-  if (changedProperties.has('value')) {
-    const transitionTime = this.transitionTime
-    const originTime = now()
-    const originValue = this.real_value
-    const targetValue = this.value
-
-    const timeScale = scaleLinear()
-      .domain([0, transitionTime])
-      .range([0, 1])
-      .clamp(true)
-
-    const valueScale = scaleLinear()
-      .domain([0, 1])
-      .range([originValue, targetValue])
-
-    this._timer.restart((elapsedTime) => {
-      const scaled = timeScale(elapsedTime)
-      const eased = easeCubicInOut(scaled)
-      const newValue = valueScale(eased)
-      this.real_value = newValue
-
-      // Repaint on each frame
-      this.draw()
-
-      if (scaled >= 1) {
-        this._timer.stop()
-      }
-    })
-  }
-}
-```
-
-**v3 animation (Scheduler-based):**
-
-```typescript
-import { animateRadialBargraphGauge, type AnimationRunHandle } from '@bradsjm/steelseries-v3-core'
-
-private animationHandle: AnimationRunHandle | undefined
-
-updated(changedProperties: Map<string, unknown>) {
-  if (changedProperties.size === 0) return
-
-  const valueChanged = changedProperties.has('value')
-  const onlyValueChanged = valueChanged && changedProperties.size === 1
-
-  this.renderGauge(onlyValueChanged && this.animateValue)
-}
-
-private renderGauge(animateValue: boolean): void {
-  // ... setup code ...
-
-  // Cancel any existing animation
-  this.animationHandle?.cancel()
-
-  if (animateValue && this.currentValue !== nextValue) {
-    this.animationHandle = animateRadialBargraphGauge({
-      context: drawContext,
-      config: animationConfig,
-      from: this.currentValue,
-      to: nextValue,
-      paint,
-      onFrame: (frame) => {
-        this.currentValue = frame.value
-        this.emitValueChange(frame)
-      },
-      onComplete: (frame) => {
-        this.currentValue = frame.value
-        this.emitValueChange(frame)
-        this.animationHandle = undefined
-      }
-    })
-  }
-  // ...
-}
-```
-
----
-
-## Phase 6: Common Pitfalls and Lessons Learned
-
-### 6.1 Boolean Attribute Converter Pitfall
-
-**PROBLEM**: `animate-value="false"` in HTML is still truthy without a converter.
-
-**SOLUTION**: Always use a converter for boolean attributes:
+**PROBLEM**: `animate-value="false"` in HTML is truthy without converter.
 
 ```typescript
 const booleanAttributeConverter = {
   fromAttribute: (value: string | null) => value !== null && value !== 'false'
 }
 
-@property({
-  type: Boolean,
-  attribute: 'animate-value',
-  converter: booleanAttributeConverter
-})
+@property({ type: Boolean, converter: booleanAttributeConverter })
 animateValue = true
 ```
 
-### 6.2 Canvas Size Reset Pitfall
+### 5.2 Canvas Size Reset
 
-**PROBLEM**: Setting `canvas.width` clears the canvas, losing rendered content.
+**PROBLEM**: Setting `canvas.width` clears the canvas.
 
-**SOLUTION**: Set dimensions BEFORE drawing:
+**SOLUTION**: Set dimensions BEFORE drawing.
 
-```typescript
-private renderGauge(animateValue: boolean): void {
-  const canvas = this.renderRoot.querySelector('canvas')
-  if (!canvas) return
+### 5.3 Memory Leaks
 
-  // Set size FIRST
-  canvas.width = this.size
-  canvas.height = this.size
+**PROBLEM**: Animations continue after disconnect.
 
-  // Then render
-  // ...
-}
-```
+**SOLUTION**: Always cancel in `disconnectedCallback()`.
 
-### 6.3 Memory Leak Pitfall
+### 5.4 Geometry Precision
 
-**PROBLEM**: Animations continue after element is disconnected.
-
-**SOLUTION**: Always cancel in `disconnectedCallback`:
-
-```typescript
-override disconnectedCallback() {
-  this.animationHandle?.cancel()
-  this.animationHandle = undefined
-  super.disconnectedCallback()
-}
-```
-
-### 6.4 Geometry Precision Pitfall
-
-**PROBLEM**: Small changes to angle calculations break visual parity.
+**PROBLEM**: Small angle calculation changes break visual parity.
 
 **SOLUTION**: Copy legacy math EXACTLY:
 
 ```typescript
-// LEGACY - Copy verbatim
 const freeAreaAngle = (60 * PI) / 180 // NOT 1.04719755
-let rotationOffset = HALF_PI + freeAreaAngle * 0.5
-
-// Type1: exact match to legacy
-if (gaugeType === 'type1') {
-  rotationOffset = PI
-  angleRange = HALF_PI
-  bargraphOffset = 0
-}
 ```
 
-### 6.5 Build Artifact Staleness Pitfall
+### 5.5 Build Artifact Staleness
 
-**PROBLEM**: Changes appear not to take effect.
+**PROBLEM**: Changes don't appear.
 
-**ROOT CAUSE**: Visual test harness uses `dist/` outputs, not source.
-
-**SOLUTION**: Rebuild packages after changes:
+**SOLUTION**: Rebuild after changes:
 
 ```bash
-# After modifying core or elements
 pnpm --filter @bradsjm/steelseries-v3-core build
 pnpm --filter @bradsjm/steelseries-v3-elements build
 ```
 
-### 6.6 Blank Canvas Pitfall
+### 5.6 Blank Canvas
 
 **PROBLEM**: Visual tests pass but canvas is empty.
 
-**DETECTION**: Always verify with runtime probe:
+**DETECTION**:
 
 ```typescript
-// Add to test harness
-const canvas = document.querySelector('canvas')
-const context = canvas.getContext('2d')
-const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-const opaquePixels = imageData.data.filter((_, i) => i % 4 === 3 && imageData.data[i] > 0).length
-console.log('Opaque pixels:', opaquePixels) // Should be > 0
+const data = context.getImageData(0, 0, canvas.width, canvas.height).data
+const opaquePixels = data.filter((_, i) => i % 4 === 3 && data[i] > 0).length
+console.log('Opaque pixels:', opaquePixels) // Must be > 0
 ```
 
 **NEVER update snapshots until opaque pixel count > 0.**
 
+### 5.7 Tick Mark Resolution
+
+**PROBLEM**: Wrong tick intervals.
+
+**WindDirection requires 1° resolution:**
+
+```typescript
+// WRONG
+for (let angle = 0; angle < 360; angle += 10) {
+  drawTick(angle)
+}
+
+// CORRECT
+for (let angle = 0; angle < 360; angle++) {
+  // Every 1 degree
+  if (angle % 10 === 0) drawMajorTick(angle)
+  else drawMinorTick(angle)
+}
+```
+
 ---
 
-## Phase 7: Testing and Validation
+## Phase 6: Final Validation Gate
+
+**⚠️ DO NOT DECLARE MIGRATION COMPLETE UNTIL ALL CHECKS PASS ⚠️**
+
+### 6.1 Pre-Validation Checklist
+
+#### Legacy Source Review
+
+- [ ] Read EVERY line of legacy source (imports, properties, constructor, all functions)
+- [ ] Create function mapping table:
+
+| Legacy Function (Line) | v3 Function             | Status     |
+| ---------------------- | ----------------------- | ---------- |
+| `drawFrame()` (L145)   | `drawFrameBackground()` | ✅         |
+| `drawLcd()` (L567)     | `drawLcd()`             | ❌ MISSING |
+
+- [ ] Any ❌ items = STOP and implement
+
+#### Property Audit
+
+```bash
+# Count legacy properties
+grep -E "^\s+\w+:\s*\{" legacy_code/src/{Gauge}.js | wc -l
+# Count schema properties
+grep -E "^\s+\w+:" packages/core/src/{gauge}/schema.ts | wc -l
+```
+
+- [ ] List every legacy property on paper
+- [ ] Check off each one in schema and element
+
+#### Visual Parity Check
+
+**Canvas Inspection** (browser console):
+
+```javascript
+const canvas = document.querySelector('canvas')
+const ctx = canvas.getContext('2d')
+const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+const opaque = data.filter((_, i) => i % 4 === 3 && data[i] > 0).length
+console.log('Opaque pixels:', opaque) // Must be > 1000
+```
+
+**Side-by-side Comparison**:
+
+- [ ] Frame matches (design, color, thickness)
+- [ ] Background matches (material, color)
+- [ ] Ticks match (count, length, labels)
+- [ ] Pointer(s) match (shape, color, shadow)
+- [ ] LCD matches (font, digits, decimals)
+
+#### Behavioral Verification
+
+- [ ] Set value = 0 → pointer at correct position
+- [ ] Set value = max → pointer at correct position
+- [ ] Toggle visibility flags → elements show/hide
+- [ ] Rapid value changes → smooth animation
+- [ ] Disconnect element → no console errors
+
+#### Multi-Pointer Specific (if applicable)
+
+- [ ] Both pointers visible
+- [ ] Average pointer at correct angle
+- [ ] Latest pointer shows RELATIVE to average
+- [ ] Both have shadow effects
+
+### 6.2 Final Gate Questions
+
+Answer YES/NO truthfully:
+
+1. Have you read **every line** of the legacy source? \_\_\_\_
+2. Does your schema include **all** legacy properties? \_\_\_\_
+3. Does your renderer include **all** drawing functions? \_\_\_\_
+4. Have you verified **canvas renders non-empty** output? \_\_\_\_
+5. Have you compared **visually** with legacy? \_\_\_\_
+6. Are there **any** ❌ items in your function mapping? \_\_\_\_
+
+**If any answer is NO, fix the gap before proceeding.**
+
+---
+
+## Phase 7: Testing
 
 ### 7.1 Unit Test Pattern
 
-**File location:** `packages/core/src/radial-bargraph/renderer.test.ts`
-
 ```typescript
 import { describe, expect, it } from 'vitest'
-import { renderRadialBargraphGauge } from './renderer.js'
-import { radialBargraphGaugeConfigSchema } from './schema.js'
+import { renderGauge } from './renderer.js'
+import { gaugeConfigSchema } from './schema.js'
 
-describe('renderRadialBargraphGauge', () => {
+describe('renderGauge', () => {
   it('should render with valid config', () => {
     const canvas = document.createElement('canvas')
     canvas.width = 200
     canvas.height = 200
-    const context = canvas.getContext('2d')!
+    const ctx = canvas.getContext('2d')!
 
-    const config = radialBargraphGaugeConfigSchema.parse({
+    const config = gaugeConfigSchema.parse({
       value: { min: 0, max: 100, current: 50 },
       size: { width: 200, height: 200 }
     })
 
-    const result = renderRadialBargraphGauge(context, config)
-
+    const result = renderGauge(ctx, config)
     expect(result.value).toBe(50)
-    expect(result.tone).toBe('accent')
-    expect(result.activeAlerts).toHaveLength(0)
-  })
-
-  it('should clamp value to range', () => {
-    // Test boundary conditions
-  })
-
-  it('should resolve alerts when value exceeds threshold', () => {
-    // Test alert resolution
   })
 })
 ```
 
 ### 7.2 Visual Test Pattern
 
-**File location:** `packages/test-assets/src/radial-bargraph.visual.test.ts`
-
 ```typescript
 import { test, expect } from '@playwright/test'
 
-test('radial-bargraph default state', async ({ page }) => {
-  await page.goto('/radial-bargraph?fixture=default')
-
-  // Wait for canvas to render
+test('gauge default state', async ({ page }) => {
+  await page.goto('/{gauge}?fixture=default')
   await page.waitForSelector('canvas')
-
-  // Verify non-empty canvas
   const canvas = await page.locator('canvas')
-  await expect(canvas).toHaveScreenshot('radial-bargraph-default.png')
+  await expect(canvas).toHaveScreenshot('{gauge}-default.png')
 })
 ```
 
-### 7.3 Validation Checklist
-
-Before marking migration complete:
+### 7.3 Test Checklist
 
 - [ ] All legacy enum values ported
 - [ ] All legacy defaults preserved
 - [ ] Geometry calculations match exactly
-- [ ] Rendering order preserved
 - [ ] Canvas renders non-empty output
 - [ ] Animation cancels properly
 - [ ] TypeScript types compile
 - [ ] Zod schemas validate correctly
 - [ ] Visual tests pass
-- [ ] Element events fire correctly
 
 ---
 
-## Phase 8: Reference Tables
+## Appendix: Reference Tables
 
-### 8.1 File Mapping
+### A.1 File Mapping
 
-| Legacy File             | v3 Location                                           | Purpose                           |
-| ----------------------- | ----------------------------------------------------- | --------------------------------- |
-| `src/RadialBargraph.js` | `packages/core/src/radial-bargraph/`                  | Split into schema.ts, renderer.ts |
-| `src/BaseElement.js`    | `packages/elements/src/index.ts`                      | Element wrapper pattern           |
-| `src/definitions.js`    | `packages/core/src/radial/schema.ts`                  | Enum definitions                  |
-| `src/tools.js`          | `packages/core/src/math/`, `packages/core/src/color/` | Utility modules                   |
-| `src/drawFrame.js`      | `packages/core/src/render/legacy-materials.ts`        | Frame drawing                     |
-| `src/drawBackground.js` | `packages/core/src/render/legacy-materials.ts`        | Background drawing                |
-| `src/drawForeground.js` | `packages/core/src/render/legacy-materials.ts`        | Foreground drawing                |
+| Legacy File          | v3 Location                                           |
+| -------------------- | ----------------------------------------------------- |
+| `src/{Gauge}.js`     | `packages/core/src/{gauge}/` (schema.ts, renderer.ts) |
+| `src/BaseElement.js` | `packages/elements/src/index.ts`                      |
+| `src/definitions.js` | `packages/core/src/{gauge}/schema.ts`                 |
+| `src/tools.js`       | `packages/core/src/math/`, `packages/core/src/color/` |
+| `src/drawFrame.js`   | `packages/core/src/render/legacy-materials.ts`        |
 
-### 8.2 Gauge Type Angles
+### A.2 Gauge Type Angles
 
-| Gauge Type | rotationOffset | angleRange       | bargraphOffset | Visual Description                 |
-| ---------- | -------------- | ---------------- | -------------- | ---------------------------------- |
-| type1      | PI (180°)      | HALF_PI (90°)    | 0              | Top-left quadrant                  |
-| type2      | PI (180°)      | PI (180°)        | 0              | Left semicircle                    |
-| type3      | HALF_PI (90°)  | 1.5 \* PI (270°) | -HALF_PI       | Three-quarter circle               |
-| type4      | HALF_PI + 30°  | TWO_PI - 60°     | -TWO_PI/6      | Full circle with 60° gap at bottom |
+| Gauge Type | rotationOffset | angleRange       | Visual Description                 |
+| ---------- | -------------- | ---------------- | ---------------------------------- |
+| type1      | PI (180°)      | HALF_PI (90°)    | Top-left quadrant                  |
+| type2      | PI (180°)      | PI (180°)        | Left semicircle                    |
+| type3      | HALF_PI (90°)  | 1.5 \* PI (270°) | Three-quarter circle               |
+| type4      | HALF_PI + 30°  | TWO_PI - 60°     | Full circle with 60° gap at bottom |
 
-### 8.3 LCD Color Definitions
-
-**Copy these exact RGB values from legacy:**
+### A.3 LCD Number Formatting
 
 ```typescript
-const LCD_COLORS = {
-  STANDARD: {
-    gradientStart: 'rgb(131, 133, 119)',
-    gradientFraction1: 'rgb(176, 183, 167)',
-    gradientFraction2: 'rgb(165, 174, 153)',
-    gradientFraction3: 'rgb(166, 175, 156)',
-    gradientStop: 'rgb(175, 184, 165)',
-    text: 'rgb(35, 42, 52)'
+const formatLcdValue = (value: number): string => {
+  // Legacy: No leading zero for values >= 100
+  // 0-99: '005', '045', '099'
+  // 100+: '100', '359'
+  if (value >= 100) {
+    return value.toFixed(0)
   }
-  // ... other LCD colors
+  return value.toFixed(0).padStart(3, '0')
 }
 ```
 
-### 8.4 Pointer Color Definitions
-
-**Copy these exact RGB values:**
-
-```typescript
-const LEGACY_POINTER_COLORS = {
-  RED: {
-    dark: 'rgb(82, 0, 0)',
-    medium: 'rgb(213, 0, 25)',
-    light: 'rgb(255, 171, 173)',
-    veryDark: 'rgb(82, 0, 0)'
-  }
-  // ... other colors
-}
-```
-
----
-
-## Phase 9: Quick Reference Commands
-
-### Build and Test
+### A.4 Quick Commands
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Build all packages
+# Build
 pnpm build
 
 # Type check
 pnpm typecheck
 
-# Run tests
+# Test
 pnpm test
 
-# Run visual tests
+# Visual tests
 pnpm test:visual
 
-# Build specific package
-pnpm --filter @bradsjm/steelseries-v3-core build
+# Single test
+pnpm --filter @bradsjm/steelseries-v3-core exec vitest run src/{gauge}/renderer.test.ts
 
-# Run single test file
-pnpm --filter @bradsjm/steelseries-v3-core exec vitest run src/radial-bargraph/renderer.test.ts
-```
-
-### Debug Visual Issues
-
-```bash
-# Start docs site for manual testing
+# Dev server
 pnpm --filter @bradsjm/steelseries-v3-docs dev
-
-# Check canvas pixel data in browser console
-const canvas = document.querySelector('canvas')
-const ctx = canvas.getContext('2d')
-const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
-const opaqueCount = data.filter((_, i) => i % 4 === 3 && data[i] > 0).length
-console.log('Opaque pixels:', opaqueCount)
 ```
 
 ---
 
 ## Summary
 
-This migration guide provides explicit, copy-paste ready patterns for converting SteelSeries v2 gauges to v3 architecture. Key takeaways:
-
-1. **Preserve legacy math exactly** - Copy angle calculations, nice number algorithm verbatim
+1. **Preserve legacy math exactly** - Copy angle calculations verbatim
 2. **Invert negative booleans** - `noXVisible` → `showX`
-3. **Nest related properties** - Group into style, scale, visibility, indicators
-4. **Use Zod for everything** - Schema is source of truth for types
+3. **Nest related properties** - style, scale, visibility, indicators
+4. **Use Zod for everything** - Schema is source of truth
 5. **Cancel animations** - Always clean up in `disconnectedCallback`
 6. **Verify non-empty output** - Never update snapshots without pixel validation
-7. **Rebuild after changes** - `dist/` artifacts must be refreshed
-
-The v3 architecture separates concerns (schema → renderer → element) while preserving exact visual behavior through careful porting of legacy algorithms and constants.
+7. **Visual parity over code structure** - Match pixels, not just function names
