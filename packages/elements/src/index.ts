@@ -16,6 +16,7 @@ export { SteelseriesWindDirectionV3Element } from './components/wind-direction-e
 // Export shared utilities (useful for extending elements)
 export { booleanAttributeConverter, readCssCustomPropertyColor } from './shared/css-utils.js'
 export { sharedStyles } from './shared/shared-styles.js'
+export { SteelseriesGaugeElement } from './shared/gauge-base-element.js'
 
 // Global type augmentation for TypeScript
 declare global {
