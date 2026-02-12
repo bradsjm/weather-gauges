@@ -10,7 +10,6 @@ import { drawCompassForeground } from '../render/compass-foreground.js'
 import { drawCompassLabels } from '../render/compass-labels.js'
 import { drawCompassPointer, resolveCompassPointerColor } from '../render/compass-pointer.js'
 import { drawCompassRose, drawCompassTickmarks } from '../render/compass-scales.js'
-import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { CompassAlert, CompassGaugeConfig } from './schema.js'
 
@@ -62,6 +61,23 @@ const normalizeHeading = (heading: number, min: number, max: number): number => 
   return min + normalized
 }
 
+const resolveActiveAlerts = (heading: number, alerts: CompassAlert[]): CompassAlert[] => {
+  const tolerance = 8
+  return alerts.filter((alert) => Math.abs(alert.heading - heading) <= tolerance)
+}
+
+const resolveTone = (activeAlerts: CompassAlert[]): 'accent' | 'warning' | 'danger' => {
+  if (activeAlerts.some((alert) => alert.severity === 'critical')) {
+    return 'danger'
+  }
+
+  if (activeAlerts.some((alert) => alert.severity === 'warning')) {
+    return 'warning'
+  }
+
+  return 'accent'
+}
+
 export const renderCompassGauge = (
   context: CompassDrawContext,
   config: CompassGaugeConfig,
@@ -80,8 +96,8 @@ export const renderCompassGauge = (
   const centerY = imageWidth / 2
   const radius = Math.min(config.size.width, config.size.height) * 0.48
 
-  const activeAlerts = resolveGaugeHeadingAlerts(heading, config.indicators.alerts)
-  const tone = resolveGaugeToneFromAlerts(activeAlerts)
+  const activeAlerts = resolveActiveAlerts(heading, config.indicators.alerts)
+  const tone = resolveTone(activeAlerts)
   const pointerColorName =
     tone === 'danger' ? 'RED' : tone === 'warning' ? 'ORANGE' : config.style.pointerColor
 
