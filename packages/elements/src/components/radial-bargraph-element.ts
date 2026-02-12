@@ -48,6 +48,15 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
   @property({ type: Number })
   threshold = 80
 
+  @property({ type: Boolean, attribute: 'alerts-enabled', converter: booleanAttributeConverter })
+  alertsEnabled = false
+
+  @property({ type: Number, attribute: 'warning-alert-value' })
+  warningAlertValue = 80
+
+  @property({ type: Number, attribute: 'critical-alert-value' })
+  criticalAlertValue = 95
+
   @property({ type: Number, attribute: 'lcd-decimals' })
   lcdDecimals = 2
 
@@ -248,6 +257,29 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
       : []
 
     const defaultTickLabelOrientation = this.gaugeType === 'type1' ? 'tangent' : 'normal'
+    const rangeMin = Math.min(this.minValue, this.maxValue)
+    const rangeMax = Math.max(this.minValue, this.maxValue)
+    const clampInRange = (value: number): number => Math.min(rangeMax, Math.max(rangeMin, value))
+    const warningAlertValue = clampInRange(this.warningAlertValue)
+    const criticalAlertValue = clampInRange(this.criticalAlertValue)
+    const warningValue = Math.min(warningAlertValue, criticalAlertValue)
+    const criticalValue = Math.max(warningAlertValue, criticalAlertValue)
+    const alerts = this.alertsEnabled
+      ? [
+          {
+            id: 'warning',
+            value: warningValue,
+            message: `warning at ${warningValue}`,
+            severity: 'warning' as const
+          },
+          {
+            id: 'critical',
+            value: criticalValue,
+            message: `critical at ${criticalValue}`,
+            severity: 'critical' as const
+          }
+        ]
+      : []
 
     return radialBargraphGaugeConfigSchema.parse({
       value: {
@@ -296,20 +328,7 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
           value: this.threshold,
           show: true
         },
-        alerts: [
-          {
-            id: 'critical',
-            value: this.maxValue * 0.95,
-            message: 'critical',
-            severity: 'critical'
-          },
-          {
-            id: 'warning',
-            value: this.threshold,
-            message: 'warning',
-            severity: 'warning'
-          }
-        ],
+        alerts,
         ledVisible: this.ledVisible,
         userLedVisible: this.userLedVisible,
         trendVisible: this.trendVisible,

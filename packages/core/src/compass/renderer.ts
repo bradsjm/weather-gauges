@@ -102,44 +102,61 @@ export const renderCompassGauge = (
   const customLayer = config.style.customLayer as CanvasImageSource | null | undefined
   drawCompassCustomImage(context, customLayer ?? null, centerX, centerY, imageWidth, imageWidth)
 
-  if (
-    canTransform &&
-    config.style.roseVisible &&
-    config.visibility.showBackground &&
-    !config.style.rotateFace
-  ) {
-    drawCompassRose(
-      context,
-      centerX,
-      centerY,
-      imageWidth,
-      imageWidth,
-      backgroundPalette.symbolColor
-    )
-  }
-
   if (canTransform) {
-    drawCompassTickmarks(
-      context,
-      config,
-      imageWidth,
-      config.style.pointSymbols,
-      backgroundPalette.labelColor,
-      backgroundPalette.symbolColor
-    )
+    if (config.style.rotateFace) {
+      context.save()
+      context.translate(centerX, centerY)
+      context.rotate(-(heading * RAD_FACTOR))
+      context.translate(-centerX, -centerY)
+
+      if (config.style.roseVisible && config.visibility.showBackground) {
+        drawCompassRose(
+          context,
+          centerX,
+          centerY,
+          imageWidth,
+          imageWidth,
+          backgroundPalette.symbolColor
+        )
+      }
+
+      drawCompassTickmarks(
+        context,
+        config,
+        imageWidth,
+        config.style.pointSymbols,
+        backgroundPalette.labelColor,
+        backgroundPalette.symbolColor
+      )
+
+      context.restore()
+    } else {
+      if (config.style.roseVisible && config.visibility.showBackground) {
+        drawCompassRose(
+          context,
+          centerX,
+          centerY,
+          imageWidth,
+          imageWidth,
+          backgroundPalette.symbolColor
+        )
+      }
+
+      drawCompassTickmarks(
+        context,
+        config,
+        imageWidth,
+        config.style.pointSymbols,
+        backgroundPalette.labelColor,
+        backgroundPalette.symbolColor
+      )
+    }
   }
 
   if (canTransform) {
     context.save()
     context.translate(centerX, centerY)
-
-    if (config.style.rotateFace) {
-      context.rotate(-(heading * RAD_FACTOR))
-      if (config.style.roseVisible && config.visibility.showBackground) {
-        drawCompassRose(context, 0, 0, imageWidth, imageWidth, backgroundPalette.symbolColor)
-      }
-      context.rotate(heading * RAD_FACTOR)
-    } else {
+    if (!config.style.rotateFace) {
       context.rotate(heading * RAD_FACTOR)
     }
 

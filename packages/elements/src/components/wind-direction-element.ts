@@ -209,6 +209,15 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
   @property({ type: Boolean, attribute: 'use-color-labels', converter: booleanAttributeConverter })
   useColorLabels = false
 
+  @property({ type: Boolean, attribute: 'alerts-enabled', converter: booleanAttributeConverter })
+  alertsEnabled = false
+
+  @property({ type: Number, attribute: 'warning-alert-heading' })
+  warningAlertHeading = 90
+
+  @property({ type: Number, attribute: 'critical-alert-heading' })
+  criticalAlertHeading = 180
+
   @property({
     type: Boolean,
     attribute: 'animate-value',
@@ -260,6 +269,26 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
   }
 
   private buildConfig(): WindDirectionGaugeConfig {
+    const clampHeading = (value: number): number => Math.min(360, Math.max(0, value))
+    const warningHeading = clampHeading(this.warningAlertHeading)
+    const criticalHeading = clampHeading(this.criticalAlertHeading)
+    const alerts = this.alertsEnabled
+      ? [
+          {
+            id: 'warning',
+            heading: warningHeading,
+            severity: 'warning' as const,
+            message: `warning at ${warningHeading} deg`
+          },
+          {
+            id: 'critical',
+            heading: criticalHeading,
+            severity: 'critical' as const,
+            message: `critical at ${criticalHeading} deg`
+          }
+        ]
+      : []
+
     return windDirectionGaugeConfigSchema.parse({
       value: {
         latest: this.valueLatest,
@@ -310,6 +339,9 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
       lcdTitles: {
         latest: this.lcdTitleLatest,
         average: this.lcdTitleAverage
+      },
+      indicators: {
+        alerts
       },
       sections: [],
       areas: []

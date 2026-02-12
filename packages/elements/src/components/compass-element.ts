@@ -144,6 +144,15 @@ export class SteelseriesCompassV3Element extends LitElement {
   @property({ type: Boolean, attribute: 'show-heading-readout' })
   showHeadingReadout = false
 
+  @property({ type: Boolean, attribute: 'alerts-enabled', converter: booleanAttributeConverter })
+  alertsEnabled = false
+
+  @property({ type: Number, attribute: 'warning-alert-heading' })
+  warningAlertHeading = 90
+
+  @property({ type: Number, attribute: 'critical-alert-heading' })
+  criticalAlertHeading = 180
+
   @property({
     type: Boolean,
     attribute: 'animate-value',
@@ -195,6 +204,25 @@ export class SteelseriesCompassV3Element extends LitElement {
   private buildConfig(current: number): CompassGaugeConfig {
     const title = this.title.trim()
     const unit = this.unit.trim()
+    const clampHeading = (value: number): number => Math.min(360, Math.max(0, value))
+    const warningHeading = clampHeading(this.warningAlertHeading)
+    const criticalHeading = clampHeading(this.criticalAlertHeading)
+    const alerts = this.alertsEnabled
+      ? [
+          {
+            id: 'warning',
+            heading: warningHeading,
+            message: `warning at ${warningHeading} deg`,
+            severity: 'warning' as const
+          },
+          {
+            id: 'critical',
+            heading: criticalHeading,
+            message: `critical at ${criticalHeading} deg`,
+            severity: 'critical' as const
+          }
+        ]
+      : []
 
     return compassGaugeConfigSchema.parse({
       heading: {
@@ -239,20 +267,7 @@ export class SteelseriesCompassV3Element extends LitElement {
         customLayer: this.customLayer
       },
       indicators: {
-        alerts: [
-          {
-            id: 'east-wind',
-            heading: 90,
-            message: 'east wind',
-            severity: 'warning'
-          },
-          {
-            id: 'south-storm',
-            heading: 180,
-            message: 'storm',
-            severity: 'critical'
-          }
-        ]
+        alerts
       }
     })
   }

@@ -92,6 +92,13 @@ const hasRotateNear = (operations: DrawOp[], target: number, tolerance = 0.0001)
   })
 }
 
+const firstOperationIndex = (
+  operations: DrawOp[],
+  predicate: (operation: DrawOp) => boolean
+): number => {
+  return operations.findIndex(predicate)
+}
+
 describe('compass renderer', () => {
   it('renders rose, needle, and heading labels', () => {
     const mock = createMockContext()
@@ -230,6 +237,65 @@ describe('compass renderer', () => {
 
     expect(hasRotateNear(rotateFaceOn.operations, -(heading * radFactor))).toBe(true)
     expect(hasRotateNear(rotateFaceOff.operations, -(heading * radFactor))).toBe(false)
+
+    const firstNorthSymbolOn = firstOperationIndex(
+      rotateFaceOn.operations,
+      (operation) => operation.kind === 'fillText' && operation.text === 'N'
+    )
+    const firstNorthSymbolOff = firstOperationIndex(
+      rotateFaceOff.operations,
+      (operation) => operation.kind === 'fillText' && operation.text === 'N'
+    )
+    const firstNegativeRotateOn = firstOperationIndex(
+      rotateFaceOn.operations,
+      (operation) => operation.kind === 'rotate' && operation.angle < 0
+    )
+    const firstNegativeRotateOff = firstOperationIndex(
+      rotateFaceOff.operations,
+      (operation) => operation.kind === 'rotate' && operation.angle < 0
+    )
+
+    expect(firstNorthSymbolOn).toBeGreaterThan(-1)
+    expect(firstNorthSymbolOff).toBeGreaterThan(-1)
+    expect(firstNegativeRotateOn).toBeGreaterThan(-1)
+    expect(firstNegativeRotateOn).toBeLessThan(firstNorthSymbolOn)
+    expect(firstNegativeRotateOff).toBe(-1)
+  })
+
+  it('keeps pointer fixed when rotateFace is enabled', () => {
+    const heading = 37
+    const radFactor = Math.PI / 180
+    const baseConfig = createConfig(heading)
+
+    const rotateFaceOn = createMockContext()
+    renderCompassGauge(
+      rotateFaceOn.context,
+      compassGaugeConfigSchema.parse({
+        ...baseConfig,
+        style: {
+          ...baseConfig.style,
+          rotateFace: true,
+          roseVisible: false
+        }
+      })
+    )
+
+    const rotateFaceOff = createMockContext()
+    renderCompassGauge(
+      rotateFaceOff.context,
+      compassGaugeConfigSchema.parse({
+        ...baseConfig,
+        style: {
+          ...baseConfig.style,
+          rotateFace: false,
+          roseVisible: false
+        }
+      })
+    )
+
+    expect(hasRotateNear(rotateFaceOn.operations, heading * radFactor)).toBe(false)
+    expect(hasRotateNear(rotateFaceOff.operations, heading * radFactor)).toBe(true)
+    expect(hasRotateNear(rotateFaceOn.operations, -(heading * radFactor))).toBe(true)
   })
 
   it('animates compass heading', () => {

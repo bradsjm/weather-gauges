@@ -665,6 +665,9 @@ const renderRadialPage = (root: HTMLElement): void => {
     minValue: 0,
     maxValue: 100,
     threshold: 80,
+    alertsEnabled: false,
+    warningAlertValue: 80,
+    criticalAlertValue: 95,
     title: 'Pressure',
     unit: 'psi',
     frameDesign: 'metal',
@@ -722,6 +725,30 @@ const renderRadialPage = (root: HTMLElement): void => {
       key: 'threshold',
       label: 'Threshold',
       description: 'Warning threshold marker (constrained to Min/Max range).',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    {
+      key: 'alertsEnabled',
+      label: 'Enable Alerts',
+      description: 'Enable warning/critical alert-based tone changes.',
+      type: 'checkbox'
+    },
+    {
+      key: 'warningAlertValue',
+      label: 'Warning Alert Value',
+      description: 'Value where warning alert starts.',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    {
+      key: 'criticalAlertValue',
+      label: 'Critical Alert Value',
+      description: 'Value where critical alert starts.',
       type: 'range',
       min: 0,
       max: 100,
@@ -884,12 +911,27 @@ const renderRadialPage = (root: HTMLElement): void => {
       state.maxValue = maxValue
       state.value = clampNumber(asFiniteNumber(state.value, minValue), minValue, maxValue)
       state.threshold = clampNumber(asFiniteNumber(state.threshold, minValue), minValue, maxValue)
+      state.warningAlertValue = clampNumber(
+        asFiniteNumber(state.warningAlertValue, minValue),
+        minValue,
+        maxValue
+      )
+      state.criticalAlertValue = clampNumber(
+        asFiniteNumber(state.criticalAlertValue, maxValue),
+        minValue,
+        maxValue
+      )
+
+      const warningAlertValue = asFiniteNumber(state.warningAlertValue, minValue)
+      const criticalAlertValue = asFiniteNumber(state.criticalAlertValue, maxValue)
+      state.warningAlertValue = Math.min(warningAlertValue, criticalAlertValue)
+      state.criticalAlertValue = Math.max(warningAlertValue, criticalAlertValue)
 
       if (Boolean(state.useSectionColors) && Boolean(state.useValueGradient)) {
         state.useValueGradient = false
       }
 
-      for (const key of ['value', 'threshold']) {
+      for (const key of ['value', 'threshold', 'warningAlertValue', 'criticalAlertValue']) {
         const control = controlDefs.find((entry) => entry.key === key)
         if (!control) {
           continue
@@ -918,6 +960,9 @@ const renderCompassPage = (root: HTMLElement): void => {
     rotateFace: false,
     pointSymbolsVisible: true,
     showHeadingReadout: true,
+    alertsEnabled: false,
+    warningAlertHeading: 90,
+    criticalAlertHeading: 180,
     pointSymbolN: 'N',
     pointSymbolNE: 'NE',
     pointSymbolE: 'E',
@@ -933,6 +978,30 @@ const renderCompassPage = (root: HTMLElement): void => {
       key: 'heading',
       label: 'Heading',
       description: 'Current compass heading in degrees.',
+      type: 'range',
+      min: 0,
+      max: 359,
+      step: 1
+    },
+    {
+      key: 'alertsEnabled',
+      label: 'Enable Alerts',
+      description: 'Enable warning/critical heading alerts that adjust pointer tone.',
+      type: 'checkbox'
+    },
+    {
+      key: 'warningAlertHeading',
+      label: 'Warning Alert Heading',
+      description: 'Heading where warning alert activates.',
+      type: 'range',
+      min: 0,
+      max: 359,
+      step: 1
+    },
+    {
+      key: 'criticalAlertHeading',
+      label: 'Critical Alert Heading',
+      description: 'Heading where critical alert activates.',
       type: 'range',
       min: 0,
       max: 359,
@@ -1075,7 +1144,16 @@ const renderCompassPage = (root: HTMLElement): void => {
     'Live tune compass styling and behavior. Use pointer, rose, and foreground controls to compare variants.',
     'steelseries-compass-v3',
     controls,
-    defaults
+    defaults,
+    (state) => {
+      state.heading = clampNumber(asFiniteNumber(state.heading, 0), 0, 359)
+      state.warningAlertHeading = clampNumber(asFiniteNumber(state.warningAlertHeading, 90), 0, 359)
+      state.criticalAlertHeading = clampNumber(
+        asFiniteNumber(state.criticalAlertHeading, 180),
+        0,
+        359
+      )
+    }
   )
 }
 
@@ -1083,6 +1161,9 @@ const renderWindPage = (root: HTMLElement): void => {
   const defaults: Record<string, unknown> = {
     valueLatest: 48,
     valueAverage: 63,
+    alertsEnabled: false,
+    warningAlertHeading: 90,
+    criticalAlertHeading: 180,
     title: 'Wind',
     unit: 'deg',
     frameDesign: 'metal',
@@ -1123,6 +1204,30 @@ const renderWindPage = (root: HTMLElement): void => {
       key: 'valueAverage',
       label: 'Average Value',
       description: 'Average wind direction value.',
+      type: 'range',
+      min: 0,
+      max: 359,
+      step: 1
+    },
+    {
+      key: 'alertsEnabled',
+      label: 'Enable Alerts',
+      description: 'Enable warning/critical heading alerts for wind pointers.',
+      type: 'checkbox'
+    },
+    {
+      key: 'warningAlertHeading',
+      label: 'Warning Alert Heading',
+      description: 'Heading where warning alert activates.',
+      type: 'range',
+      min: 0,
+      max: 359,
+      step: 1
+    },
+    {
+      key: 'criticalAlertHeading',
+      label: 'Critical Alert Heading',
+      description: 'Heading where critical alert activates.',
       type: 'range',
       min: 0,
       max: 359,
@@ -1275,7 +1380,17 @@ const renderWindPage = (root: HTMLElement): void => {
     'Tune the dual-pointer wind-direction gauge live, including rose, LCD, pointer styles, and visibility options.',
     'steelseries-wind-direction-v3',
     controls,
-    defaults
+    defaults,
+    (state) => {
+      state.valueLatest = clampNumber(asFiniteNumber(state.valueLatest, 0), 0, 359)
+      state.valueAverage = clampNumber(asFiniteNumber(state.valueAverage, 0), 0, 359)
+      state.warningAlertHeading = clampNumber(asFiniteNumber(state.warningAlertHeading, 90), 0, 359)
+      state.criticalAlertHeading = clampNumber(
+        asFiniteNumber(state.criticalAlertHeading, 180),
+        0,
+        359
+      )
+    }
   )
 }
 
