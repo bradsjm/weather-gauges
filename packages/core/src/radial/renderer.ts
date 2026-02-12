@@ -28,7 +28,12 @@ import { drawRadialSimpleLed } from '../render/radial-led.js'
 import { drawRadialTrendIndicator } from '../render/radial-trend.js'
 import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
-import type { RadialAlert, RadialGaugeConfig } from './schema.js'
+import type {
+  RadialAlert,
+  RadialGaugeConfig,
+  RadialGaugeType,
+  RadialOrientation
+} from './schema.js'
 
 export type RadialDrawContext = CanvasRenderingContext2D
 
@@ -60,6 +65,36 @@ type RadialGeometry = {
   degAngleRange: number
 }
 
+type RadialLayout = {
+  frameCenterY: number
+  gaugeCenterY: number
+  radius: number
+  segmentInnerRadius: number
+  segmentOuterRadius: number
+  majorTickInnerRadius: number
+  majorTickOuterRadius: number
+  minorTickInnerRadius: number
+  minorTickOuterRadius: number
+  labelRadius: number
+  titleY: number
+  unitY: number
+  lcdY: number
+  thresholdInnerRadius: number
+  thresholdOuterRadius: number
+  thresholdLineWidth: number
+  measuredInnerRadius: number
+  measuredOuterRadius: number
+  measuredLineWidth: number
+  ledX: number
+  userLedX: number
+  ledY: number
+  trendOffsetX: number
+  trendOffsetY: number
+  knobCenterY: number
+  pointerImageSize: number
+  pointerShadow: boolean
+}
+
 const PI = Math.PI
 const TWO_PI = PI * 2
 const DEG_FACTOR = 180 / PI
@@ -68,12 +103,102 @@ const DEFAULT_START_ANGLE = (-3 * PI) / 4
 const DEFAULT_END_ANGLE = (3 * PI) / 4
 const DEFAULT_ANGLE_EPSILON = 1e-6
 const STD_FONT_NAME = 'Arial,Verdana,sans-serif'
+const TYPE5_START_ANGLE = 1.25 * PI
+const ORIENTATION_ROTATION: Record<RadialOrientation, number> = {
+  north: 0,
+  east: HALF_PI,
+  west: -HALF_PI
+}
 
 const mergePaint = (paint?: Partial<ThemePaint>): ThemePaint => {
   return {
     ...resolveThemePaint(),
     ...paint
   }
+}
+
+const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout => {
+  if (gaugeType === 'type5') {
+    return {
+      frameCenterY: size * 0.5,
+      gaugeCenterY: size * 0.733644,
+      radius: size * 0.48,
+      segmentInnerRadius: size * 0.345,
+      segmentOuterRadius: size * 0.38,
+      majorTickInnerRadius: size * 0.41,
+      majorTickOuterRadius: size * 0.44,
+      minorTickInnerRadius: size * 0.42,
+      minorTickOuterRadius: size * 0.44,
+      labelRadius: size * 0.48,
+      titleY: size * 0.4,
+      unitY: size * 0.46,
+      lcdY: size * 0.57,
+      thresholdInnerRadius: size * 0.39,
+      thresholdOuterRadius: size * 0.445,
+      thresholdLineWidth: Math.max(1.5, size * 0.007),
+      measuredInnerRadius: size * 0.395,
+      measuredOuterRadius: size * 0.44,
+      measuredLineWidth: Math.max(1.25, size * 0.006),
+      ledX: size * 0.455,
+      userLedX: size * 0.545,
+      ledY: size * 0.51,
+      trendOffsetX: -0.12 * size,
+      trendOffsetY: -0.12 * size,
+      knobCenterY: size * 0.733644,
+      pointerImageSize: size,
+      pointerShadow: true
+    }
+  }
+
+  return {
+    frameCenterY: size * 0.5,
+    gaugeCenterY: size * 0.5,
+    radius: size * 0.48,
+    segmentInnerRadius: size * 0.355,
+    segmentOuterRadius: size * 0.425,
+    majorTickInnerRadius: size * 0.32,
+    majorTickOuterRadius: size * 0.39,
+    minorTickInnerRadius: size * 0.34,
+    minorTickOuterRadius: size * 0.385,
+    labelRadius: size * 0.27,
+    titleY: size * 0.57,
+    unitY: size * 0.79,
+    lcdY: size * 0.62,
+    thresholdInnerRadius: size * 0.34,
+    thresholdOuterRadius: size * 0.425,
+    thresholdLineWidth: Math.max(1.5, size * 0.006),
+    measuredInnerRadius: size * 0.35,
+    measuredOuterRadius: size * 0.405,
+    measuredLineWidth: Math.max(1.25, size * 0.005),
+    ledX: size * 0.6,
+    userLedX: size * 0.4,
+    ledY: size * 0.38,
+    trendOffsetX: -0.12 * size,
+    trendOffsetY: -0.12 * size,
+    knobCenterY: size * 0.5,
+    pointerImageSize: size,
+    pointerShadow: false
+  }
+}
+
+const withOrientationTransform = (
+  context: RadialDrawContext,
+  orientation: RadialOrientation,
+  size: number,
+  render: () => void
+): void => {
+  const rotation = ORIENTATION_ROTATION[orientation]
+  if (!rotation) {
+    render()
+    return
+  }
+
+  context.save()
+  context.translate(size * 0.5, size * 0.5)
+  context.rotate(rotation)
+  context.translate(-size * 0.5, -size * 0.5)
+  render()
+  context.restore()
 }
 
 const resolveGeometry = (config: RadialGaugeConfig): RadialGeometry => {
@@ -105,6 +230,10 @@ const resolveGeometry = (config: RadialGaugeConfig): RadialGeometry => {
         endAngle = startAngle + (TWO_PI - freeAreaAngle)
         break
       }
+      case 'type5':
+        startAngle = TYPE5_START_ANGLE
+        endAngle = startAngle + HALF_PI
+        break
     }
   }
 
@@ -166,7 +295,7 @@ const drawSegments = (
   geometry: RadialGeometry,
   minValue: number,
   maxValue: number,
-  size: number,
+  layout: RadialLayout,
   centerX: number,
   centerY: number
 ): void => {
@@ -184,11 +313,11 @@ const drawSegments = (
   drawGaugeSectionArcs(context, arcs, {
     centerX,
     centerY,
-    innerRadius: 0.355 * size,
-    outerRadius: 0.425 * size,
+    innerRadius: layout.segmentInnerRadius,
+    outerRadius: layout.segmentOuterRadius,
     filled: true,
     fillAlpha: 0.2,
-    lineWidth: Math.max(1, size * 0.0045),
+    lineWidth: Math.max(1, layout.radius * 0.01),
     angleOffsetDeg: geometry.startAngle * DEG_FACTOR
   })
 }
@@ -207,6 +336,7 @@ const drawTicks = (
   minValue: number,
   maxValue: number,
   size: number,
+  layout: RadialLayout,
   centerX: number,
   centerY: number
 ): void => {
@@ -217,11 +347,11 @@ const drawTicks = (
   const majorAngleStep = geometry.angleRange / (majorCount - 1)
   const minorPerMajor = Math.max(0, config.scale.minorTicksPerMajor)
   const minorAngleStep = majorAngleStep / Math.max(1, minorPerMajor + 1)
-  const majorTickInnerRadius = 0.32 * size
-  const majorTickOuterRadius = 0.39 * size
-  const minorTickInnerRadius = 0.34 * size
-  const minorTickOuterRadius = 0.385 * size
-  const labelRadius = 0.27 * size
+  const majorTickInnerRadius = layout.majorTickInnerRadius
+  const majorTickOuterRadius = layout.majorTickOuterRadius
+  const minorTickInnerRadius = layout.minorTickInnerRadius
+  const minorTickOuterRadius = layout.minorTickOuterRadius
+  const labelRadius = layout.labelRadius
 
   context.save()
   context.strokeStyle = textColor
@@ -230,6 +360,8 @@ const drawTicks = (
   context.textAlign = 'center'
   context.textBaseline = 'middle'
   context.font = buildGaugeFont(Math.max(11, Math.round(size * 0.045)), STD_FONT_NAME)
+  const orientation = config.style.gaugeType === 'type5' ? config.style.orientation : 'north'
+  const labelRotation = -ORIENTATION_ROTATION[orientation]
 
   for (let majorIndex = 0; majorIndex < majorCount; majorIndex += 1) {
     const majorAngle = geometry.startAngle + majorIndex * majorAngleStep
@@ -250,7 +382,18 @@ const drawTicks = (
 
     const labelValue = minValue + majorIndex * majorStep
     const label = formatTickValue(labelValue, majorStep)
-    context.fillText(label, centerX + majorCos * labelRadius, centerY + majorSin * labelRadius)
+    const labelX = centerX + majorCos * labelRadius
+    const labelY = centerY + majorSin * labelRadius
+
+    if (labelRotation === 0) {
+      context.fillText(label, labelX, labelY)
+    } else {
+      context.save()
+      context.translate(labelX, labelY)
+      context.rotate(labelRotation)
+      context.fillText(label, 0, 0)
+      context.restore()
+    }
 
     if (majorIndex === majorCount - 1 || minorPerMajor === 0) {
       continue
@@ -281,7 +424,8 @@ const drawTitleAndUnit = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
   size: number,
-  centerX: number
+  centerX: number,
+  layout: RadialLayout
 ): void => {
   const textColor = getGaugeBackgroundTextColor(config.style.backgroundColor)
   configureGaugeTextLayout(context, {
@@ -294,14 +438,14 @@ const drawTitleAndUnit = (
     configureGaugeTextLayout(context, {
       font: buildGaugeFont(Math.max(12, Math.round(size * 0.048)), STD_FONT_NAME)
     })
-    drawGaugeText(context, config.text.title, centerX, size * 0.57)
+    drawGaugeText(context, config.text.title, centerX, layout.titleY)
   }
 
   if (config.text.unit) {
     configureGaugeTextLayout(context, {
       font: buildGaugeFont(Math.max(10, Math.round(size * 0.036)), STD_FONT_NAME)
     })
-    drawGaugeText(context, config.text.unit, centerX, size * 0.79)
+    drawGaugeText(context, config.text.unit, centerX, layout.unitY)
   }
 }
 
@@ -309,13 +453,14 @@ const drawLcd = (
   context: RadialDrawContext,
   value: number,
   size: number,
-  paint: ThemePaint
+  paint: ThemePaint,
+  layout: RadialLayout
 ): void => {
   const lcdPalette = resolveRadialLcdPalette('STANDARD')
   const lcdWidth = size * 0.21
   const lcdHeight = size * 0.07
   const lcdX = (size - lcdWidth) * 0.5
-  const lcdY = size * 0.62
+  const lcdY = layout.lcdY
 
   drawRadialLcdBox(context, lcdX, lcdY, lcdWidth, lcdHeight, lcdPalette)
   drawRadialLcdValueText({
@@ -345,17 +490,31 @@ const drawPointer = (
   angle: number,
   size: number,
   centerX: number,
-  centerY: number
+  centerY: number,
+  layout: RadialLayout
 ): void => {
+  const pointerOriginX = centerX - layout.pointerImageSize * 0.5
+  const pointerOriginY = centerY - layout.pointerImageSize * 0.5
+
   context.save()
   context.translate(centerX, centerY)
   context.rotate(angle + HALF_PI)
   context.translate(-centerX, -centerY)
+
+  if (layout.pointerShadow) {
+    context.shadowColor = 'rgba(0, 0, 0, 0.35)'
+    context.shadowOffsetX = size * 0.006
+    context.shadowOffsetY = size * 0.006
+    context.shadowBlur = size * 0.012
+  }
+
+  context.translate(pointerOriginX, pointerOriginY)
+
   drawGaugePointer({
     context,
     pointerType: config.style.pointerType,
     pointerColor: resolveGaugePointerColor(config.style.pointerColor),
-    imageWidth: size,
+    imageWidth: layout.pointerImageSize,
     family: gaugePointerFamily.compass
   })
   context.restore()
@@ -367,7 +526,7 @@ const drawThreshold = (
   geometry: RadialGeometry,
   minValue: number,
   maxValue: number,
-  size: number,
+  layout: RadialLayout,
   centerX: number,
   centerY: number
 ): void => {
@@ -380,10 +539,10 @@ const drawThreshold = (
     centerX,
     centerY,
     angleRadians: resolveValueAngle(thresholdValue, geometry, minValue, maxValue),
-    innerRadius: 0.34 * size,
-    outerRadius: 0.425 * size,
+    innerRadius: layout.thresholdInnerRadius,
+    outerRadius: layout.thresholdOuterRadius,
     color: '#ff3b30',
-    lineWidth: Math.max(1.5, size * 0.006),
+    lineWidth: layout.thresholdLineWidth,
     direction: 'inward'
   })
 }
@@ -394,7 +553,7 @@ const drawMeasuredIndicators = (
   geometry: RadialGeometry,
   minValue: number,
   maxValue: number,
-  size: number,
+  layout: RadialLayout,
   centerX: number,
   centerY: number
 ): void => {
@@ -407,10 +566,10 @@ const drawMeasuredIndicators = (
       centerX,
       centerY,
       angleRadians: resolveValueAngle(minMeasured, geometry, minValue, maxValue),
-      innerRadius: 0.35 * size,
-      outerRadius: 0.405 * size,
+      innerRadius: layout.measuredInnerRadius,
+      outerRadius: layout.measuredOuterRadius,
       color: '#1f7de0',
-      lineWidth: Math.max(1.25, size * 0.005),
+      lineWidth: layout.measuredLineWidth,
       direction: 'inward'
     })
   }
@@ -424,10 +583,10 @@ const drawMeasuredIndicators = (
       centerX,
       centerY,
       angleRadians: resolveValueAngle(maxMeasured, geometry, minValue, maxValue),
-      innerRadius: 0.35 * size,
-      outerRadius: 0.405 * size,
+      innerRadius: layout.measuredInnerRadius,
+      outerRadius: layout.measuredOuterRadius,
       color: '#f97316',
-      lineWidth: Math.max(1.25, size * 0.005),
+      lineWidth: layout.measuredLineWidth,
       direction: 'inward'
     })
   }
@@ -437,16 +596,24 @@ const drawForeground = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
   centerX: number,
-  centerY: number,
-  radius: number,
-  size: number
+  size: number,
+  layout: RadialLayout
 ): void => {
   if (config.visibility.showForeground) {
-    drawGaugeRadialForegroundByType(context, config.style.foregroundType, centerX, centerY, radius)
+    drawGaugeRadialForegroundByType(
+      context,
+      config.style.foregroundType,
+      centerX,
+      layout.frameCenterY,
+      layout.radius
+    )
   }
 
   if (!['type15', 'type16'].includes(config.style.pointerType)) {
+    context.save()
+    context.translate(0, layout.knobCenterY - size * 0.5)
     drawGaugeCenterKnob(context, size, 'standardKnob', 'silver')
+    context.restore()
   }
 }
 
@@ -470,61 +637,106 @@ export const renderRadialGauge = (
 
   const size = Math.min(config.size.width, config.size.height)
   const centerX = size * 0.5
-  const centerY = size * 0.5
-  const radius = size * 0.48
+  const layout = resolveLayout(size, config.style.gaugeType)
 
   context.clearRect(0, 0, config.size.width, config.size.height)
 
-  drawFrameBackground(context, config, size, centerX, centerY, radius, paint)
-  drawSegments(context, config, geometry, minValue, maxValue, size, centerX, centerY)
-  drawTicks(context, config, geometry, minValue, maxValue, size, centerX, centerY)
-  drawTitleAndUnit(context, config, size, centerX)
-  drawThreshold(context, config, geometry, minValue, maxValue, size, centerX, centerY)
-  drawMeasuredIndicators(context, config, geometry, minValue, maxValue, size, centerX, centerY)
+  drawFrameBackground(context, config, size, centerX, layout.frameCenterY, layout.radius, paint)
 
-  drawPointer(
-    context,
-    config,
-    resolveValueAngle(clampedValue, geometry, minValue, maxValue),
-    size,
-    centerX,
-    centerY
-  )
+  const drawOrientedContents = (): void => {
+    drawSegments(
+      context,
+      config,
+      geometry,
+      minValue,
+      maxValue,
+      layout,
+      centerX,
+      layout.gaugeCenterY
+    )
+    drawTicks(
+      context,
+      config,
+      geometry,
+      minValue,
+      maxValue,
+      size,
+      layout,
+      centerX,
+      layout.gaugeCenterY
+    )
+    drawThreshold(
+      context,
+      config,
+      geometry,
+      minValue,
+      maxValue,
+      layout,
+      centerX,
+      layout.gaugeCenterY
+    )
+    drawMeasuredIndicators(
+      context,
+      config,
+      geometry,
+      minValue,
+      maxValue,
+      layout,
+      centerX,
+      layout.gaugeCenterY
+    )
 
-  if (config.visibility.showLcd) {
-    drawLcd(context, clampedValue, size, paint)
+    drawPointer(
+      context,
+      config,
+      resolveValueAngle(clampedValue, geometry, minValue, maxValue),
+      size,
+      centerX,
+      layout.gaugeCenterY,
+      layout
+    )
+
+    const ledSize = Math.ceil(size * 0.093457)
+    drawRadialSimpleLed(
+      context,
+      layout.ledX,
+      layout.ledY,
+      ledSize,
+      '#ff2a2a',
+      config.indicators.ledVisible
+    )
+
+    drawRadialSimpleLed(
+      context,
+      layout.userLedX,
+      layout.ledY,
+      ledSize,
+      '#00c74a',
+      config.indicators.userLedVisible
+    )
+
+    context.save()
+    context.translate(layout.trendOffsetX, layout.trendOffsetY)
+    drawRadialTrendIndicator(
+      context,
+      config.indicators.trendVisible,
+      config.indicators.trendState,
+      size
+    )
+    context.restore()
+
+    drawForeground(context, config, centerX, size, layout)
   }
 
-  const ledSize = Math.ceil(size * 0.093457)
-  drawRadialSimpleLed(
-    context,
-    0.6 * size,
-    0.38 * size,
-    ledSize,
-    '#ff2a2a',
-    config.indicators.ledVisible
-  )
+  const orientation =
+    config.style.gaugeType === 'type5' ? config.style.orientation : ('north' as const)
+  withOrientationTransform(context, orientation, size, drawOrientedContents)
 
-  drawRadialSimpleLed(
-    context,
-    0.4 * size,
-    0.38 * size,
-    ledSize,
-    '#00c74a',
-    config.indicators.userLedVisible
-  )
+  drawTitleAndUnit(context, config, size, centerX, layout)
 
-  context.save()
-  context.translate(-0.12 * size, -0.12 * size)
-  drawRadialTrendIndicator(
-    context,
-    config.indicators.trendVisible,
-    config.indicators.trendState,
-    size
-  )
-  context.restore()
-
-  drawForeground(context, config, centerX, centerY, radius, size)
+  if (config.visibility.showLcd) {
+    drawLcd(context, clampedValue, size, paint, layout)
+  }
 
   return {
     value: clampedValue,

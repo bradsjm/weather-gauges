@@ -106,7 +106,10 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
   @property({ type: String, attribute: 'gauge-type' })
-  gaugeType: 'type1' | 'type2' | 'type3' | 'type4' = 'type4'
+  gaugeType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type4'
+
+  @property({ type: String })
+  orientation: 'north' | 'east' | 'west' = 'north'
 
   @property({ type: String, attribute: 'pointer-type' })
   pointerType:
@@ -273,6 +276,7 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
         foregroundType: this.foregroundType,
         pointerType: this.pointerType,
         gaugeType: this.gaugeType,
+        orientation: this.orientation,
         pointerColor: this.pointerColor
       },
       segments: this.segments,

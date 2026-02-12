@@ -105,6 +105,17 @@ const gaugeTypeOptions: SelectOption[] = [
   { value: 'type4', label: 'type4 - Full arc with free area' }
 ]
 
+const radialGaugeTypeOptions: SelectOption[] = [
+  ...gaugeTypeOptions,
+  { value: 'type5', label: 'type5 - Radial vertical (legacy style)' }
+]
+
+const orientationOptions: SelectOption[] = [
+  { value: 'north', label: 'north - Arc at top' },
+  { value: 'east', label: 'east - Arc at right' },
+  { value: 'west', label: 'west - Arc at left' }
+]
+
 const knobTypeOptions: SelectOption[] = ['standardKnob', 'metalKnob'].map((value) => ({
   value,
   label: value
@@ -752,6 +763,7 @@ const renderNeedleRadialPage = (root: HTMLElement): void => {
     backgroundColor: 'DARK_GRAY',
     foregroundType: 'type1',
     gaugeType: 'type4',
+    orientation: 'north',
     pointerType: 'type2',
     pointerColor: 'RED',
     majorTickCount: 9,
@@ -868,7 +880,14 @@ const renderNeedleRadialPage = (root: HTMLElement): void => {
       label: 'Gauge Type',
       description: 'Arc geometry variant.',
       type: 'select',
-      options: gaugeTypeOptions
+      options: radialGaugeTypeOptions
+    },
+    {
+      key: 'orientation',
+      label: 'Type5 Orientation',
+      description: 'Orientation for gauge type5 (ignored by type1-type4).',
+      type: 'select',
+      options: orientationOptions
     },
     {
       key: 'pointerType',
@@ -1005,7 +1024,7 @@ const renderNeedleRadialPage = (root: HTMLElement): void => {
   renderPlaygroundPage(
     root,
     'Radial Gauge Playground',
-    'Adjust plain radial-gauge settings live, including pointer style, scale arc angles, threshold, and measured min/max markers.',
+    'Adjust radial-gauge settings live, including new type5 radial-vertical orientation options, pointer style, threshold, and measured min/max markers.',
     'steelseries-radial-v3',
     controls,
     defaults,
