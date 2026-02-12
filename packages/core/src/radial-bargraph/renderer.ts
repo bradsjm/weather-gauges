@@ -21,6 +21,7 @@ import {
 } from '../render/gauge-text-primitives.js'
 import { drawRadialTextLabel } from '../render/gauge-ticks.js'
 import { drawRadialLcd } from '../render/radial-lcd.js'
+import { drawRadialSimpleLed } from '../render/radial-led.js'
 import { drawRadialTrendIndicator } from '../render/radial-trend.js'
 import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
@@ -530,31 +531,6 @@ const drawTitleAndUnit = (
   }
 }
 
-const drawSimpleLed = (
-  context: RadialBargraphDrawContext,
-  x: number,
-  y: number,
-  size: number,
-  onColor: string,
-  visible: boolean
-): void => {
-  if (!visible) {
-    return
-  }
-
-  const radius = size * 0.5
-  const gradient = createRadialGradientSafe(context, x, y, 0, x, y, radius, onColor)
-  if (typeof gradient !== 'string') {
-    gradient.addColorStop(0, '#ffffff')
-    gradient.addColorStop(0.25, onColor)
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.8)')
-  }
-  context.fillStyle = gradient
-  context.beginPath()
-  context.arc(x, y, radius, 0, TWO_PI)
-  context.fill()
-}
-
 const drawForeground = (
   context: RadialBargraphDrawContext,
   config: RadialBargraphGaugeConfig,
@@ -715,7 +691,7 @@ export const renderRadialBargraphGauge = (
 
   const ledSize = Math.ceil(size * 0.093457)
   const ledRadius = ledSize * 0.5
-  drawSimpleLed(
+  drawRadialSimpleLed(
     context,
     0.53 * size + ledRadius,
     0.61 * size + ledRadius,
@@ -726,7 +702,7 @@ export const renderRadialBargraphGauge = (
 
   const userLedX = config.style.gaugeType === 'type3' ? 0.7 * size : size * 0.5
   const userLedY = config.style.gaugeType === 'type3' ? 0.61 * size : 0.75 * size
-  drawSimpleLed(
+  drawRadialSimpleLed(
     context,
     userLedX + ledRadius,
     userLedY + ledRadius,
