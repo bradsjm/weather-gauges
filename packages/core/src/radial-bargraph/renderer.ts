@@ -24,11 +24,12 @@ import { drawRadialLcd } from '../render/radial-lcd.js'
 import { drawRadialSimpleLed } from '../render/radial-led.js'
 import { drawRadialTrendIndicator } from '../render/radial-trend.js'
 import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
+import { drawGaugeRadialThreshold } from '../render/gauge-threshold.js'
+import { resolveGaugeValueSectionArcs, type GaugeSectionArc } from '../render/gauge-sections.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   RadialBargraphAlert,
   RadialBargraphGaugeConfig,
-  RadialBargraphSection,
   RadialBargraphValueGradientStop
 } from './schema.js'
 
@@ -68,12 +69,6 @@ type GaugeGeometry = {
   angleRange: number
   degAngleRange: number
   angleStep: number
-}
-
-type SectionAngle = {
-  startDeg: number
-  stopDeg: number
-  color: string
 }
 
 const PI = Math.PI
@@ -300,23 +295,6 @@ const createGradientSampler = (
   }
 }
 
-const resolveSectionAngles = (
-  sections: RadialBargraphSection[],
-  minValue: number,
-  range: number,
-  degAngleRange: number
-): SectionAngle[] => {
-  return sections.map((section) => {
-    const from = clamp(section.from, minValue, minValue + range)
-    const to = clamp(section.to, minValue, minValue + range)
-    return {
-      startDeg: ((from - minValue) / Math.max(range, 1e-9)) * degAngleRange,
-      stopDeg: ((to - minValue) / Math.max(range, 1e-9)) * degAngleRange,
-      color: section.color
-    }
-  })
-}
-
 const drawFrameBackground = (
   context: RadialBargraphDrawContext,
   config: RadialBargraphGaugeConfig,
@@ -531,6 +509,36 @@ const drawTitleAndUnit = (
   }
 }
 
+const drawThresholdIndicator = (
+  context: RadialBargraphDrawContext,
+  threshold: RadialBargraphGaugeConfig['indicators']['threshold'],
+  geometry: GaugeGeometry,
+  scale: { minValue: number; maxValue: number; range: number },
+  size: number,
+  centerX: number,
+  centerY: number
+): void => {
+  if (!threshold?.show) {
+    return
+  }
+
+  const thresholdValue = clamp(threshold.value, scale.minValue, scale.maxValue)
+  const thresholdAngleDeg =
+    ((thresholdValue - scale.minValue) / Math.max(scale.range, 1e-9)) * geometry.degAngleRange
+  const thresholdAngleRadians = thresholdAngleDeg * RAD_FACTOR + geometry.bargraphOffset
+
+  drawGaugeRadialThreshold(context, {
+    centerX,
+    centerY,
+    angleRadians: thresholdAngleRadians,
+    innerRadius: 0.355 * size,
+    outerRadius: 0.425 * size,
+    color: '#ff3b30',
+    lineWidth: Math.max(1.5, size * 0.006),
+    direction: 'inward'
+  })
+}
+
 const drawForeground = (
   context: RadialBargraphDrawContext,
   config: RadialBargraphGaugeConfig,
@@ -552,7 +560,7 @@ const drawActiveLeds = (
   size: number,
   geometry: GaugeGeometry,
   scale: { minValue: number; maxValue: number; range: number },
-  sectionAngles: SectionAngle[],
+  sectionAngles: GaugeSectionArc[],
   gradientSampler: ((fraction: number) => string) | undefined
 ): void => {
   const activeLedAngle =
@@ -643,10 +651,10 @@ export const renderRadialBargraphGauge = (
     resolvedScale.maxValue
   )
   const geometry = resolveGeometry(config.style.gaugeType, resolvedScale.range)
-  const sectionAngles = resolveSectionAngles(
+  const sectionAngles = resolveGaugeValueSectionArcs(
     config.sections,
     resolvedScale.minValue,
-    resolvedScale.range,
+    resolvedScale.maxValue,
     geometry.degAngleRange
   )
   const gradientSampler = createGradientSampler(config.valueGradientStops)
@@ -676,6 +684,15 @@ export const renderRadialBargraphGauge = (
     resolvedScale,
     sectionAngles,
     gradientSampler
+  )
+  drawThresholdIndicator(
+    context,
+    config.indicators.threshold,
+    geometry,
+    resolvedScale,
+    size,
+    centerX,
+    centerY
   )
   if (config.visibility.showLcd) {
     drawRadialLcd(

@@ -16,13 +16,13 @@ import {
   drawGaugeRadialBackgroundByStyle,
   drawGaugeRadialFrameByDesign
 } from '../render/gauge-materials.js'
-import { drawCompassCenterKnob } from '../render/compass-foreground.js'
+import { drawGaugeCenterKnob } from '../render/gauge-knob.js'
+import { drawGaugeSectionArcs } from '../render/gauge-sections.js'
 import {
   getGaugeBackgroundPalette,
   rgbTupleToCss,
   type GaugeBackgroundPalette
 } from '../render/gauge-color-palettes.js'
-import { closePathSafe } from '../render/gauge-canvas-primitives.js'
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
 import {
   drawRadialLcdBox,
@@ -36,11 +36,7 @@ import {
 } from '../render/gauge-text-primitives.js'
 import { runGaugeRenderPipeline, type GaugeRenderContextContract } from '../render/pipeline.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
-import type {
-  WindDirectionAlert,
-  WindDirectionGaugeConfig,
-  WindDirectionSection
-} from './schema.js'
+import type { WindDirectionAlert, WindDirectionGaugeConfig } from './schema.js'
 
 export type WindDirectionDrawContext = CanvasRenderingContext2D
 
@@ -296,43 +292,6 @@ const drawPointers = (
   context.restore()
 }
 
-const drawSectionsAndAreas = (
-  context: WindDirectionDrawContext,
-  sections: WindDirectionSection[],
-  centerX: number,
-  centerY: number,
-  innerRadius: number,
-  outerRadius: number,
-  filled: boolean
-): void => {
-  if (sections.length === 0) return
-
-  context.save()
-
-  for (const section of sections) {
-    const startAngle = (section.start - 90) * RAD_FACTOR
-    const stopAngle = (section.stop - 90) * RAD_FACTOR
-
-    context.beginPath()
-    context.arc(centerX, centerY, outerRadius, startAngle, stopAngle)
-    context.arc(centerX, centerY, innerRadius, stopAngle, startAngle, true)
-    closePathSafe(context)
-
-    if (filled) {
-      context.fillStyle = section.color
-      context.globalAlpha = 0.3
-      context.fill()
-      context.globalAlpha = 1
-    }
-
-    context.strokeStyle = section.color
-    context.lineWidth = 2
-    context.stroke()
-  }
-
-  context.restore()
-}
-
 export const renderWindDirectionGauge = (
   context: WindDirectionDrawContext,
   config: WindDirectionGaugeConfig,
@@ -402,26 +361,37 @@ export const renderWindDirectionGauge = (
       }
 
       if (config.areas.length > 0) {
-        drawSectionsAndAreas(
+        drawGaugeSectionArcs(
           context,
-          config.areas,
-          centerX,
-          centerY,
-          radius * 0.4,
-          radius * 0.75,
-          true
+          config.areas.map((section) => ({
+            startDeg: section.start,
+            stopDeg: section.stop,
+            color: section.color
+          })),
+          {
+            centerX,
+            centerY,
+            innerRadius: radius * 0.4,
+            outerRadius: radius * 0.75,
+            filled: true
+          }
         )
       }
 
       if (config.sections.length > 0) {
-        drawSectionsAndAreas(
+        drawGaugeSectionArcs(
           context,
-          config.sections,
-          centerX,
-          centerY,
-          radius * 0.4,
-          radius * 0.75,
-          false
+          config.sections.map((section) => ({
+            startDeg: section.start,
+            stopDeg: section.stop,
+            color: section.color
+          })),
+          {
+            centerX,
+            centerY,
+            innerRadius: radius * 0.4,
+            outerRadius: radius * 0.75
+          }
         )
       }
 
@@ -455,7 +425,7 @@ export const renderWindDirectionGauge = (
 
       const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
       if (showKnob) {
-        drawCompassCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
+        drawGaugeCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
       }
     }
   })

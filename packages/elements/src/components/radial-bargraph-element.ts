@@ -44,6 +44,9 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
   @property({ type: Number })
   threshold = 80
 
+  @property({ type: Boolean, attribute: 'show-threshold', converter: booleanAttributeConverter })
+  showThreshold = false
+
   @property({ type: Boolean, attribute: 'alerts-enabled', converter: booleanAttributeConverter })
   alertsEnabled = false
 
@@ -310,7 +313,7 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       indicators: {
         threshold: {
           value: this.threshold,
-          show: true
+          show: this.showThreshold
         },
         alerts,
         ledVisible: this.ledVisible,

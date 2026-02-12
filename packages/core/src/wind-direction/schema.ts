@@ -1,12 +1,9 @@
 import { z } from 'zod'
 import { gaugeBackgroundColorSchema } from '../schemas/background.js'
-import {
-  gaugeForegroundTypeSchema,
-  gaugeFrameDesignSchema,
-  gaugeKnobStyleSchema,
-  gaugeKnobTypeSchema
-} from '../schemas/frame.js'
+import { gaugeForegroundTypeSchema, gaugeFrameDesignSchema } from '../schemas/frame.js'
+import { gaugeKnobStyleSchema, gaugeKnobTypeSchema } from '../schemas/knob.js'
 import { gaugePointerColorSchema, gaugePointerTypeSchema } from '../schemas/pointer.js'
+import { gaugeAngleSectionSchema } from '../schemas/sections.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
 const imageConstructor =
@@ -41,22 +38,7 @@ export const windDirectionLcdTitlesSchema = z
   })
   .strict()
 
-export const windDirectionSectionSchema = z
-  .object({
-    start: z.number().finite(),
-    stop: z.number().finite(),
-    color: z.string()
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    if (value.stop <= value.start) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['stop'],
-        message: 'stop must be greater than start'
-      })
-    }
-  })
+export const windDirectionSectionSchema = gaugeAngleSectionSchema
 
 export const windDirectionAlertSchema = z
   .object({

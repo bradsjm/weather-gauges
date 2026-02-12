@@ -1,12 +1,8 @@
 import { z } from 'zod'
 
 import { gaugeBackgroundColorSchema } from '../schemas/background.js'
-import {
-  gaugeForegroundTypeSchema,
-  gaugeFrameDesignSchema,
-  gaugeKnobStyleSchema,
-  gaugeKnobTypeSchema
-} from '../schemas/frame.js'
+import { gaugeForegroundTypeSchema, gaugeFrameDesignSchema } from '../schemas/frame.js'
+import { gaugeKnobStyleSchema, gaugeKnobTypeSchema } from '../schemas/knob.js'
 import { gaugePointerColorSchema, gaugePointerTypeSchema } from '../schemas/pointer.js'
 import {
   sharedGaugeConfigSchema,

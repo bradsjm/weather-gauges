@@ -3,8 +3,10 @@ import { z } from 'zod'
 import { gaugeBackgroundColorSchema } from '../schemas/background.js'
 import { gaugeForegroundTypeSchema, gaugeFrameDesignSchema } from '../schemas/frame.js'
 import { gaugePointerColorSchema } from '../schemas/pointer.js'
+import { gaugeValueSectionSchema } from '../schemas/sections.js'
 import { radialGaugeTypeSchema } from '../radial/schema.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
+import { gaugeThresholdSchema } from '../schemas/threshold.js'
 
 export const radialBargraphLabelNumberFormatSchema = z.enum([
   'standard',
@@ -26,22 +28,7 @@ export const radialBargraphLcdColorSchema = z.enum([
   'BLACK'
 ])
 
-export const radialBargraphSectionSchema = z
-  .object({
-    from: z.number().finite(),
-    to: z.number().finite(),
-    color: z.string().trim().min(1)
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    if (value.to <= value.from) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['to'],
-        message: 'to must be greater than from'
-      })
-    }
-  })
+export const radialBargraphSectionSchema = gaugeValueSectionSchema
 
 export const radialBargraphValueGradientStopSchema = z
   .object({
@@ -50,12 +37,7 @@ export const radialBargraphValueGradientStopSchema = z
   })
   .strict()
 
-export const radialBargraphThresholdSchema = z
-  .object({
-    value: z.number().finite(),
-    show: z.boolean().default(true)
-  })
-  .strict()
+export const radialBargraphThresholdSchema = gaugeThresholdSchema
 
 export const radialBargraphAlertSchema = z
   .object({
