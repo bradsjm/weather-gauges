@@ -12,7 +12,6 @@ Guidance for agentic coding tools working in this repository.
   - `@bradsjm/steelseries-v3-elements`
   - `@bradsjm/steelseries-v3-ha-cards`
   - `@bradsjm/steelseries-v3-docs` (private)
-  - `@bradsjm/steelseries-v3-test-assets`
 
 ## 2) Environment
 
@@ -31,7 +30,6 @@ Guidance for agentic coding tools working in this repository.
 - Lint all packages: `pnpm lint`
 - Typecheck all packages: `pnpm typecheck`
 - Run all tests: `pnpm test`
-- Run visual test graph: `pnpm test:visual`
 - Run dev tasks in parallel: `pnpm dev`
 - Format all supported files: `pnpm format`
 - Clean workspace artifacts: `pnpm clean`
@@ -44,7 +42,6 @@ Use `pnpm --filter <package-name> <script>`.
 - Elements typecheck: `pnpm --filter @bradsjm/steelseries-v3-elements typecheck`
 - HA cards lint: `pnpm --filter @bradsjm/steelseries-v3-ha-cards lint`
 - Docs dev server: `pnpm --filter @bradsjm/steelseries-v3-docs dev`
-- Test-assets tests: `pnpm --filter @bradsjm/steelseries-v3-test-assets test`
 
 ## 6) Running a Single Test (Important)
 
@@ -155,8 +152,6 @@ ESLint highlights (from `eslint.config.mjs`):
 
 - Minimum full check: `pnpm typecheck && pnpm build && pnpm test`
 - Add tests for changed behavior in `core`
-- Update `test-assets` fixtures when render output changes
-- Run `pnpm test:visual` for visual-impacting changes
 - Visual tests are only passing when they have been viewed and visually reviewed
 
 ## 16) Release Workflow

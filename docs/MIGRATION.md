@@ -891,16 +891,19 @@ describe('renderGauge', () => {
 })
 ```
 
-### 7.2 Visual Test Pattern
+### 7.2 Deterministic Layer Test Pattern
 
 ```typescript
-import { test, expect } from '@playwright/test'
+import { describe, expect, it } from 'vitest'
 
-test('gauge default state', async ({ page }) => {
-  await page.goto('/{gauge}?fixture=default')
-  await page.waitForSelector('canvas')
-  const canvas = await page.locator('canvas')
-  await expect(canvas).toHaveScreenshot('{gauge}-default.png')
+describe('drawGaugeLayers', () => {
+  it('renders stable draw operations for baseline config', () => {
+    const context = createMockContext()
+    drawGaugeLayers(context, baselineConfig)
+
+    expect(context.operations).toContainEqual({ kind: 'arc' })
+    expect(context.operations.length).toBeGreaterThan(0)
+  })
 })
 ```
 
@@ -913,7 +916,7 @@ test('gauge default state', async ({ page }) => {
 - [ ] Animation cancels properly
 - [ ] TypeScript types compile
 - [ ] Zod schemas validate correctly
-- [ ] Visual tests pass
+- [ ] Deterministic renderer tests pass
 
 ---
 
@@ -964,9 +967,6 @@ pnpm typecheck
 # Test
 pnpm test
 
-# Visual tests
-pnpm test:visual
-
 # Single test
 pnpm --filter @bradsjm/steelseries-v3-core exec vitest run src/{gauge}/renderer.test.ts
 
@@ -983,5 +983,5 @@ pnpm --filter @bradsjm/steelseries-v3-docs dev
 3. **Nest related properties** - style, scale, visibility, indicators
 4. **Use Zod for everything** - Schema is source of truth
 5. **Cancel animations** - Always clean up in `disconnectedCallback`
-6. **Verify non-empty output** - Never update snapshots without pixel validation
-7. **Visual parity over code structure** - Match pixels, not just function names
+6. **Verify deterministic output** - Prefer stable operation/layer assertions over browser snapshots
+7. **Rendering parity over code structure** - Match behavior and geometry, not just function names
