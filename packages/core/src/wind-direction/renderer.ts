@@ -1,5 +1,8 @@
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
-import { drawCompassRose as drawSharedCompassRose } from '../render/compass-scales.js'
+import {
+  drawCompassRose as drawSharedCompassRose,
+  drawCompassTickmarks
+} from '../render/compass-scales.js'
 import {
   drawGaugeRadialForegroundByType,
   drawGaugeRadialBackgroundByStyle,
@@ -25,6 +28,7 @@ import {
   drawGaugeText
 } from '../render/gauge-text-primitives.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
+import type { CompassGaugeConfig } from '../compass/schema.js'
 import type {
   WindDirectionAlert,
   WindDirectionGaugeConfig,
@@ -78,118 +82,41 @@ const getWindBackgroundPalette = (
   return getGaugeBackgroundPalette(backgroundColor)
 }
 
-const drawPointSymbols = (
+const drawWindDirectionCompassTicks = (
   context: WindDirectionDrawContext,
-  pointSymbols: string[],
-  centerX: number,
-  centerY: number,
+  config: WindDirectionGaugeConfig,
   imageWidth: number,
   palette: GaugeBackgroundPalette
 ): void => {
-  context.save()
-  context.translate(centerX, centerY)
-  context.fillStyle = rgb(palette.symbolColor)
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-
-  // Cardinal directions (N, S, E, W)
-  const cardinalAngles = [270, 90, 0, 180] as const
-  const cardinalSymbols = [pointSymbols[0], pointSymbols[4], pointSymbols[2], pointSymbols[6]]
-
-  context.font = `${0.12 * imageWidth}px serif`
-
-  for (let i = 0; i < 4; i++) {
-    const angle = cardinalAngles[i]! * RAD_FACTOR
-    const symbol = cardinalSymbols[i]
-
-    if (symbol) {
-      context.save()
-      context.rotate(angle)
-      context.translate(0, -0.35 * imageWidth)
-      context.rotate(HALF_PI)
-      context.fillText(symbol, 0, 0)
-      context.restore()
+  const tickConfig = {
+    style: {
+      degreeScale: config.visibility.showDegreeScale,
+      pointSymbolsVisible: config.visibility.showPointSymbols,
+      roseVisible: config.visibility.showRose
+    },
+    rose: {
+      showDegreeLabels: config.visibility.showDegreeScale,
+      showOrdinalMarkers: config.visibility.showPointSymbols
     }
-  }
+  } as unknown as CompassGaugeConfig
 
-  // Intercardinal directions (NE, SE, SW, NW)
-  const intercardinalAngles = [315, 45, 135, 225] as const
-  const intercardinalSymbols = [pointSymbols[1], pointSymbols[3], pointSymbols[5], pointSymbols[7]]
-
-  context.font = `${0.06 * imageWidth}px serif`
-
-  for (let i = 0; i < 4; i++) {
-    const angle = intercardinalAngles[i]! * RAD_FACTOR
-    const symbol = intercardinalSymbols[i]
-
-    if (symbol) {
-      context.save()
-      context.rotate(angle)
-      context.translate(0, -0.29 * imageWidth)
-      context.rotate(HALF_PI)
-      context.fillText(symbol, 0, 0)
-      context.restore()
-    }
-  }
-
-  context.restore()
-}
-
-const drawDegreeScale = (
-  context: WindDirectionDrawContext,
-  centerX: number,
-  centerY: number,
-  imageWidth: number,
-  imageHeight: number,
-  degreeScaleHalf: boolean,
-  palette: GaugeBackgroundPalette
-): void => {
-  context.save()
-  context.translate(centerX, centerY)
-  context.strokeStyle = rgb(palette.symbolColor)
-  context.fillStyle = rgb(palette.symbolColor)
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.font = `${0.06 * imageWidth}px serif`
-
-  // Tick marks every 2.5 degrees (matching compass)
-  for (let i = 0; i < 360; i += 2.5) {
-    const angle = i * RAD_FACTOR
-    const isMajor = i % 10 === 0
-    const isMedium = i % 5 === 0
-
-    context.save()
-    context.rotate(angle)
-
-    // Draw tick mark
-    const innerR = isMajor ? 0.36 * imageWidth : isMedium ? 0.36 * imageWidth : 0.38 * imageWidth
-    const outerR = 0.38 * imageWidth
-
-    context.beginPath()
-    context.moveTo(0, -innerR)
-    context.lineTo(0, -outerR)
-    context.lineWidth = isMajor ? 2 : isMedium ? 1.5 : 1
-    context.stroke()
-
-    // Draw degree label on major ticks (every 10°)
-    if (isMajor) {
-      // Handle degreeScaleHalf: wrap 180-360° to -180-0°
-      let displayAngle = i
-      if (degreeScaleHalf && i > 180) {
-        displayAngle = i - 360
-      }
-
-      context.save()
-      context.translate(0, -0.29 * imageWidth)
-      context.rotate(HALF_PI)
-      context.fillText(displayAngle.toString(), 0, 0)
-      context.restore()
-    }
-
-    context.restore()
-  }
-
-  context.restore()
+  drawCompassTickmarks(
+    context,
+    tickConfig,
+    imageWidth,
+    config.style.pointSymbols as unknown as readonly [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string
+    ],
+    palette.labelColor,
+    palette.symbolColor
+  )
 }
 
 const drawLcdTitle = (
@@ -492,20 +419,8 @@ export const renderWindDirectionGauge = (
       drawSharedCompassRose(context, centerX, centerY, width, height, palette.symbolColor)
     }
 
-    if (config.visibility.showDegreeScale) {
-      drawDegreeScale(
-        context,
-        centerX,
-        centerY,
-        width,
-        height,
-        config.scale.degreeScaleHalf,
-        palette
-      )
-    }
-
-    if (config.visibility.showPointSymbols) {
-      drawPointSymbols(context, config.style.pointSymbols, centerX, centerY, width, palette)
+    if (config.visibility.showDegreeScale || config.visibility.showPointSymbols) {
+      drawWindDirectionCompassTicks(context, config, width, palette)
     }
   }
 
