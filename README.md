@@ -407,8 +407,9 @@ SteelSeries has a rich heritage:
 - **2010** - Original Java Swing version created by [HanSolo](https://harmoniccode.blogspot.com/2010/08/java-swing-component-library.html)
 - **2013** - JavaScript Canvas-based [SteelSeries-Canvas](https://github.com/HanSolo/SteelSeries-Canvas) created by HanSolo
 - **2019** - Web Component implementation by [Nicolas Vanhoren](https://github.com/nicolas-van/steelseries)
+- **2021** - SteelSeries Rose Gauge implementation by [Ricky Rebo](https://github.com/ricky-rebo/SteelSeries-Rose-Gauge)
 
-The v3 version maintains the visual fidelity of the original while providing a modern, type-safe API and framework-agnostic core.
+The v3 version maintains the visual fidelity of the original weather gauges while providing a modern, type-safe API and framework-agnostic core.
 
 ## 📄 License
 
@@ -418,4 +419,3 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - [Documentation](https://docs.steelseries.dev)
 - [GitHub Issues](https://github.com/bradsjm/steelseries-v3/issues)
-- [Legacy SteelSeries-Canvas](https://github.com/HanSolo/SteelSeries-Canvas)
