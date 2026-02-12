@@ -3,14 +3,14 @@ import {
   radialFrameDesignSchema,
   radialBackgroundColorSchema,
   radialForegroundTypeSchema,
-  radialPointerTypeSchema,
   radialPointerColorSchema
 } from '../radial/schema.js'
+import { pointerTypeSchema } from '../pointers/schema.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
 export const windDirectionPointerSchema = z
   .object({
-    type: radialPointerTypeSchema.default('type1'),
+    type: pointerTypeSchema.default('type1'),
     color: radialPointerColorSchema.default('RED')
   })
   .strict()

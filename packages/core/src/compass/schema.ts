@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { pointerTypeSchema } from '../pointers/schema.js'
 import {
   gaugeAnimationSchema,
   gaugeSizeSchema,
@@ -72,24 +73,7 @@ export const compassBackgroundColorSchema = z.enum([
   'TURNED'
 ])
 
-export const compassPointerTypeSchema = z.enum([
-  'type1',
-  'type2',
-  'type3',
-  'type4',
-  'type5',
-  'type6',
-  'type7',
-  'type8',
-  'type9',
-  'type10',
-  'type11',
-  'type12',
-  'type13',
-  'type14',
-  'type15',
-  'type16'
-])
+export const compassPointerTypeSchema = pointerTypeSchema
 
 export const compassForegroundTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
 

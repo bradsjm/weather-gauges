@@ -55,10 +55,24 @@ const backgroundOptions: SelectOption[] = [
   'TURNED'
 ].map((value) => ({ value, label: value }))
 
-const pointerTypeOptions: SelectOption[] = Array.from({ length: 16 }, (_, index) => {
-  const value = `type${index + 1}`
-  return { value, label: value }
-})
+const pointerTypeOptions: SelectOption[] = [
+  { value: 'type1', label: 'type1 - Classic compass needle' },
+  { value: 'type2', label: 'type2 - Slim angular needle' },
+  { value: 'type3', label: 'type3 - Thin bar needle' },
+  { value: 'type4', label: 'type4 - Diamond spear needle' },
+  { value: 'type5', label: 'type5 - Triangular split needle' },
+  { value: 'type6', label: 'type6 - Forked center needle' },
+  { value: 'type7', label: 'type7 - Simple triangular needle' },
+  { value: 'type8', label: 'type8 - Curved classic needle' },
+  { value: 'type9', label: 'type9 - Heavy metallic needle' },
+  { value: 'type10', label: 'type10 - Teardrop bulb needle' },
+  { value: 'type11', label: 'type11 - Curved tail needle' },
+  { value: 'type12', label: 'type12 - Narrow spike needle' },
+  { value: 'type13', label: 'type13 - Label-tip marker needle' },
+  { value: 'type14', label: 'type14 - Metallic marker needle' },
+  { value: 'type15', label: 'type15 - Ornate ring-base needle' },
+  { value: 'type16', label: 'type16 - Ring-base bar-tail needle' }
+]
 
 const pointerColorOptions: SelectOption[] = [
   'RED',

@@ -3,7 +3,7 @@ import type { RadialDrawContext } from '../radial/renderer.js'
 import type { GaugePointerPalette } from './gauge-color-palettes.js'
 import { drawGaugePointer, resolveGaugePointerColor } from './gauge-pointer.js'
 
-type PointerColor = Pick<GaugePointerPalette, 'light' | 'medium' | 'dark'>
+type PointerColor = GaugePointerPalette
 
 export const resolveCompassPointerColor = (name: CompassPointerColorName): PointerColor => {
   return resolveGaugePointerColor(name)

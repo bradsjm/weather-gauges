@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { pointerTypeSchema } from '../pointers/schema.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
 export const radialFrameDesignSchema = z.enum([
@@ -39,24 +40,7 @@ export const radialBackgroundColorSchema = z.enum([
 
 export const radialForegroundTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
 
-export const radialPointerTypeSchema = z.enum([
-  'type1',
-  'type2',
-  'type3',
-  'type4',
-  'type5',
-  'type6',
-  'type7',
-  'type8',
-  'type9',
-  'type10',
-  'type11',
-  'type12',
-  'type13',
-  'type14',
-  'type15',
-  'type16'
-])
+export const radialPointerTypeSchema = pointerTypeSchema
 
 export const radialGaugeTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4'])
 
