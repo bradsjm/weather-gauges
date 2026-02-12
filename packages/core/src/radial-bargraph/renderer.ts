@@ -7,6 +7,15 @@ import {
   drawLegacyRadialFrameMetal,
   type RadialForegroundType
 } from '../render/legacy-materials.js'
+import {
+  getGaugeBackgroundTextColor,
+  resolveGaugePointerPalette,
+  rgbTupleToCss
+} from '../render/gauge-color-palettes.js'
+import {
+  createLinearGradientSafe,
+  createRadialGradientSafe
+} from '../render/gauge-canvas-primitives.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   RadialBargraphAlert,
@@ -65,111 +74,6 @@ const HALF_PI = PI * 0.5
 const TWO_PI = PI * 2
 const DEG_FACTOR = 180 / PI
 const RAD_FACTOR = PI / 180
-
-const LEGACY_BACKGROUND_TEXT = {
-  DARK_GRAY: 'rgb(255, 255, 255)',
-  SATIN_GRAY: 'rgb(167, 184, 180)',
-  LIGHT_GRAY: 'rgb(0, 0, 0)',
-  WHITE: 'rgb(0, 0, 0)',
-  BLACK: 'rgb(255, 255, 255)',
-  BEIGE: 'rgb(0, 0, 0)',
-  BROWN: 'rgb(109, 73, 47)',
-  RED: 'rgb(0, 0, 0)',
-  GREEN: 'rgb(0, 0, 0)',
-  BLUE: 'rgb(0, 0, 0)',
-  ANTHRACITE: 'rgb(250, 250, 250)',
-  MUD: 'rgb(255, 255, 240)',
-  PUNCHED_SHEET: 'rgb(255, 255, 255)',
-  CARBON: 'rgb(255, 255, 255)',
-  STAINLESS: 'rgb(0, 0, 0)',
-  BRUSHED_METAL: 'rgb(0, 0, 0)',
-  BRUSHED_STAINLESS: 'rgb(0, 0, 0)',
-  TURNED: 'rgb(0, 0, 0)'
-} as const
-
-const LEGACY_POINTER_COLORS: Record<
-  RadialBargraphGaugeConfig['style']['valueColor'],
-  PointerColor
-> = {
-  RED: {
-    dark: 'rgb(82, 0, 0)',
-    medium: 'rgb(213, 0, 25)',
-    light: 'rgb(255, 171, 173)',
-    veryDark: 'rgb(82, 0, 0)'
-  },
-  GREEN: {
-    dark: 'rgb(8, 54, 4)',
-    medium: 'rgb(15, 148, 0)',
-    light: 'rgb(190, 231, 141)',
-    veryDark: 'rgb(8, 54, 4)'
-  },
-  BLUE: {
-    dark: 'rgb(0, 11, 68)',
-    medium: 'rgb(0, 108, 201)',
-    light: 'rgb(122, 200, 255)',
-    veryDark: 'rgb(0, 11, 68)'
-  },
-  ORANGE: {
-    dark: 'rgb(118, 83, 30)',
-    medium: 'rgb(240, 117, 0)',
-    light: 'rgb(255, 255, 128)',
-    veryDark: 'rgb(118, 83, 30)'
-  },
-  YELLOW: {
-    dark: 'rgb(41, 41, 0)',
-    medium: 'rgb(177, 165, 0)',
-    light: 'rgb(255, 250, 153)',
-    veryDark: 'rgb(41, 41, 0)'
-  },
-  CYAN: {
-    dark: 'rgb(15, 109, 109)',
-    medium: 'rgb(0, 144, 191)',
-    light: 'rgb(153, 223, 249)',
-    veryDark: 'rgb(15, 109, 109)'
-  },
-  MAGENTA: {
-    dark: 'rgb(98, 0, 114)',
-    medium: 'rgb(191, 36, 107)',
-    light: 'rgb(255, 172, 210)',
-    veryDark: 'rgb(98, 0, 114)'
-  },
-  WHITE: {
-    dark: 'rgb(210, 210, 210)',
-    medium: 'rgb(235, 235, 235)',
-    light: 'rgb(255, 255, 255)',
-    veryDark: 'rgb(180, 180, 180)'
-  },
-  GRAY: {
-    dark: 'rgb(25, 25, 25)',
-    medium: 'rgb(76, 76, 76)',
-    light: 'rgb(204, 204, 204)',
-    veryDark: 'rgb(10, 10, 10)'
-  },
-  BLACK: {
-    dark: 'rgb(0, 0, 0)',
-    medium: 'rgb(10, 10, 10)',
-    light: 'rgb(20, 20, 20)',
-    veryDark: 'rgb(0, 0, 0)'
-  },
-  RAITH: {
-    dark: 'rgb(0, 32, 65)',
-    medium: 'rgb(0, 106, 172)',
-    light: 'rgb(148, 203, 242)',
-    veryDark: 'rgb(0, 16, 32)'
-  },
-  GREEN_LCD: {
-    dark: 'rgb(0, 55, 45)',
-    medium: 'rgb(0, 185, 165)',
-    light: 'rgb(153, 255, 227)',
-    veryDark: 'rgb(0, 32, 24)'
-  },
-  JUG_GREEN: {
-    dark: 'rgb(0, 56, 0)',
-    medium: 'rgb(50, 161, 0)',
-    light: 'rgb(190, 231, 141)',
-    veryDark: 'rgb(0, 34, 0)'
-  }
-}
 
 const LCD_COLORS: Record<
   RadialBargraphLcdColorName,
@@ -269,38 +173,6 @@ const isChromeLikeFrame = (design: RadialBargraphGaugeConfig['style']['frameDesi
   return design === 'chrome' || design === 'blackMetal' || design === 'shinyMetal'
 }
 
-const createLinearGradientSafe = (
-  context: RadialBargraphDrawContext,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  fallbackColor: string
-): CanvasGradient | string => {
-  if (typeof context.createLinearGradient !== 'function') {
-    return fallbackColor
-  }
-
-  return context.createLinearGradient(x0, y0, x1, y1)
-}
-
-const createRadialGradientSafe = (
-  context: RadialBargraphDrawContext,
-  x0: number,
-  y0: number,
-  r0: number,
-  x1: number,
-  y1: number,
-  r1: number,
-  fallbackColor: string
-): CanvasGradient | string => {
-  if (typeof context.createRadialGradient !== 'function') {
-    return fallbackColor
-  }
-
-  return context.createRadialGradient(x0, y0, r0, x1, y1, r1)
-}
-
 const parseRgbColor = (color: string): { r: number; g: number; b: number } | undefined => {
   if (typeof document === 'undefined') {
     return undefined
@@ -329,6 +201,18 @@ const clampChannel = (value: number): number => Math.round(clamp(value, 0, 255))
 
 const colorToString = (rgb: { r: number; g: number; b: number }): string => {
   return `rgb(${clampChannel(rgb.r)}, ${clampChannel(rgb.g)}, ${clampChannel(rgb.b)})`
+}
+
+const resolveLegacyPointerColor = (
+  colorName: RadialBargraphGaugeConfig['style']['valueColor']
+): PointerColor => {
+  const palette = resolveGaugePointerPalette(colorName)
+  return {
+    light: rgbTupleToCss(palette.light),
+    medium: rgbTupleToCss(palette.medium),
+    dark: rgbTupleToCss(palette.dark),
+    veryDark: rgbTupleToCss(palette.veryDark)
+  }
 }
 
 const derivePointerColor = (color: string): PointerColor => {
@@ -568,7 +452,7 @@ const drawFrameBackground = (
 
   const patchedPaint: ThemePaint = {
     ...paint,
-    textColor: LEGACY_BACKGROUND_TEXT[config.style.backgroundColor],
+    textColor: getGaugeBackgroundTextColor(config.style.backgroundColor),
     backgroundColor: paint.backgroundColor
   }
 
@@ -720,7 +604,7 @@ const drawTickMarks = (
   centerY: number
 ): void => {
   const maxMinorTicks = config.scale.maxNoOfMinorTicks
-  const textColor = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
+  const textColor = getGaugeBackgroundTextColor(config.style.backgroundColor)
   const fontSize = Math.ceil(0.04 * size)
   const textTranslateX = 0.28 * size
   const maxValueRounded = Number.parseFloat(scale.maxValue.toFixed(2))
@@ -788,7 +672,7 @@ const drawTitleAndUnit = (
   size: number,
   centerX: number
 ): void => {
-  const textColor = LEGACY_BACKGROUND_TEXT[config.style.backgroundColor]
+  const textColor = getGaugeBackgroundTextColor(config.style.backgroundColor)
   context.fillStyle = textColor
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -1013,7 +897,7 @@ const drawActiveLeds = (
     activeLedBuffer.height = Math.ceil(ledH)
   }
   const activeLedContext = activeLedBuffer?.getContext('2d')
-  let activeColor = LEGACY_POINTER_COLORS[config.style.valueColor]
+  let activeColor = resolveLegacyPointerColor(config.style.valueColor)
   let activeColorKey = `${activeColor.light}|${activeColor.medium}|${activeColor.dark}`
 
   const drawActiveLedRect = (color: PointerColor): void => {
@@ -1042,7 +926,7 @@ const drawActiveLeds = (
   drawActiveLedRect(activeColor)
 
   for (let angle = 0; angle <= activeLedAngle + 0.001; angle += 5) {
-    let currentColor = LEGACY_POINTER_COLORS[config.style.valueColor]
+    let currentColor = resolveLegacyPointerColor(config.style.valueColor)
 
     if (config.style.useValueGradient && gradientSampler) {
       const fraction = angle / Math.max(geometry.degAngleRange, 1e-9)
