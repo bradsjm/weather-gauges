@@ -1,7 +1,3 @@
-export const PI = Math.PI
-export const HALF_PI = PI * 0.5
-export const RAD_FACTOR = PI / 180
-
 export const drawRadialTextLabel = (
   context: CanvasRenderingContext2D,
   distance: number,

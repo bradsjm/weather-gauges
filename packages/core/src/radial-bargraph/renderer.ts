@@ -14,7 +14,8 @@ import {
   createLinearGradientSafe,
   createRadialGradientSafe
 } from '../render/gauge-canvas-primitives.js'
-import { HALF_PI, RAD_FACTOR, drawRadialTextLabel } from '../render/gauge-ticks.js'
+import { DEG_FACTOR, HALF_PI, PI, RAD_FACTOR, TWO_PI } from '../render/gauge-polar.js'
+import { drawRadialTextLabel } from '../render/gauge-ticks.js'
 import {
   buildGaugeFont,
   configureGaugeTextLayout,
@@ -73,10 +74,6 @@ type SectionAngle = {
   stopDeg: number
   color: string
 }
-
-const PI = Math.PI
-const TWO_PI = PI * 2
-const DEG_FACTOR = 180 / PI
 
 const LCD_COLORS: Record<
   RadialBargraphLcdColorName,
