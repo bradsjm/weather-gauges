@@ -3,6 +3,7 @@ import {
   drawCompassRose as drawSharedCompassRose,
   drawCompassTickmarks
 } from '../render/compass-scales.js'
+import { drawGaugePointer, resolveGaugePointerColor } from '../render/gauge-pointer.js'
 import {
   drawGaugeRadialForegroundByType,
   drawGaugeRadialBackgroundByStyle,
@@ -11,7 +12,6 @@ import {
 import { drawCompassCenterKnob } from '../render/compass-foreground.js'
 import {
   getGaugeBackgroundPalette,
-  resolveGaugePointerPalette,
   type GaugeBackgroundPalette
 } from '../render/gauge-color-palettes.js'
 import {
@@ -181,10 +181,10 @@ const drawLcds = (
 
   // Determine title colors based on useColorLabels setting
   const latestTitleColor = config.style.useColorLabels
-    ? rgb(resolveGaugePointerPalette(config.style.pointerLatest.color).medium)
+    ? rgb(resolveGaugePointerColor(config.style.pointerLatest.color).medium)
     : lcdPalette.text
   const averageTitleColor = config.style.useColorLabels
-    ? rgb(resolveGaugePointerPalette(config.style.pointerAverage.color).medium)
+    ? rgb(resolveGaugePointerColor(config.style.pointerAverage.color).medium)
     : lcdPalette.text
 
   // Latest LCD (top)
@@ -239,31 +239,13 @@ const drawPointerShape = (
   pointer: WindDirectionPointer,
   imageWidth: number
 ): void => {
-  const colors = resolveGaugePointerPalette(pointer.color)
-  const pointerLength = imageWidth * 0.35
-  const pointerWidth = imageWidth * 0.05
-
-  context.beginPath()
-  context.moveTo(0, -pointerLength)
-  context.lineTo(pointerWidth / 2, pointerLength * 0.1)
-  context.lineTo(0, pointerLength * 0.2)
-  context.lineTo(-pointerWidth / 2, pointerLength * 0.1)
-  closePathSafe(context)
-
-  const gradient = addColorStops(
-    createLinearGradientSafe(context, -pointerWidth, 0, pointerWidth, 0, rgb(colors.medium)),
-    [
-      [0, rgb(colors.dark)],
-      [0.5, rgb(colors.medium)],
-      [1, rgb(colors.light)]
-    ]
-  )
-
-  context.fillStyle = gradient
-  context.fill()
-  context.strokeStyle = rgb(colors.dark)
-  context.lineWidth = 1
-  context.stroke()
+  drawGaugePointer({
+    context,
+    pointerType: pointer.type,
+    pointerColor: resolveGaugePointerColor(pointer.color),
+    imageWidth,
+    family: 'wind'
+  })
 }
 
 const drawPointers = (
