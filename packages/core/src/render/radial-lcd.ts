@@ -97,16 +97,16 @@ export const drawRadialLcd = (
   paint: ThemePaint
 ): void => {
   const lcdPalette = LCD_COLORS[lcdColor]
-  const lcdX = 0.4 * size
-  const lcdY = 0.55 * size
   const lcdWidth = 0.4 * size
-  const lcdHeight = 0.14 * size
+  const lcdHeight = 0.13 * size
+  const lcdX = (size - lcdWidth) * 0.5
+  const lcdY = size * 0.5 - lcdHeight * 0.5
 
   const outerFrameGradient = createLinearGradientSafe(
     context,
-    lcdX,
+    0,
     lcdY,
-    lcdX,
+    0,
     lcdY + lcdHeight,
     '#666666'
   )
