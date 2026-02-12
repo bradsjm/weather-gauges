@@ -1,13 +1,13 @@
-import type { RadialDrawContext } from '../radial/renderer.js'
+type Canvas2DContext = CanvasRenderingContext2D
 
-export const closePathSafe = (context: RadialDrawContext): void => {
+export const closePathSafe = (context: Canvas2DContext): void => {
   if (typeof context.closePath === 'function') {
     context.closePath()
   }
 }
 
 export const createLinearGradientSafe = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   x0: number,
   y0: number,
   x1: number,
@@ -22,7 +22,7 @@ export const createLinearGradientSafe = (
 }
 
 export const createRadialGradientSafe = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   x0: number,
   y0: number,
   r0: number,

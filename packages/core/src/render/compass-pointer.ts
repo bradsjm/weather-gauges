@@ -1,7 +1,6 @@
 import type { CompassPointerColorName, CompassPointerType } from '../compass/schema.js'
-import type { RadialDrawContext } from '../radial/renderer.js'
 import type { GaugePointerPalette } from './gauge-color-palettes.js'
-import { drawGaugePointer, resolveGaugePointerColor } from './gauge-pointer.js'
+import { drawGaugePointer, gaugePointerFamily, resolveGaugePointerColor } from './gauge-pointer.js'
 
 type PointerColor = GaugePointerPalette
 
@@ -10,7 +9,7 @@ export const resolveCompassPointerColor = (name: CompassPointerColorName): Point
 }
 
 export const drawCompassPointer = (
-  context: RadialDrawContext,
+  context: CanvasRenderingContext2D,
   pointerType: CompassPointerType,
   pointerColor: PointerColor,
   imageWidth: number
@@ -20,6 +19,6 @@ export const drawCompassPointer = (
     pointerType,
     pointerColor,
     imageWidth,
-    family: 'compass'
+    family: gaugePointerFamily.compass
   })
 }

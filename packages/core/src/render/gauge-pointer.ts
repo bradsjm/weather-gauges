@@ -1,6 +1,5 @@
 import type { CompassPointerColorName } from '../compass/schema.js'
 import type { PointerType } from '../pointers/types.js'
-import type { RadialDrawContext } from '../radial/renderer.js'
 import type { GaugePointerPalette } from './gauge-color-palettes.js'
 import { resolveGaugePointerPalette, rgbTupleToCss } from './gauge-color-palettes.js'
 import {
@@ -10,10 +9,17 @@ import {
   createRadialGradientSafe
 } from './gauge-canvas-primitives.js'
 
-export type GaugePointerFamily = 'compass' | 'wind'
+type Canvas2DContext = CanvasRenderingContext2D
+
+export const gaugePointerFamily = {
+  compass: 'compass',
+  wind: 'wind'
+} as const
+
+export type GaugePointerFamily = (typeof gaugePointerFamily)[keyof typeof gaugePointerFamily]
 
 type DrawPointerOptions = {
-  context: RadialDrawContext
+  context: Canvas2DContext
   pointerType: PointerType
   pointerColor: GaugePointerPalette
   imageWidth: number
@@ -24,7 +30,7 @@ export const resolveGaugePointerColor = (name: CompassPointerColorName): GaugePo
   return resolveGaugePointerPalette(name)
 }
 
-const drawType1 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType1 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   const grad = addColorStops(
     createLinearGradientSafe(
       context,
@@ -113,7 +119,7 @@ const drawType1 = (context: RadialDrawContext, size: number, color: GaugePointer
 }
 
 const drawType2 = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   size: number,
   color: GaugePointerPalette,
   labelColor: string
@@ -141,7 +147,7 @@ const drawType2 = (
   context.fill()
 }
 
-const drawType3 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType3 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   context.beginPath()
   context.rect(size * 0.495327, size * 0.130841, size * 0.009345, size * 0.373831)
   closePathSafe(context)
@@ -149,7 +155,7 @@ const drawType3 = (context: RadialDrawContext, size: number, color: GaugePointer
   context.fill()
 }
 
-const drawType4 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType4 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   const grad = addColorStops(
     createLinearGradientSafe(
       context,
@@ -180,7 +186,7 @@ const drawType4 = (context: RadialDrawContext, size: number, color: GaugePointer
   context.fill()
 }
 
-const drawType5 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType5 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   const grad = addColorStops(
     createLinearGradientSafe(
       context,
@@ -211,7 +217,7 @@ const drawType5 = (context: RadialDrawContext, size: number, color: GaugePointer
   context.stroke()
 }
 
-const drawType6 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType6 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   context.fillStyle = rgbTupleToCss(color.medium)
   context.beginPath()
   context.moveTo(size * 0.481308, size * 0.485981)
@@ -232,7 +238,7 @@ const drawType6 = (context: RadialDrawContext, size: number, color: GaugePointer
   context.fill()
 }
 
-const drawType7 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType7 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   const grad = addColorStops(
     createLinearGradientSafe(
       context,
@@ -258,7 +264,7 @@ const drawType7 = (context: RadialDrawContext, size: number, color: GaugePointer
   context.fill()
 }
 
-const drawType8 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType8 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   const grad = addColorStops(
     createLinearGradientSafe(
       context,
@@ -302,7 +308,7 @@ const drawType8 = (context: RadialDrawContext, size: number, color: GaugePointer
   context.stroke()
 }
 
-const drawType9 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType9 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   const bodyGrad = addColorStops(
     createLinearGradientSafe(context, 0.471962 * size, 0, 0.528036 * size, 0, 'rgb(50, 50, 50)'),
     [
@@ -373,7 +379,7 @@ const drawType9 = (context: RadialDrawContext, size: number, color: GaugePointer
   context.fill()
 }
 
-const drawType10 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType10 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   context.beginPath()
   context.moveTo(size * 0.5, size * 0.149532)
   context.bezierCurveTo(
@@ -431,7 +437,7 @@ const drawType10 = (context: RadialDrawContext, size: number, color: GaugePointe
   context.stroke()
 }
 
-const drawType11 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType11 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   context.beginPath()
   context.moveTo(0.5 * size, 0.168224 * size)
   context.lineTo(0.485981 * size, 0.5 * size)
@@ -473,7 +479,7 @@ const drawType11 = (context: RadialDrawContext, size: number, color: GaugePointe
   context.stroke()
 }
 
-const drawType12 = (context: RadialDrawContext, size: number, color: GaugePointerPalette): void => {
+const drawType12 = (context: Canvas2DContext, size: number, color: GaugePointerPalette): void => {
   context.beginPath()
   context.moveTo(0.5 * size, 0.168224 * size)
   context.lineTo(0.485981 * size, 0.5 * size)
@@ -502,7 +508,7 @@ const drawType12 = (context: RadialDrawContext, size: number, color: GaugePointe
 }
 
 const drawType13And14 = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   size: number,
   color: GaugePointerPalette,
   labelColor: string,
@@ -551,7 +557,7 @@ const drawType13And14 = (
 }
 
 const drawType15And16 = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   size: number,
   color: GaugePointerPalette,
   pointerType: PointerType
@@ -748,7 +754,7 @@ export const drawGaugePointer = ({
   context.lineJoin = 'miter'
   context.lineWidth = 1
 
-  if (family === 'wind') {
+  if (family === gaugePointerFamily.wind) {
     context.translate(-0.5 * imageWidth, -0.5 * imageWidth)
   }
 

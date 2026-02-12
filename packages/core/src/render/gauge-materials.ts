@@ -13,8 +13,9 @@ import type {
   RadialFrameDesign
 } from '../radial/schema.js'
 import type { ThemePaint } from '../theme/tokens.js'
-import type { RadialDrawContext } from '../radial/renderer.js'
 import type { CompassBackgroundColorName, CompassFrameDesign } from '../compass/schema.js'
+
+type Canvas2DContext = CanvasRenderingContext2D
 
 const PI = Math.PI
 const HALF_PI = PI * 0.5
@@ -28,7 +29,7 @@ export const getCompassBackgroundPalette = (
 }
 
 export const drawCompassFrame = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   frameDesign: CompassFrameDesign,
   centerX: number,
   centerY: number,
@@ -299,7 +300,7 @@ export const drawCompassFrame = (
 }
 
 export const drawCompassCustomImage = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   image: CanvasImageSource | null,
   centerX: number,
   centerY: number,
@@ -326,7 +327,7 @@ export const drawCompassCustomImage = (
 }
 
 const createPatternCanvas = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   width: number,
   height: number
 ): HTMLCanvasElement | OffscreenCanvas | null => {
@@ -354,7 +355,7 @@ const getPatternContext = (
     | null
 }
 
-const drawCarbonPattern = (context: RadialDrawContext): CanvasPattern | null => {
+const drawCarbonPattern = (context: Canvas2DContext): CanvasPattern | null => {
   const canvas = createPatternCanvas(context, 12, 12)
   if (!canvas) {
     return null
@@ -374,7 +375,7 @@ const drawCarbonPattern = (context: RadialDrawContext): CanvasPattern | null => 
   ): void => {
     brush.beginPath()
     brush.rect(x, y, width, height)
-    closePathSafe(brush as unknown as RadialDrawContext)
+    closePathSafe(brush as unknown as Canvas2DContext)
     const gradient = brush.createLinearGradient(0, y, 0, y + height)
     gradient.addColorStop(0, top)
     gradient.addColorStop(1, bottom)
@@ -394,7 +395,7 @@ const drawCarbonPattern = (context: RadialDrawContext): CanvasPattern | null => 
   return context.createPattern(canvas as CanvasImageSource, 'repeat')
 }
 
-const drawPunchedSheetPattern = (context: RadialDrawContext): CanvasPattern | null => {
+const drawPunchedSheetPattern = (context: Canvas2DContext): CanvasPattern | null => {
   const canvas = createPatternCanvas(context, 15, 15)
   if (!canvas) {
     return null
@@ -417,7 +418,7 @@ const drawPunchedSheetPattern = (context: RadialDrawContext): CanvasPattern | nu
   brush.bezierCurveTo(3.1, 1, 4, 1.9, 4, 3)
   brush.bezierCurveTo(4, 4.1, 3.1, 5, 2, 5)
   brush.bezierCurveTo(0.9, 5, 0, 4.1, 0, 3)
-  closePathSafe(brush as unknown as RadialDrawContext)
+  closePathSafe(brush as unknown as Canvas2DContext)
   brush.fill()
 
   brush.fillStyle = '#050506'
@@ -427,7 +428,7 @@ const drawPunchedSheetPattern = (context: RadialDrawContext): CanvasPattern | nu
   brush.bezierCurveTo(3.1, 0, 4, 0.9, 4, 2)
   brush.bezierCurveTo(4, 3.1, 3.1, 4, 2, 4)
   brush.bezierCurveTo(0.9, 4, 0, 3.1, 0, 2)
-  closePathSafe(brush as unknown as RadialDrawContext)
+  closePathSafe(brush as unknown as Canvas2DContext)
   brush.fill()
 
   const lowerBack = brush.createLinearGradient(0, 8, 0, 13)
@@ -440,7 +441,7 @@ const drawPunchedSheetPattern = (context: RadialDrawContext): CanvasPattern | nu
   brush.bezierCurveTo(10.1, 8, 11, 8.9, 11, 10)
   brush.bezierCurveTo(11, 11.1, 10.1, 12, 9, 12)
   brush.bezierCurveTo(7.9, 12, 7, 11.1, 7, 10)
-  closePathSafe(brush as unknown as RadialDrawContext)
+  closePathSafe(brush as unknown as Canvas2DContext)
   brush.fill()
 
   brush.fillStyle = '#050506'
@@ -450,14 +451,14 @@ const drawPunchedSheetPattern = (context: RadialDrawContext): CanvasPattern | nu
   brush.bezierCurveTo(10.1, 7, 11, 7.9, 11, 9)
   brush.bezierCurveTo(11, 10.1, 10.1, 11, 9, 11)
   brush.bezierCurveTo(7.9, 11, 7, 10.1, 7, 9)
-  closePathSafe(brush as unknown as RadialDrawContext)
+  closePathSafe(brush as unknown as Canvas2DContext)
   brush.fill()
 
   return context.createPattern(canvas as CanvasImageSource, 'repeat')
 }
 
 const drawBrushedMetalPattern = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   color: Rgb,
   monochrome: boolean
 ): CanvasPattern | null => {
@@ -497,7 +498,7 @@ const drawBrushedMetalPattern = (
 }
 
 export const drawCompassBackground = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   backgroundColorName: CompassBackgroundColorName,
   centerX: number,
   centerY: number,

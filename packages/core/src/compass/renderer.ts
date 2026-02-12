@@ -14,10 +14,13 @@ import { drawCompassRose, drawCompassTickmarks } from '../render/compass-scales.
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { CompassAlert, CompassGaugeConfig } from './schema.js'
+import {
+  compassFallbackPointerMinLineWidth,
+  compassGeometryRatios,
+  compassShadowRatios
+} from './constants.js'
 
-import type { RadialDrawContext } from '../radial/renderer.js'
-
-export type CompassDrawContext = RadialDrawContext
+export type CompassDrawContext = CanvasRenderingContext2D
 
 export type CompassRenderResult = {
   heading: number
@@ -69,7 +72,7 @@ export const renderCompassGauge = (
   const imageWidth = Math.min(config.size.width, config.size.height)
   const centerX = imageWidth / 2
   const centerY = imageWidth / 2
-  const radius = Math.min(config.size.width, config.size.height) * 0.48
+  const radius = Math.min(config.size.width, config.size.height) * compassGeometryRatios.radius
 
   const activeAlerts = resolveGaugeHeadingAlerts(heading, config.indicators.alerts)
   const tone = resolveGaugeToneFromAlerts(activeAlerts)
@@ -155,9 +158,9 @@ export const renderCompassGauge = (
 
     context.translate(-centerX, -centerY)
     context.shadowColor = 'rgba(0, 0, 0, 0.8)'
-    context.shadowOffsetX = imageWidth * 0.006
-    context.shadowOffsetY = imageWidth * 0.006
-    context.shadowBlur = imageWidth * 0.012
+    context.shadowOffsetX = imageWidth * compassShadowRatios.pointerOffset
+    context.shadowOffsetY = imageWidth * compassShadowRatios.pointerOffset
+    context.shadowBlur = imageWidth * compassShadowRatios.pointerBlur
     drawCompassPointer(
       context,
       config.style.pointerType,
@@ -168,9 +171,12 @@ export const renderCompassGauge = (
   } else {
     context.beginPath()
     context.moveTo(centerX, centerY)
-    context.lineTo(centerX, centerY - radius * 0.65)
+    context.lineTo(centerX, centerY - radius * compassGeometryRatios.fallbackPointerLength)
     context.strokeStyle = rgb(resolveCompassPointerColor(pointerColorName).medium)
-    context.lineWidth = Math.max(2, radius * 0.015)
+    context.lineWidth = Math.max(
+      compassFallbackPointerMinLineWidth,
+      radius * compassGeometryRatios.fallbackPointerLineWidth
+    )
     context.stroke()
   }
 

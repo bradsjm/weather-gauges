@@ -1,11 +1,10 @@
 import type { CompassGaugeConfig } from '../compass/schema.js'
-import type { RadialDrawContext } from '../radial/renderer.js'
 import type { ThemePaint } from '../theme/tokens.js'
 import { normalizeCompassHeadingForScale } from './compass-scales.js'
 import { buildGaugeFont, configureGaugeTextLayout, drawGaugeText } from './gauge-text-primitives.js'
 
 export const drawCompassLabels = (
-  context: RadialDrawContext,
+  context: CanvasRenderingContext2D,
   config: CompassGaugeConfig,
   paint: ThemePaint,
   heading: number,

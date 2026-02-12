@@ -1,11 +1,12 @@
 import { z } from 'zod'
+import { gaugeBackgroundColorSchema } from '../schemas/background.js'
 import {
-  radialFrameDesignSchema,
-  radialBackgroundColorSchema,
-  radialForegroundTypeSchema,
-  radialPointerColorSchema
-} from '../radial/schema.js'
-import { pointerTypeSchema } from '../pointers/schema.js'
+  gaugeForegroundTypeSchema,
+  gaugeFrameDesignSchema,
+  gaugeKnobStyleSchema,
+  gaugeKnobTypeSchema
+} from '../schemas/frame.js'
+import { gaugePointerColorSchema, gaugePointerTypeSchema } from '../schemas/pointer.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
 const imageConstructor =
@@ -21,8 +22,8 @@ const windDirectionCustomLayerImageSchema = imageConstructor
 
 export const windDirectionPointerSchema = z
   .object({
-    type: pointerTypeSchema.default('type1'),
-    color: radialPointerColorSchema.default('RED')
+    type: gaugePointerTypeSchema.default('type1'),
+    color: gaugePointerColorSchema.default('RED')
   })
   .strict()
 
@@ -92,13 +93,13 @@ export const windDirectionScaleSchema = z
 
 export const windDirectionStyleSchema = z
   .object({
-    frameDesign: radialFrameDesignSchema.default('metal'),
-    backgroundColor: radialBackgroundColorSchema.default('DARK_GRAY'),
-    foregroundType: radialForegroundTypeSchema.default('type1'),
+    frameDesign: gaugeFrameDesignSchema.default('metal'),
+    backgroundColor: gaugeBackgroundColorSchema.default('DARK_GRAY'),
+    foregroundType: gaugeForegroundTypeSchema.default('type1'),
     pointerLatest: windDirectionPointerSchema.default({ type: 'type1', color: 'RED' }),
     pointerAverage: windDirectionPointerSchema.default({ type: 'type8', color: 'BLUE' }),
-    knobType: z.enum(['standardKnob', 'metalKnob']).default('standardKnob'),
-    knobStyle: z.enum(['black', 'brass', 'silver']).default('silver'),
+    knobType: gaugeKnobTypeSchema.default('standardKnob'),
+    knobStyle: gaugeKnobStyleSchema.default('silver'),
     pointSymbols: z
       .array(z.string())
       .length(8)

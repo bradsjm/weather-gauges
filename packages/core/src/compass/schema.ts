@@ -1,12 +1,13 @@
 import { z } from 'zod'
 
-import { pointerTypeSchema } from '../pointers/schema.js'
+import { gaugeBackgroundColorSchema } from '../schemas/background.js'
 import {
-  radialBackgroundColorSchema,
-  radialForegroundTypeSchema,
-  radialFrameDesignSchema,
-  radialPointerColorSchema
-} from '../radial/schema.js'
+  gaugeForegroundTypeSchema,
+  gaugeFrameDesignSchema,
+  gaugeKnobStyleSchema,
+  gaugeKnobTypeSchema
+} from '../schemas/frame.js'
+import { gaugePointerColorSchema, gaugePointerTypeSchema } from '../schemas/pointer.js'
 import {
   sharedGaugeConfigSchema,
   gaugeAnimationSchema,
@@ -44,19 +45,19 @@ export const compassScaleSchema = z
   })
   .strict()
 
-export const compassFrameDesignSchema = radialFrameDesignSchema
+export const compassFrameDesignSchema = gaugeFrameDesignSchema
 
-export const compassBackgroundColorSchema = radialBackgroundColorSchema
+export const compassBackgroundColorSchema = gaugeBackgroundColorSchema
 
-export const compassPointerTypeSchema = pointerTypeSchema
+export const compassPointerTypeSchema = gaugePointerTypeSchema
 
-export const compassForegroundTypeSchema = radialForegroundTypeSchema
+export const compassForegroundTypeSchema = gaugeForegroundTypeSchema
 
-export const compassKnobTypeSchema = z.enum(['standardKnob', 'metalKnob'])
+export const compassKnobTypeSchema = gaugeKnobTypeSchema
 
-export const compassKnobStyleSchema = z.enum(['black', 'brass', 'silver'])
+export const compassKnobStyleSchema = gaugeKnobStyleSchema
 
-export const compassPointerColorSchema = radialPointerColorSchema
+export const compassPointerColorSchema = gaugePointerColorSchema
 
 export const compassPointSymbolsSchema = z
   .tuple([

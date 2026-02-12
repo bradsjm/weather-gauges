@@ -1,12 +1,9 @@
 import { z } from 'zod'
 
-import {
-  radialBackgroundColorSchema,
-  radialFrameDesignSchema,
-  radialForegroundTypeSchema,
-  radialGaugeTypeSchema,
-  radialPointerColorSchema
-} from '../radial/schema.js'
+import { gaugeBackgroundColorSchema } from '../schemas/background.js'
+import { gaugeForegroundTypeSchema, gaugeFrameDesignSchema } from '../schemas/frame.js'
+import { gaugePointerColorSchema } from '../schemas/pointer.js'
+import { radialGaugeTypeSchema } from '../radial/schema.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
 export const radialBargraphLabelNumberFormatSchema = z.enum([
@@ -98,11 +95,11 @@ export const radialBargraphScaleSchema = z
 
 export const radialBargraphStyleSchema = z
   .object({
-    frameDesign: radialFrameDesignSchema.default('metal'),
-    backgroundColor: radialBackgroundColorSchema.default('DARK_GRAY'),
-    foregroundType: radialForegroundTypeSchema.default('type1'),
+    frameDesign: gaugeFrameDesignSchema.default('metal'),
+    backgroundColor: gaugeBackgroundColorSchema.default('DARK_GRAY'),
+    foregroundType: gaugeForegroundTypeSchema.default('type1'),
     gaugeType: radialGaugeTypeSchema.default('type4'),
-    valueColor: radialPointerColorSchema.default('RED'),
+    valueColor: gaugePointerColorSchema.default('RED'),
     lcdColor: radialBargraphLcdColorSchema.default('STANDARD'),
     digitalFont: z.boolean().default(false),
     labelNumberFormat: radialBargraphLabelNumberFormatSchema.default('standard'),

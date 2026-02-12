@@ -1,4 +1,3 @@
-import type { RadialDrawContext } from '../radial/renderer.js'
 import type { Rgb } from './gauge-color-palettes.js'
 import { rgbTupleToCss } from './gauge-color-palettes.js'
 import { normalizeAngle360 } from './gauge-angles.js'
@@ -13,6 +12,8 @@ const PI = Math.PI
 const HALF_PI = PI * 0.5
 const TWO_PI = PI * 2
 const RAD_FACTOR = PI / 180
+
+type Canvas2DContext = CanvasRenderingContext2D
 
 export const normalizeCompassHeadingForScale = (
   heading: number,
@@ -52,7 +53,7 @@ export type CompassTickmarkConfig = {
 }
 
 export const drawCompassRose = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   centerX: number,
   centerY: number,
   imageWidth: number,
@@ -142,7 +143,7 @@ export const drawCompassRose = (
 }
 
 export const drawCompassTickmarks = (
-  context: RadialDrawContext,
+  context: Canvas2DContext,
   config: CompassTickmarkConfig,
   imageWidth: number,
   pointSymbols: readonly [string, string, string, string, string, string, string, string],

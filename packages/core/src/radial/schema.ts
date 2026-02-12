@@ -1,64 +1,21 @@
 import { z } from 'zod'
 
-import { pointerTypeSchema } from '../pointers/schema.js'
+import { gaugeBackgroundColorSchema } from '../schemas/background.js'
+import { gaugeFrameDesignSchema, gaugeForegroundTypeSchema } from '../schemas/frame.js'
+import { gaugePointerColorSchema, gaugePointerTypeSchema } from '../schemas/pointer.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 
-export const radialFrameDesignSchema = z.enum([
-  'blackMetal',
-  'metal',
-  'shinyMetal',
-  'brass',
-  'steel',
-  'chrome',
-  'gold',
-  'anthracite',
-  'tiltedGray',
-  'tiltedBlack',
-  'glossyMetal'
-])
+export const radialFrameDesignSchema = gaugeFrameDesignSchema
 
-export const radialBackgroundColorSchema = z.enum([
-  'DARK_GRAY',
-  'SATIN_GRAY',
-  'LIGHT_GRAY',
-  'WHITE',
-  'BLACK',
-  'BEIGE',
-  'BROWN',
-  'RED',
-  'GREEN',
-  'BLUE',
-  'ANTHRACITE',
-  'MUD',
-  'PUNCHED_SHEET',
-  'CARBON',
-  'STAINLESS',
-  'BRUSHED_METAL',
-  'BRUSHED_STAINLESS',
-  'TURNED'
-])
+export const radialBackgroundColorSchema = gaugeBackgroundColorSchema
 
-export const radialForegroundTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
+export const radialForegroundTypeSchema = gaugeForegroundTypeSchema
 
-export const radialPointerTypeSchema = pointerTypeSchema
+export const radialPointerTypeSchema = gaugePointerTypeSchema
 
 export const radialGaugeTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4'])
 
-export const radialPointerColorSchema = z.enum([
-  'RED',
-  'GREEN',
-  'BLUE',
-  'ORANGE',
-  'YELLOW',
-  'CYAN',
-  'MAGENTA',
-  'WHITE',
-  'GRAY',
-  'BLACK',
-  'RAITH',
-  'GREEN_LCD',
-  'JUG_GREEN'
-])
+export const radialPointerColorSchema = gaugePointerColorSchema
 
 export const radialStyleSchema = z
   .object({

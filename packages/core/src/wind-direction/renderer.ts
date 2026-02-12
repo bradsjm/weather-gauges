@@ -6,7 +6,11 @@ import {
   normalizeCompassHeadingForScale
 } from '../render/compass-scales.js'
 import { normalizeAngle360 } from '../render/gauge-angles.js'
-import { drawGaugePointer, resolveGaugePointerColor } from '../render/gauge-pointer.js'
+import {
+  drawGaugePointer,
+  gaugePointerFamily,
+  resolveGaugePointerColor
+} from '../render/gauge-pointer.js'
 import {
   drawGaugeRadialForegroundByType,
   drawGaugeRadialBackgroundByStyle,
@@ -265,7 +269,7 @@ const drawPointers = (
     pointerType: config.style.pointerAverage.type,
     pointerColor: resolveGaugePointerColor(config.style.pointerAverage.color),
     imageWidth,
-    family: 'wind'
+    family: gaugePointerFamily.wind
   })
 
   // Step 3: Calculate and apply RELATIVE rotation for latest
@@ -279,7 +283,7 @@ const drawPointers = (
     pointerType: config.style.pointerLatest.type,
     pointerColor: resolveGaugePointerColor(config.style.pointerLatest.color),
     imageWidth,
-    family: 'wind'
+    family: gaugePointerFamily.wind
   })
 
   // Clear shadow after drawing

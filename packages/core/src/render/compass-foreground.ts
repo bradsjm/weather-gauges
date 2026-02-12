@@ -1,5 +1,4 @@
 import type { CompassForegroundType, CompassKnobStyle, CompassKnobType } from '../compass/schema.js'
-import type { RadialDrawContext } from '../radial/renderer.js'
 import {
   addColorStops,
   closePathSafe,
@@ -10,7 +9,7 @@ import {
 const TWO_PI = Math.PI * 2
 
 export const drawCompassCenterKnob = (
-  context: RadialDrawContext,
+  context: CanvasRenderingContext2D,
   imageWidth: number,
   knobType: CompassKnobType,
   knobStyle: CompassKnobStyle
@@ -137,7 +136,7 @@ export const drawCompassCenterKnob = (
 }
 
 export const drawCompassForeground = (
-  context: RadialDrawContext,
+  context: CanvasRenderingContext2D,
   foregroundType: CompassForegroundType,
   imageWidth: number,
   imageHeight: number,
