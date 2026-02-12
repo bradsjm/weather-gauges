@@ -4,6 +4,7 @@ import {
   drawGaugeRadialBackgroundByStyle,
   drawGaugeRadialFrameByDesign
 } from '../render/gauge-materials.js'
+import { resolveGaugePointerPalette } from '../render/gauge-color-palettes.js'
 import { drawRadialLcdBox, resolveRadialLcdPalette } from '../render/radial-lcd.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
@@ -46,11 +47,6 @@ type BackgroundPalette = {
   gradientStop: Rgb
   labelColor: Rgb
   symbolColor: Rgb
-}
-type PointerColor = {
-  light: Rgb
-  medium: Rgb
-  dark: Rgb
 }
 
 const PI = Math.PI
@@ -245,22 +241,6 @@ const BACKGROUND_COLORS: Record<
   }
 }
 
-const POINTER_COLORS: Record<WindDirectionPointer['color'], PointerColor> = {
-  RED: { dark: [82, 0, 0], medium: [213, 0, 25], light: [255, 171, 173] },
-  GREEN: { dark: [8, 54, 4], medium: [15, 148, 0], light: [190, 231, 141] },
-  BLUE: { dark: [0, 11, 68], medium: [0, 108, 201], light: [122, 200, 255] },
-  ORANGE: { dark: [118, 83, 30], medium: [240, 117, 0], light: [255, 255, 128] },
-  YELLOW: { dark: [41, 41, 0], medium: [177, 165, 0], light: [255, 250, 153] },
-  CYAN: { dark: [15, 109, 109], medium: [0, 144, 191], light: [153, 223, 249] },
-  MAGENTA: { dark: [98, 0, 114], medium: [191, 36, 107], light: [255, 172, 210] },
-  WHITE: { dark: [210, 210, 210], medium: [235, 235, 235], light: [255, 255, 255] },
-  GRAY: { dark: [25, 25, 25], medium: [76, 76, 76], light: [204, 204, 204] },
-  BLACK: { dark: [0, 0, 0], medium: [10, 10, 10], light: [20, 20, 20] },
-  RAITH: { dark: [0, 32, 65], medium: [0, 106, 172], light: [148, 203, 242] },
-  GREEN_LCD: { dark: [0, 55, 45], medium: [0, 185, 165], light: [153, 255, 227] },
-  JUG_GREEN: { dark: [0, 56, 0], medium: [50, 161, 0], light: [190, 231, 141] }
-}
-
 const drawPointSymbols = (
   context: WindDirectionDrawContext,
   pointSymbols: string[],
@@ -433,10 +413,10 @@ const drawLcds = (
 
   // Determine title colors based on useColorLabels setting
   const latestTitleColor = config.style.useColorLabels
-    ? rgb(POINTER_COLORS[config.style.pointerLatest.color].medium)
+    ? rgb(resolveGaugePointerPalette(config.style.pointerLatest.color).medium)
     : lcdPalette.text
   const averageTitleColor = config.style.useColorLabels
-    ? rgb(POINTER_COLORS[config.style.pointerAverage.color].medium)
+    ? rgb(resolveGaugePointerPalette(config.style.pointerAverage.color).medium)
     : lcdPalette.text
 
   // Latest LCD (top)
@@ -491,7 +471,7 @@ const drawPointerShape = (
   pointer: WindDirectionPointer,
   imageWidth: number
 ): void => {
-  const colors = POINTER_COLORS[pointer.color]
+  const colors = resolveGaugePointerPalette(pointer.color)
   const pointerLength = imageWidth * 0.35
   const pointerWidth = imageWidth * 0.05
 
