@@ -4,6 +4,7 @@ import {
   renderRadialGauge,
   toGaugeContractState,
   type RadialDrawContext,
+  type RadialArea,
   type RadialGaugeConfig,
   type RadialSegment,
   type RadialRenderResult
@@ -149,6 +150,9 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
   @property({ attribute: false })
   segments: RadialSegment[] = []
 
+  @property({ attribute: false })
+  areas: RadialArea[] = []
+
   @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
   showFrame = true
 
@@ -280,6 +284,7 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
         pointerColor: this.pointerColor
       },
       segments: this.segments,
+      areas: this.areas,
       indicators: {
         threshold: {
           value: this.threshold,

@@ -69,6 +69,8 @@ type RadialLayout = {
   frameCenterY: number
   gaugeCenterY: number
   radius: number
+  areaInnerRadius: number
+  areaOuterRadius: number
   segmentInnerRadius: number
   segmentOuterRadius: number
   majorTickInnerRadius: number
@@ -123,6 +125,8 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
       frameCenterY: size * 0.5,
       gaugeCenterY: size * 0.733644,
       radius: size * 0.48,
+      areaInnerRadius: 0,
+      areaOuterRadius: size * 0.33,
       segmentInnerRadius: size * 0.345,
       segmentOuterRadius: size * 0.38,
       majorTickInnerRadius: size * 0.41,
@@ -154,8 +158,10 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
     frameCenterY: size * 0.5,
     gaugeCenterY: size * 0.5,
     radius: size * 0.48,
-    segmentInnerRadius: size * 0.355,
-    segmentOuterRadius: size * 0.425,
+    areaInnerRadius: 0,
+    areaOuterRadius: size * 0.33,
+    segmentInnerRadius: size * 0.34,
+    segmentOuterRadius: size * 0.385,
     majorTickInnerRadius: size * 0.32,
     majorTickOuterRadius: size * 0.39,
     minorTickInnerRadius: size * 0.34,
@@ -316,8 +322,41 @@ const drawSegments = (
     innerRadius: layout.segmentInnerRadius,
     outerRadius: layout.segmentOuterRadius,
     filled: true,
-    fillAlpha: 0.2,
+    fillAlpha: 1,
     lineWidth: Math.max(1, layout.radius * 0.01),
+    angleOffsetDeg: geometry.startAngle * DEG_FACTOR
+  })
+}
+
+const drawAreas = (
+  context: RadialDrawContext,
+  config: RadialGaugeConfig,
+  geometry: RadialGeometry,
+  minValue: number,
+  maxValue: number,
+  layout: RadialLayout,
+  centerX: number,
+  centerY: number
+): void => {
+  if (config.areas.length === 0) {
+    return
+  }
+
+  const arcs = resolveGaugeValueSectionArcs(
+    config.areas,
+    minValue,
+    maxValue,
+    geometry.degAngleRange
+  )
+
+  drawGaugeSectionArcs(context, arcs, {
+    centerX,
+    centerY,
+    innerRadius: layout.areaInnerRadius,
+    outerRadius: layout.areaOuterRadius,
+    filled: true,
+    fillAlpha: 1,
+    lineWidth: 0,
     angleOffsetDeg: geometry.startAngle * DEG_FACTOR
   })
 }
@@ -654,6 +693,7 @@ export const renderRadialGauge = (
       centerX,
       layout.gaugeCenterY
     )
+    drawAreas(context, config, geometry, minValue, maxValue, layout, centerX, layout.gaugeCenterY)
     drawTicks(
       context,
       config,

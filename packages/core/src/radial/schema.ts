@@ -50,6 +50,8 @@ export const radialScaleSchema = z
 
 export const radialSegmentSchema = gaugeValueSectionSchema
 
+export const radialAreaSchema = gaugeValueSectionSchema
+
 export const radialThresholdSchema = gaugeThresholdSchema
 
 export const radialAlertSchema = z
@@ -132,12 +134,14 @@ export const radialGaugeConfigSchema = sharedGaugeConfigSchema
       pointerColor: 'RED'
     }),
     segments: z.array(radialSegmentSchema).default([]),
+    areas: z.array(radialAreaSchema).default([]),
     indicators: radialIndicatorsSchema
   })
   .strict()
 
 export type RadialScale = z.infer<typeof radialScaleSchema>
 export type RadialSegment = z.infer<typeof radialSegmentSchema>
+export type RadialArea = z.infer<typeof radialAreaSchema>
 export type RadialThreshold = z.infer<typeof radialThresholdSchema>
 export type RadialAlert = z.infer<typeof radialAlertSchema>
 export type RadialIndicators = z.infer<typeof radialIndicatorsSchema>

@@ -138,6 +138,27 @@ const lcdColorOptions: SelectOption[] = [
   'BLACK'
 ].map((value) => ({ value, label: value }))
 
+const minMaxAreaColor = 'rgba(212,132,134,0.6)'
+
+const temperatureSections = [
+  { from: -200, to: -30, color: 'rgba(195, 92, 211, 0.4)' },
+  { from: -30, to: -25, color: 'rgba(139, 74, 197, 0.4)' },
+  { from: -25, to: -15, color: 'rgba(98, 65, 188, 0.4)' },
+  { from: -15, to: -5, color: 'rgba(62, 66, 185, 0.4)' },
+  { from: -5, to: 5, color: 'rgba(42, 84, 194, 0.4)' },
+  { from: 5, to: 15, color: 'rgba(25, 112, 210, 0.4)' },
+  { from: 15, to: 25, color: 'rgba(9, 150, 224, 0.4)' },
+  { from: 25, to: 32, color: 'rgba(2, 170, 209, 0.4)' },
+  { from: 32, to: 40, color: 'rgba(0, 162, 145, 0.4)' },
+  { from: 40, to: 50, color: 'rgba(0, 158, 122, 0.4)' },
+  { from: 50, to: 60, color: 'rgba(54, 177, 56, 0.4)' },
+  { from: 60, to: 70, color: 'rgba(111, 202, 56, 0.4)' },
+  { from: 70, to: 80, color: 'rgba(248, 233, 45, 0.4)' },
+  { from: 80, to: 90, color: 'rgba(253, 142, 42, 0.4)' },
+  { from: 90, to: 110, color: 'rgba(236, 45, 45, 0.4)' },
+  { from: 110, to: 200, color: 'rgba(245, 109, 205, 0.4)' }
+]
+
 const rootStyles = `
   .docs-shell {
     min-height: 100vh;
@@ -147,7 +168,7 @@ const rootStyles = `
   }
   .docs-nav {
     display: flex;
-    gap: 0.65rem;
+    gap: 0.45rem;
     padding: 1rem 1.25rem;
     border-bottom: 1px solid rgba(16, 36, 58, 0.12);
     backdrop-filter: blur(2px);
@@ -228,12 +249,12 @@ const rootStyles = `
   }
   .control-grid {
     display: grid;
-    gap: 0.6rem;
+    gap: 0.4rem;
   }
   .control-item {
     border: 1px solid rgba(30, 55, 81, 0.16);
     border-radius: 10px;
-    padding: 0.55rem 0.65rem;
+    padding: 0.55rem 0.45rem;
     background: #f8fbff;
   }
   .control-item label {
@@ -382,6 +403,37 @@ const renderIndexPage = (root: HTMLElement): void => {
     link: Route
     create: () => HTMLElement
   }> = [
+    {
+      title: 'Radial Temperature Classic',
+      link: '/radial',
+      create: () => {
+        const node = document.createElement('steelseries-radial-v3')
+        applyGaugeProps(node, {
+          title: 'Temperature',
+          unit: '°F',
+          size: 220,
+          minValue: 0,
+          maxValue: 100,
+          value: 45.1,
+          frameDesign: 'tiltedGray',
+          backgroundColor: 'BEIGE',
+          foregroundType: 'type1',
+          gaugeType: 'type4',
+          pointerType: 'type8',
+          pointerColor: 'RED',
+          majorTickCount: 11,
+          minorTicksPerMajor: 5,
+          ledVisible: false,
+          userLedVisible: true,
+          trendVisible: true,
+          trendState: 'down',
+          segments: temperatureSections,
+          areas: [{ from: 30, to: 76, color: minMaxAreaColor }],
+          animateValue: false
+        })
+        return node
+      }
+    },
     {
       title: 'Radial Needle',
       link: '/radial',
@@ -749,40 +801,42 @@ const renderPlaygroundPage = (
 
 const renderNeedleRadialPage = (root: HTMLElement): void => {
   const defaults: Record<string, unknown> = {
-    value: 58,
+    value: 45.1,
     minValue: 0,
     maxValue: 100,
     threshold: 72,
-    showThreshold: true,
+    showThreshold: false,
     alertsEnabled: false,
     warningAlertValue: 72,
     criticalAlertValue: 88,
-    title: 'Boiler',
-    unit: 'bar',
-    frameDesign: 'metal',
-    backgroundColor: 'DARK_GRAY',
+    title: 'Temperature',
+    unit: '°F',
+    frameDesign: 'tiltedGray',
+    backgroundColor: 'BEIGE',
     foregroundType: 'type1',
     gaugeType: 'type4',
     orientation: 'north',
-    pointerType: 'type2',
+    pointerType: 'type8',
     pointerColor: 'RED',
-    majorTickCount: 9,
-    minorTicksPerMajor: 4,
+    majorTickCount: 11,
+    minorTicksPerMajor: 5,
     startAngle: (-3 * Math.PI) / 4,
     endAngle: (3 * Math.PI) / 4,
     showFrame: true,
     showBackground: true,
     showForeground: true,
     showLcd: true,
-    animateValue: true,
+    animateValue: false,
     ledVisible: false,
-    userLedVisible: false,
-    trendVisible: false,
+    userLedVisible: true,
+    trendVisible: true,
     trendState: 'down',
     minMeasuredValueVisible: false,
     maxMeasuredValueVisible: false,
     minMeasuredValue: 30,
-    maxMeasuredValue: 76
+    maxMeasuredValue: 76,
+    segments: temperatureSections,
+    areas: [{ from: 30, to: 76, color: minMaxAreaColor }]
   }
 
   const controls: ControlDef[] = [
@@ -1058,6 +1112,13 @@ const renderNeedleRadialPage = (root: HTMLElement): void => {
         minValue,
         maxValue
       )
+      const minMeasuredValue = asFiniteNumber(state.minMeasuredValue, minValue)
+      const maxMeasuredValue = asFiniteNumber(state.maxMeasuredValue, maxValue)
+      const measuredLow = Math.min(minMeasuredValue, maxMeasuredValue)
+      const measuredHigh = Math.max(minMeasuredValue, maxMeasuredValue)
+      state.minMeasuredValue = measuredLow
+      state.maxMeasuredValue = measuredHigh
+      state.areas = [{ from: measuredLow, to: measuredHigh, color: minMaxAreaColor }]
 
       const warningAlertValue = asFiniteNumber(state.warningAlertValue, minValue)
       const criticalAlertValue = asFiniteNumber(state.criticalAlertValue, maxValue)
