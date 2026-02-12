@@ -9,6 +9,7 @@ import {
 import { drawCompassForeground } from '../render/compass-foreground.js'
 import { drawCompassLabels } from '../render/compass-labels.js'
 import { drawCompassPointer, resolveCompassPointerColor } from '../render/compass-pointer.js'
+import { normalizeAngleInRange } from '../render/gauge-angles.js'
 import { drawCompassRose, drawCompassTickmarks } from '../render/compass-scales.js'
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
@@ -52,16 +53,6 @@ const mergePaint = (paint?: Partial<ThemePaint>): ThemePaint => ({
 const rgb = (value: readonly [number, number, number]): string =>
   `rgb(${value[0]}, ${value[1]}, ${value[2]})`
 
-const normalizeHeading = (heading: number, min: number, max: number): number => {
-  const span = max - min
-  if (span <= 0) {
-    return heading
-  }
-
-  const normalized = (((heading - min) % span) + span) % span
-  return min + normalized
-}
-
 export const renderCompassGauge = (
   context: CompassDrawContext,
   config: CompassGaugeConfig,
@@ -69,7 +60,7 @@ export const renderCompassGauge = (
 ): CompassRenderResult => {
   const paint = mergePaint(options.paint)
   const showHeadingReadout = options.showHeadingReadout ?? false
-  const heading = normalizeHeading(
+  const heading = normalizeAngleInRange(
     clamp(options.heading ?? config.heading.current, config.heading.min, config.heading.max),
     config.heading.min,
     config.heading.max

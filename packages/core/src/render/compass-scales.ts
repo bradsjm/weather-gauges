@@ -1,7 +1,7 @@
-import type { CompassGaugeConfig } from '../compass/schema.js'
 import type { RadialDrawContext } from '../radial/renderer.js'
 import type { Rgb } from './gauge-color-palettes.js'
 import { rgbTupleToCss } from './gauge-color-palettes.js'
+import { normalizeAngle360 } from './gauge-angles.js'
 import { drawRadialTextLabel } from './gauge-ticks.js'
 import {
   addColorStops,
@@ -18,7 +18,7 @@ export const normalizeCompassHeadingForScale = (
   heading: number,
   degreeScaleHalf: boolean
 ): number => {
-  const normalized = ((heading % 360) + 360) % 360
+  const normalized = normalizeAngle360(heading)
   if (!degreeScaleHalf) {
     return normalized
   }
@@ -37,6 +37,18 @@ const formatCompassDegreeLabel = (heading: number, degreeScaleHalf: boolean): st
 
 type CompassTickmarkOptions = {
   degreeScaleHalf?: boolean
+}
+
+export type CompassTickmarkConfig = {
+  style: {
+    degreeScale: boolean
+    pointSymbolsVisible: boolean
+    roseVisible: boolean
+  }
+  rose: {
+    showDegreeLabels: boolean
+    showOrdinalMarkers: boolean
+  }
 }
 
 export const drawCompassRose = (
@@ -131,7 +143,7 @@ export const drawCompassRose = (
 
 export const drawCompassTickmarks = (
   context: RadialDrawContext,
-  config: CompassGaugeConfig,
+  config: CompassTickmarkConfig,
   imageWidth: number,
   pointSymbols: readonly [string, string, string, string, string, string, string, string],
   labelColor: Rgb,

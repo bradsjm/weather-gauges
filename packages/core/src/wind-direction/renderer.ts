@@ -1,9 +1,11 @@
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
 import {
   drawCompassRose as drawSharedCompassRose,
+  type CompassTickmarkConfig,
   drawCompassTickmarks,
   normalizeCompassHeadingForScale
 } from '../render/compass-scales.js'
+import { normalizeAngle360 } from '../render/gauge-angles.js'
 import { drawGaugePointer, resolveGaugePointerColor } from '../render/gauge-pointer.js'
 import {
   drawGaugeRadialForegroundByType,
@@ -34,7 +36,6 @@ import {
   drawGaugeText
 } from '../render/gauge-text-primitives.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
-import type { CompassGaugeConfig } from '../compass/schema.js'
 import type {
   WindDirectionAlert,
   WindDirectionGaugeConfig,
@@ -74,8 +75,25 @@ const TWO_PI = Math.PI * 2
 const HALF_PI = Math.PI / 2
 const RAD_FACTOR = PI / 180
 
-const normalizeAngle = (angle: number): number => {
-  return ((angle % 360) + 360) % 360
+type CompassPointSymbolsTuple = readonly [
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string
+]
+
+const DEFAULT_POINT_SYMBOLS: CompassPointSymbolsTuple = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+
+const asCompassPointSymbols = (value: readonly string[]): CompassPointSymbolsTuple => {
+  if (value.length === 8) {
+    return value as CompassPointSymbolsTuple
+  }
+
+  return DEFAULT_POINT_SYMBOLS
 }
 
 const getWindBackgroundPalette = (
@@ -90,7 +108,7 @@ const drawWindDirectionCompassTicks = (
   imageWidth: number,
   palette: GaugeBackgroundPalette
 ): void => {
-  const tickConfig = {
+  const tickConfig: CompassTickmarkConfig = {
     style: {
       degreeScale: config.visibility.showDegreeScale,
       pointSymbolsVisible: config.visibility.showPointSymbols,
@@ -100,22 +118,13 @@ const drawWindDirectionCompassTicks = (
       showDegreeLabels: config.visibility.showDegreeScale,
       showOrdinalMarkers: config.visibility.showPointSymbols
     }
-  } as unknown as CompassGaugeConfig
+  }
 
   drawCompassTickmarks(
     context,
     tickConfig,
     imageWidth,
-    config.style.pointSymbols as unknown as readonly [
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string
-    ],
+    asCompassPointSymbols(config.style.pointSymbols),
     palette.labelColor,
     palette.symbolColor,
     { degreeScaleHalf: config.scale.degreeScaleHalf }
@@ -333,8 +342,8 @@ export const renderWindDirectionGauge = (
     ...options.paint
   }
 
-  const latest = normalizeAngle(options.latest ?? config.value.latest)
-  const average = normalizeAngle(options.average ?? config.value.average)
+  const latest = normalizeAngle360(options.latest ?? config.value.latest)
+  const average = normalizeAngle360(options.average ?? config.value.average)
   const palette = getWindBackgroundPalette(config.style.backgroundColor)
 
   context.clearRect(0, 0, width, height)
