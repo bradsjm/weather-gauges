@@ -414,8 +414,3 @@ The v3 version maintains the visual fidelity of the original weather gauges whil
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
-## 🔗 Links
-
-- [Documentation](https://docs.steelseries.dev)
-- [GitHub Issues](https://github.com/bradsjm/steelseries-v3/issues)
