@@ -2,10 +2,16 @@ import { z } from 'zod'
 
 import { pointerTypeSchema } from '../pointers/schema.js'
 import {
+  radialBackgroundColorSchema,
+  radialForegroundTypeSchema,
+  radialFrameDesignSchema,
+  radialPointerColorSchema
+} from '../radial/schema.js'
+import {
+  sharedGaugeConfigSchema,
   gaugeAnimationSchema,
-  gaugeSizeSchema,
-  gaugeTextSchema,
-  gaugeVisibilitySchema
+  gaugeVisibilitySchema,
+  gaugeTextSchema
 } from '../schemas/shared.js'
 
 export const compassHeadingSchema = z
@@ -38,64 +44,19 @@ export const compassScaleSchema = z
   })
   .strict()
 
-export const compassFrameDesignSchema = z.enum([
-  'blackMetal',
-  'metal',
-  'shinyMetal',
-  'brass',
-  'steel',
-  'chrome',
-  'gold',
-  'anthracite',
-  'tiltedGray',
-  'tiltedBlack',
-  'glossyMetal'
-])
+export const compassFrameDesignSchema = radialFrameDesignSchema
 
-export const compassBackgroundColorSchema = z.enum([
-  'DARK_GRAY',
-  'SATIN_GRAY',
-  'LIGHT_GRAY',
-  'WHITE',
-  'BLACK',
-  'BEIGE',
-  'BROWN',
-  'RED',
-  'GREEN',
-  'BLUE',
-  'ANTHRACITE',
-  'MUD',
-  'PUNCHED_SHEET',
-  'CARBON',
-  'STAINLESS',
-  'BRUSHED_METAL',
-  'BRUSHED_STAINLESS',
-  'TURNED'
-])
+export const compassBackgroundColorSchema = radialBackgroundColorSchema
 
 export const compassPointerTypeSchema = pointerTypeSchema
 
-export const compassForegroundTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
+export const compassForegroundTypeSchema = radialForegroundTypeSchema
 
 export const compassKnobTypeSchema = z.enum(['standardKnob', 'metalKnob'])
 
 export const compassKnobStyleSchema = z.enum(['black', 'brass', 'silver'])
 
-export const compassPointerColorSchema = z.enum([
-  'RED',
-  'GREEN',
-  'BLUE',
-  'ORANGE',
-  'YELLOW',
-  'CYAN',
-  'MAGENTA',
-  'WHITE',
-  'GRAY',
-  'BLACK',
-  'RAITH',
-  'GREEN_LCD',
-  'JUG_GREEN'
-])
+export const compassPointerColorSchema = radialPointerColorSchema
 
 export const compassPointSymbolsSchema = z
   .tuple([
@@ -144,10 +105,14 @@ export const compassIndicatorsSchema = z
   .strict()
   .default({ alerts: [] })
 
-export const compassGaugeConfigSchema = z
-  .object({
+export const compassGaugeConfigSchema = sharedGaugeConfigSchema
+  .extend({
+    value: compassHeadingSchema.default({
+      current: 0,
+      min: 0,
+      max: 360
+    }),
     heading: compassHeadingSchema,
-    size: gaugeSizeSchema,
     animation: gaugeAnimationSchema.default(() => ({
       enabled: true,
       durationMs: 500,

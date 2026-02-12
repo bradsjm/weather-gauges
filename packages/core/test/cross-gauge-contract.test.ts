@@ -54,7 +54,7 @@ describe('cross-gauge contracts', () => {
       expect(compass.errors[0]).toEqual(
         expect.objectContaining({
           code: 'invalid_type',
-          path: 'heading'
+          path: 'size'
         })
       )
     }
