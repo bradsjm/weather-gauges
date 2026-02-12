@@ -19,6 +19,11 @@ import {
 } from '../render/gauge-canvas-primitives.js'
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
 import { drawRadialLcdBox, resolveRadialLcdPalette } from '../render/radial-lcd.js'
+import {
+  buildGaugeFont,
+  configureGaugeTextLayout,
+  drawGaugeText
+} from '../render/gauge-text-primitives.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   WindDirectionAlert,
@@ -196,11 +201,13 @@ const drawLcdTitle = (
   color: string
 ): void => {
   context.save()
-  context.fillStyle = color
-  context.font = `bold ${width * 0.12}px Arial, sans-serif`
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.fillText(title, x + width / 2, y)
+  configureGaugeTextLayout(context, {
+    color,
+    font: buildGaugeFont(width * 0.12, 'Arial, sans-serif', 'bold'),
+    align: 'center',
+    baseline: 'middle'
+  })
+  drawGaugeText(context, title, x + width / 2, y)
   context.restore()
 }
 
@@ -215,13 +222,15 @@ const drawLcdValue = (
   digitalFont: boolean
 ): void => {
   context.save()
-  context.fillStyle = textColor
-  context.font = `${width * 0.25}px ${digitalFont ? 'monospace' : 'Arial'}, sans-serif`
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
+  configureGaugeTextLayout(context, {
+    color: textColor,
+    font: buildGaugeFont(width * 0.25, digitalFont ? 'monospace, sans-serif' : 'Arial, sans-serif'),
+    align: 'center',
+    baseline: 'middle'
+  })
 
   const valueStr = value.toFixed(0).padStart(3, '0')
-  context.fillText(valueStr, x + width / 2, y + height / 2)
+  drawGaugeText(context, valueStr, x + width / 2, y + height / 2)
 
   context.restore()
 }
