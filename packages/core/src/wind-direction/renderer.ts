@@ -1,6 +1,7 @@
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
 import { drawCompassRose as drawSharedCompassRose } from '../render/compass-scales.js'
 import {
+  drawGaugeRadialForegroundByType,
   drawGaugeRadialBackgroundByStyle,
   drawGaugeRadialFrameByDesign
 } from '../render/gauge-materials.js'
@@ -371,53 +372,6 @@ const drawPointers = (
   context.restore()
 }
 
-const drawForeground = (
-  context: WindDirectionDrawContext,
-  foregroundType: WindDirectionGaugeConfig['style']['foregroundType'],
-  centerX: number,
-  centerY: number,
-  imageWidth: number
-): void => {
-  context.save()
-
-  if (foregroundType !== 'type1') {
-    const gradient = addColorStops(
-      createRadialGradientSafe(
-        context,
-        centerX,
-        centerY,
-        0,
-        centerX,
-        centerY,
-        imageWidth * 0.48,
-        'rgba(255,255,255,0)'
-      ),
-      [
-        [0, 'rgba(255,255,255,0)'],
-        [0.7, 'rgba(255,255,255,0.1)'],
-        [0.95, 'rgba(255,255,255,0.3)'],
-        [1, 'rgba(255,255,255,0)']
-      ]
-    )
-    context.fillStyle = gradient
-    context.beginPath()
-    context.arc(centerX, centerY, imageWidth * 0.48, 0, TWO_PI)
-    closePathSafe(context)
-    context.fill()
-  }
-
-  if (foregroundType === 'type5') {
-    context.beginPath()
-    context.arc(centerX, centerY, imageWidth * 0.456, 0, TWO_PI)
-    closePathSafe(context)
-    context.strokeStyle = 'rgba(0,0,0,0.1)'
-    context.lineWidth = 2
-    context.stroke()
-  }
-
-  context.restore()
-}
-
 const drawSectionsAndAreas = (
   context: WindDirectionDrawContext,
   sections: WindDirectionSection[],
@@ -553,7 +507,13 @@ export const renderWindDirectionGauge = (
   drawPointers(context, config, centerX, centerY, width, latest, average)
 
   if (config.visibility.showForeground) {
-    drawForeground(context, config.style.foregroundType, centerX, centerY, width)
+    drawGaugeRadialForegroundByType(
+      context,
+      config.style.foregroundType,
+      centerX,
+      centerY,
+      width / 2
+    )
 
     const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
     if (showKnob) {
