@@ -14,7 +14,6 @@ import {
   createLinearGradientSafe,
   createRadialGradientSafe
 } from '../render/gauge-canvas-primitives.js'
-import { HALF_PI, RAD_FACTOR, drawRadialTextLabel } from '../render/gauge-ticks.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   RadialBargraphAlert,
@@ -69,8 +68,10 @@ type SectionAngle = {
 }
 
 const PI = Math.PI
+const HALF_PI = PI * 0.5
 const TWO_PI = PI * 2
 const DEG_FACTOR = 180 / PI
+const RAD_FACTOR = PI / 180
 
 const LCD_COLORS: Record<
   RadialBargraphLcdColorName,
@@ -581,6 +582,9 @@ const drawTickMarks = (
   ) {
     majorTickCounter += 1
     if (majorTickCounter === maxMinorTicks) {
+      context.save()
+      context.translate(textTranslateX, 0)
+
       let textRotationAngle = HALF_PI
       if (config.style.tickLabelOrientation === 'horizontal') {
         textRotationAngle = -alpha
@@ -596,7 +600,8 @@ const drawTickMarks = (
         text = valueCounter.toPrecision(2)
       }
 
-      drawRadialTextLabel(context, textTranslateX, textRotationAngle, text, textWidth)
+      context.fillText(text, 0, 0, textWidth)
+      context.restore()
 
       valueCounter += scale.majorTickSpacing
       majorTickCounter = 0

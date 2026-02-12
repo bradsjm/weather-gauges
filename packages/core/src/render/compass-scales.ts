@@ -2,14 +2,16 @@ import type { CompassGaugeConfig } from '../compass/schema.js'
 import type { RadialDrawContext } from '../radial/renderer.js'
 import type { Rgb } from './gauge-color-palettes.js'
 import { rgbTupleToCss } from './gauge-color-palettes.js'
-import { HALF_PI, PI, RAD_FACTOR, drawRadialTextLabel } from './gauge-ticks.js'
 import {
   addColorStops,
   closePathSafe,
   createLinearGradientSafe
 } from './gauge-canvas-primitives.js'
 
+const PI = Math.PI
+const HALF_PI = PI * 0.5
 const TWO_PI = PI * 2
+const RAD_FACTOR = PI / 180
 
 export const drawCompassRose = (
   context: RadialDrawContext,
@@ -135,40 +137,58 @@ export const drawCompassTickmarks = (
       }
 
       if (pointSymbolsVisible) {
+        context.save()
         switch (i) {
           case 0:
             context.font = stdFont
-            drawRadialTextLabel(context, 0.35 * imageWidth, HALF_PI, pointSymbols[2])
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[2], 0, 0)
             break
           case 45:
             context.font = smlFont
-            drawRadialTextLabel(context, 0.29 * imageWidth, HALF_PI, pointSymbols[3])
+            context.translate(0.29 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[3], 0, 0)
             break
           case 90:
             context.font = stdFont
-            drawRadialTextLabel(context, 0.35 * imageWidth, HALF_PI, pointSymbols[4])
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[4], 0, 0)
             break
           case 135:
             context.font = smlFont
-            drawRadialTextLabel(context, 0.29 * imageWidth, HALF_PI, pointSymbols[5])
+            context.translate(0.29 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[5], 0, 0)
             break
           case 180:
             context.font = stdFont
-            drawRadialTextLabel(context, 0.35 * imageWidth, HALF_PI, pointSymbols[6])
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[6], 0, 0)
             break
           case 225:
             context.font = smlFont
-            drawRadialTextLabel(context, 0.29 * imageWidth, HALF_PI, pointSymbols[7])
+            context.translate(0.29 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[7], 0, 0)
             break
           case 270:
             context.font = stdFont
-            drawRadialTextLabel(context, 0.35 * imageWidth, HALF_PI, pointSymbols[0])
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[0], 0, 0)
             break
           case 315:
             context.font = smlFont
-            drawRadialTextLabel(context, 0.29 * imageWidth, HALF_PI, pointSymbols[1])
+            context.translate(0.29 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[1], 0, 0)
             break
         }
+        context.restore()
       }
 
       if (config.style.roseVisible && (i === 360 || i % 22.5 === 0)) {
@@ -195,36 +215,43 @@ export const drawCompassTickmarks = (
         switch (i) {
           case 360:
             context.font = stdFont
-            drawRadialTextLabel(context, 0.35 * imageWidth, HALF_PI, pointSymbols[2])
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[2], 0, 0)
             break
           case 90:
             context.font = stdFont
-            drawRadialTextLabel(context, 0.35 * imageWidth, HALF_PI, pointSymbols[4])
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[4], 0, 0)
             break
           case 180:
             context.font = stdFont
-            drawRadialTextLabel(context, 0.35 * imageWidth, HALF_PI, pointSymbols[6])
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[6], 0, 0)
             break
           case 270:
             context.font = stdFont
-            drawRadialTextLabel(context, 0.35 * imageWidth, HALF_PI, pointSymbols[0])
+            context.translate(0.35 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(pointSymbols[0], 0, 0)
             break
           default: {
             const val = (i + 90) % 360
             context.font = smlFont
-            drawRadialTextLabel(
-              context,
-              0.37 * imageWidth,
-              HALF_PI,
-              `${val >= 100 ? '' : '0'}${val}`
-            )
+            context.translate(0.37 * imageWidth, 0)
+            context.rotate(HALF_PI)
+            context.fillText(`${val >= 100 ? '' : '0'}${val}`, 0, 0)
             break
           }
         }
       } else {
         const val = (i + 90) % 360
         context.font = smlFont
-        drawRadialTextLabel(context, 0.37 * imageWidth, HALF_PI, `${val >= 100 ? '' : '0'}${val}`)
+        context.translate(0.37 * imageWidth, 0)
+        context.rotate(HALF_PI)
+        context.fillText(`${val >= 100 ? '' : '0'}${val}`, 0, 0)
       }
 
       context.restore()
