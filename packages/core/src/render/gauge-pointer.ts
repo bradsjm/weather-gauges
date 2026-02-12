@@ -188,10 +188,10 @@ const drawWindClassic = (
   const pointerWidth = imageWidth * 0.05
 
   context.beginPath()
-  context.moveTo(0.5 * imageWidth, 0.5 * imageWidth - pointerLength)
-  context.lineTo(0.5 * imageWidth + pointerWidth / 2, 0.5 * imageWidth + pointerLength * 0.1)
-  context.lineTo(0.5 * imageWidth, 0.5 * imageWidth + pointerLength * 0.2)
-  context.lineTo(0.5 * imageWidth - pointerWidth / 2, 0.5 * imageWidth + pointerLength * 0.1)
+  context.moveTo(0, -pointerLength)
+  context.lineTo(pointerWidth / 2, pointerLength * 0.1)
+  context.lineTo(0, pointerLength * 0.2)
+  context.lineTo(-pointerWidth / 2, pointerLength * 0.1)
   closePathSafe(context)
 
   context.fillStyle = pointerGradient
@@ -268,6 +268,13 @@ export const drawGaugePointer = ({
 
   const strokeColor = rgbTupleToCss(pointerColor.dark)
   const variant = resolvePointerVariant(pointerType, family)
+
+  // Wind-direction renderer draws pointers in a center-translated coordinate system.
+  // Compass pointer geometries are authored in full-canvas coordinates.
+  // Shift only compass-style variants so they stay centered in wind mode.
+  if (family === 'wind' && variant !== 'windClassic') {
+    context.translate(-0.5 * imageWidth, -0.5 * imageWidth)
+  }
 
   if (variant === 'compass2') {
     drawCompassType2(context, imageWidth, pointerGradient, southGradient, strokeColor)
