@@ -2,8 +2,7 @@ import type { CompassGaugeConfig } from '../compass/schema.js'
 import type { RadialDrawContext } from '../radial/renderer.js'
 import type { Rgb } from './gauge-color-palettes.js'
 import { rgbTupleToCss } from './gauge-color-palettes.js'
-import { HALF_PI, PI, RAD_FACTOR } from './gauge-polar.js'
-import { drawRadialTextLabel } from './gauge-ticks.js'
+import { HALF_PI, PI, RAD_FACTOR, drawRadialTextLabel } from './gauge-ticks.js'
 import {
   addColorStops,
   closePathSafe,
