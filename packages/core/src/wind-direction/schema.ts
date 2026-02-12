@@ -46,6 +46,22 @@ export const windDirectionSectionSchema = z
     }
   })
 
+export const windDirectionAlertSchema = z
+  .object({
+    id: z.string().min(1),
+    heading: z.number().finite(),
+    severity: z.enum(['info', 'warning', 'critical']).default('warning'),
+    message: z.string().min(1)
+  })
+  .strict()
+
+export const windDirectionIndicatorsSchema = z
+  .object({
+    alerts: z.array(windDirectionAlertSchema).default([])
+  })
+  .strict()
+  .default({ alerts: [] })
+
 export const windDirectionCustomLayerSchema = z
   .object({
     image: z.instanceof(Image).optional(),
@@ -143,7 +159,8 @@ export const windDirectionGaugeConfigSchema = sharedGaugeConfigSchema
       average: 'Average'
     }),
     sections: z.array(windDirectionSectionSchema).default([]),
-    areas: z.array(windDirectionSectionSchema).default([])
+    areas: z.array(windDirectionSectionSchema).default([]),
+    indicators: windDirectionIndicatorsSchema
   })
   .strict()
 
@@ -155,4 +172,5 @@ export type WindDirectionCustomLayer = z.infer<typeof windDirectionCustomLayerSc
 export type WindDirectionScale = z.infer<typeof windDirectionScaleSchema>
 export type WindDirectionStyle = z.infer<typeof windDirectionStyleSchema>
 export type WindDirectionVisibility = z.infer<typeof windDirectionVisibilitySchema>
+export type WindDirectionAlert = z.infer<typeof windDirectionAlertSchema>
 export type WindDirectionGaugeConfig = z.infer<typeof windDirectionGaugeConfigSchema>

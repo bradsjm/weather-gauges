@@ -15,9 +15,11 @@ import {
   createLinearGradientSafe,
   createRadialGradientSafe
 } from '../render/gauge-canvas-primitives.js'
+import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
 import { drawRadialLcdBox, resolveRadialLcdPalette } from '../render/radial-lcd.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
+  WindDirectionAlert,
   WindDirectionGaugeConfig,
   WindDirectionPointer,
   WindDirectionSection
@@ -29,7 +31,7 @@ export type WindDirectionRenderResult = {
   latest: number
   average: number
   tone: 'accent' | 'warning' | 'danger'
-  activeAlerts: { id: string; message: string; severity: 'info' | 'warning' | 'critical' }[]
+  activeAlerts: WindDirectionAlert[]
 }
 
 export type WindDirectionRenderOptions = {
@@ -640,11 +642,17 @@ export const renderWindDirectionGauge = (
     }
   }
 
+  const activeAlerts = resolveGaugeHeadingAlerts<WindDirectionAlert>(
+    latest,
+    config.indicators.alerts
+  )
+  const tone = resolveGaugeToneFromAlerts(activeAlerts)
+
   return {
     latest,
     average,
-    tone: 'accent',
-    activeAlerts: []
+    tone,
+    activeAlerts
   }
 }
 
