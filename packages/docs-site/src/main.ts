@@ -1,6 +1,6 @@
 import '@bradsjm/steelseries-v3-elements'
 
-type Route = '/' | '/radial-bargraph' | '/compass' | '/wind-direction'
+type Route = '/' | '/radial' | '/radial-bargraph' | '/compass' | '/wind-direction'
 
 type SelectOption = { value: string; label: string }
 
@@ -96,6 +96,13 @@ const foregroundTypeOptions: SelectOption[] = [
   { value: 'type3', label: 'type3 - Deep arc highlight' },
   { value: 'type4', label: 'type4 - Lens + side flare' },
   { value: 'type5', label: 'type5 - Curved sweep highlight' }
+]
+
+const gaugeTypeOptions: SelectOption[] = [
+  { value: 'type1', label: 'type1 - Quarter arc (90 deg)' },
+  { value: 'type2', label: 'type2 - Half arc (180 deg)' },
+  { value: 'type3', label: 'type3 - Three-quarter arc (270 deg)' },
+  { value: 'type4', label: 'type4 - Full arc with free area' }
 ]
 
 const knobTypeOptions: SelectOption[] = ['standardKnob', 'metalKnob'].map((value) => ({
@@ -298,7 +305,12 @@ const rootStyles = `
 
 const currentRoute = (): Route => {
   const path = window.location.pathname
-  if (path === '/radial-bargraph' || path === '/compass' || path === '/wind-direction') {
+  if (
+    path === '/radial' ||
+    path === '/radial-bargraph' ||
+    path === '/compass' ||
+    path === '/wind-direction'
+  ) {
     return path
   }
   return '/'
@@ -307,6 +319,7 @@ const currentRoute = (): Route => {
 const renderShell = (route: Route): string => {
   const links: Array<{ path: Route; label: string }> = [
     { path: '/', label: 'Index' },
+    { path: '/radial', label: 'Radial' },
     { path: '/radial-bargraph', label: 'Radial Bargraph' },
     { path: '/compass', label: 'Compass' },
     { path: '/wind-direction', label: 'Wind Direction' }
@@ -348,7 +361,7 @@ const asFiniteNumber = (value: unknown, fallback: number): number =>
 const renderIndexPage = (root: HTMLElement): void => {
   root.innerHTML = `
     <h1 class="page-title">SteelSeries v3 Showcase</h1>
-    <p class="page-subtitle">Every preview uses a consistent 220px gauge size. Each card highlights significant visual variations. Open a gauge page to tweak settings live with documented controls.</p>
+    <p class="page-subtitle">Every preview uses a consistent 220px gauge size. Each card highlights significant visual variations across radial, radial-bargraph, compass, and wind-direction gauges. Open a gauge page to tweak settings live with documented controls.</p>
     <div class="index-grid" id="index-grid"></div>
   `
 
@@ -358,6 +371,52 @@ const renderIndexPage = (root: HTMLElement): void => {
     link: Route
     create: () => HTMLElement
   }> = [
+    {
+      title: 'Radial Needle',
+      link: '/radial',
+      create: () => {
+        const node = document.createElement('steelseries-radial-v3')
+        applyGaugeProps(node, {
+          title: 'Boiler',
+          unit: 'bar',
+          size: 220,
+          value: 58,
+          threshold: 72,
+          showThreshold: true,
+          pointerType: 'type2',
+          pointerColor: 'ORANGE',
+          gaugeType: 'type4',
+          animateValue: false
+        })
+        return node
+      }
+    },
+    {
+      title: 'Radial Precision',
+      link: '/radial',
+      create: () => {
+        const node = document.createElement('steelseries-radial-v3')
+        applyGaugeProps(node, {
+          title: 'Vacuum',
+          unit: 'kPa',
+          size: 220,
+          value: 42,
+          threshold: 50,
+          showThreshold: true,
+          frameDesign: 'brass',
+          backgroundColor: 'BEIGE',
+          foregroundType: 'type3',
+          pointerType: 'type8',
+          pointerColor: 'BLUE',
+          minMeasuredValueVisible: true,
+          minMeasuredValue: 18,
+          maxMeasuredValueVisible: true,
+          maxMeasuredValue: 67,
+          animateValue: false
+        })
+        return node
+      }
+    },
     {
       title: 'Radial Reference',
       link: '/radial-bargraph',
@@ -677,6 +736,345 @@ const renderPlaygroundPage = (
   apply()
 }
 
+const renderNeedleRadialPage = (root: HTMLElement): void => {
+  const defaults: Record<string, unknown> = {
+    value: 58,
+    minValue: 0,
+    maxValue: 100,
+    threshold: 72,
+    showThreshold: true,
+    alertsEnabled: false,
+    warningAlertValue: 72,
+    criticalAlertValue: 88,
+    title: 'Boiler',
+    unit: 'bar',
+    frameDesign: 'metal',
+    backgroundColor: 'DARK_GRAY',
+    foregroundType: 'type1',
+    gaugeType: 'type4',
+    pointerType: 'type2',
+    pointerColor: 'RED',
+    majorTickCount: 9,
+    minorTicksPerMajor: 4,
+    startAngle: (-3 * Math.PI) / 4,
+    endAngle: (3 * Math.PI) / 4,
+    showFrame: true,
+    showBackground: true,
+    showForeground: true,
+    showLcd: true,
+    animateValue: true,
+    ledVisible: false,
+    userLedVisible: false,
+    trendVisible: false,
+    trendState: 'down',
+    minMeasuredValueVisible: false,
+    maxMeasuredValueVisible: false,
+    minMeasuredValue: 30,
+    maxMeasuredValue: 76
+  }
+
+  const controls: ControlDef[] = [
+    {
+      key: 'minValue',
+      label: 'Min Value',
+      description: 'Lower bound for gauge range.',
+      type: 'number',
+      min: -999,
+      max: 999,
+      step: 1
+    },
+    {
+      key: 'maxValue',
+      label: 'Max Value',
+      description: 'Upper bound for gauge range.',
+      type: 'number',
+      min: -999,
+      max: 999,
+      step: 1
+    },
+    {
+      key: 'value',
+      label: 'Value',
+      description: 'Primary gauge value (constrained to Min/Max range).',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    {
+      key: 'showThreshold',
+      label: 'Show Threshold',
+      description: 'Toggle threshold marker visibility.',
+      type: 'checkbox'
+    },
+    {
+      key: 'threshold',
+      label: 'Threshold',
+      description: 'Threshold marker value.',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    {
+      key: 'alertsEnabled',
+      label: 'Enable Alerts',
+      description: 'Enable warning/critical alert-based tone changes.',
+      type: 'checkbox'
+    },
+    {
+      key: 'warningAlertValue',
+      label: 'Warning Alert Value',
+      description: 'Value where warning alert starts.',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    {
+      key: 'criticalAlertValue',
+      label: 'Critical Alert Value',
+      description: 'Value where critical alert starts.',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    { key: 'title', label: 'Title', description: 'Displayed title text.', type: 'text' },
+    { key: 'unit', label: 'Unit', description: 'Displayed unit text.', type: 'text' },
+    {
+      key: 'frameDesign',
+      label: 'Frame Design',
+      description: 'Outer bezel style.',
+      type: 'select',
+      options: frameOptions
+    },
+    {
+      key: 'backgroundColor',
+      label: 'Background',
+      description: 'Dial background material/palette.',
+      type: 'select',
+      options: backgroundOptions
+    },
+    {
+      key: 'foregroundType',
+      label: 'Foreground',
+      description: 'Glass overlay type.',
+      type: 'select',
+      options: foregroundTypeOptions
+    },
+    {
+      key: 'gaugeType',
+      label: 'Gauge Type',
+      description: 'Arc geometry variant.',
+      type: 'select',
+      options: gaugeTypeOptions
+    },
+    {
+      key: 'pointerType',
+      label: 'Pointer Type',
+      description: 'Needle geometry style.',
+      type: 'select',
+      options: pointerTypeOptions
+    },
+    {
+      key: 'pointerColor',
+      label: 'Pointer Color',
+      description: 'Needle color family.',
+      type: 'select',
+      options: pointerColorOptions
+    },
+    {
+      key: 'majorTickCount',
+      label: 'Major Tick Count',
+      description: 'Number of major ticks on the scale.',
+      type: 'number',
+      min: 2,
+      max: 20,
+      step: 1
+    },
+    {
+      key: 'minorTicksPerMajor',
+      label: 'Minor Ticks Per Major',
+      description: 'Minor tick count between major ticks.',
+      type: 'number',
+      min: 0,
+      max: 10,
+      step: 1
+    },
+    {
+      key: 'startAngle',
+      label: 'Start Angle (rad)',
+      description: 'Scale arc start angle in radians.',
+      type: 'number',
+      min: -6.3,
+      max: 6.3,
+      step: 0.1
+    },
+    {
+      key: 'endAngle',
+      label: 'End Angle (rad)',
+      description: 'Scale arc end angle in radians.',
+      type: 'number',
+      min: -6.3,
+      max: 6.3,
+      step: 0.1
+    },
+    {
+      key: 'showFrame',
+      label: 'Show Frame',
+      description: 'Toggle frame visibility.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showBackground',
+      label: 'Show Background',
+      description: 'Toggle dial background visibility.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showForeground',
+      label: 'Show Foreground',
+      description: 'Toggle glass foreground visibility.',
+      type: 'checkbox'
+    },
+    { key: 'showLcd', label: 'Show LCD', description: 'Toggle LCD visibility.', type: 'checkbox' },
+    {
+      key: 'animateValue',
+      label: 'Animate Value',
+      description: 'Animate value transitions when reading changes.',
+      type: 'checkbox'
+    },
+    {
+      key: 'ledVisible',
+      label: 'Show Alert LED',
+      description: 'Toggle alert LED visibility.',
+      type: 'checkbox'
+    },
+    {
+      key: 'userLedVisible',
+      label: 'Show User LED',
+      description: 'Toggle secondary LED indicator.',
+      type: 'checkbox'
+    },
+    {
+      key: 'trendVisible',
+      label: 'Show Trend',
+      description: 'Toggle trend indicator.',
+      type: 'checkbox'
+    },
+    {
+      key: 'trendState',
+      label: 'Trend State',
+      description: 'Current trend arrow state.',
+      type: 'select',
+      options: ['up', 'steady', 'down'].map((value) => ({ value, label: value }))
+    },
+    {
+      key: 'minMeasuredValueVisible',
+      label: 'Show Min Marker',
+      description: 'Toggle minimum measured marker.',
+      type: 'checkbox'
+    },
+    {
+      key: 'minMeasuredValue',
+      label: 'Min Measured Value',
+      description: 'Position for minimum measured marker.',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    {
+      key: 'maxMeasuredValueVisible',
+      label: 'Show Max Marker',
+      description: 'Toggle maximum measured marker.',
+      type: 'checkbox'
+    },
+    {
+      key: 'maxMeasuredValue',
+      label: 'Max Measured Value',
+      description: 'Position for maximum measured marker.',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    }
+  ]
+
+  renderPlaygroundPage(
+    root,
+    'Radial Gauge Playground',
+    'Adjust plain radial-gauge settings live, including pointer style, scale arc angles, threshold, and measured min/max markers.',
+    'steelseries-radial-v3',
+    controls,
+    defaults,
+    (state, controlDefs) => {
+      const rawMin = asFiniteNumber(state.minValue, 0)
+      const rawMax = asFiniteNumber(state.maxValue, 100)
+      const minValue = Math.min(rawMin, rawMax)
+      const maxValue = Math.max(rawMin, rawMax)
+
+      state.minValue = minValue
+      state.maxValue = maxValue
+      state.value = clampNumber(asFiniteNumber(state.value, minValue), minValue, maxValue)
+      state.threshold = clampNumber(asFiniteNumber(state.threshold, minValue), minValue, maxValue)
+      state.warningAlertValue = clampNumber(
+        asFiniteNumber(state.warningAlertValue, minValue),
+        minValue,
+        maxValue
+      )
+      state.criticalAlertValue = clampNumber(
+        asFiniteNumber(state.criticalAlertValue, maxValue),
+        minValue,
+        maxValue
+      )
+      state.minMeasuredValue = clampNumber(
+        asFiniteNumber(state.minMeasuredValue, minValue),
+        minValue,
+        maxValue
+      )
+      state.maxMeasuredValue = clampNumber(
+        asFiniteNumber(state.maxMeasuredValue, maxValue),
+        minValue,
+        maxValue
+      )
+
+      const warningAlertValue = asFiniteNumber(state.warningAlertValue, minValue)
+      const criticalAlertValue = asFiniteNumber(state.criticalAlertValue, maxValue)
+      state.warningAlertValue = Math.min(warningAlertValue, criticalAlertValue)
+      state.criticalAlertValue = Math.max(warningAlertValue, criticalAlertValue)
+
+      const startAngle = asFiniteNumber(state.startAngle, (-3 * Math.PI) / 4)
+      const endAngle = asFiniteNumber(state.endAngle, (3 * Math.PI) / 4)
+      if (Math.abs(endAngle - startAngle) < 0.001) {
+        state.endAngle = startAngle + 0.1
+      }
+
+      state.majorTickCount = Math.round(clampNumber(asFiniteNumber(state.majorTickCount, 9), 2, 20))
+      state.minorTicksPerMajor = Math.round(
+        clampNumber(asFiniteNumber(state.minorTicksPerMajor, 4), 0, 10)
+      )
+
+      for (const key of [
+        'value',
+        'threshold',
+        'warningAlertValue',
+        'criticalAlertValue',
+        'minMeasuredValue',
+        'maxMeasuredValue'
+      ]) {
+        const control = controlDefs.find((entry) => entry.key === key)
+        if (!control) {
+          continue
+        }
+        control.min = minValue
+        control.max = maxValue
+      }
+    }
+  )
+}
+
 const renderRadialPage = (root: HTMLElement): void => {
   const defaults: Record<string, unknown> = {
     value: 72,
@@ -801,7 +1199,7 @@ const renderRadialPage = (root: HTMLElement): void => {
       label: 'Gauge Type',
       description: 'Arc geometry variant.',
       type: 'select',
-      options: ['type1', 'type2', 'type3', 'type4'].map((value) => ({ value, label: value }))
+      options: gaugeTypeOptions
     },
     {
       key: 'valueColor',
@@ -1449,7 +1847,9 @@ const renderPage = (): void => {
   app.innerHTML = renderShell(route)
   const root = app.querySelector('#page-root') as HTMLDivElement
 
-  if (route === '/radial-bargraph') {
+  if (route === '/radial') {
+    renderNeedleRadialPage(root)
+  } else if (route === '/radial-bargraph') {
     renderRadialPage(root)
   } else if (route === '/compass') {
     renderCompassPage(root)
