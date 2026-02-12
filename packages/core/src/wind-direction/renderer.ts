@@ -12,6 +12,7 @@ import {
 import { drawCompassCenterKnob } from '../render/compass-foreground.js'
 import {
   getGaugeBackgroundPalette,
+  rgbTupleToCss,
   type GaugeBackgroundPalette
 } from '../render/gauge-color-palettes.js'
 import {
@@ -63,14 +64,10 @@ export type WindDirectionAnimationOptions = {
   onComplete?: (result: WindDirectionRenderResult) => void
 }
 
-type Rgb = readonly [number, number, number]
-
 const PI = Math.PI
 const TWO_PI = Math.PI * 2
 const HALF_PI = Math.PI / 2
 const RAD_FACTOR = PI / 180
-
-const rgb = (value: Rgb): string => `rgb(${value[0]},${value[1]},${value[2]})`
 
 const normalizeAngle = (angle: number): number => {
   return ((angle % 360) + 360) % 360
@@ -181,10 +178,10 @@ const drawLcds = (
 
   // Determine title colors based on useColorLabels setting
   const latestTitleColor = config.style.useColorLabels
-    ? rgb(resolveGaugePointerColor(config.style.pointerLatest.color).medium)
+    ? rgbTupleToCss(resolveGaugePointerColor(config.style.pointerLatest.color).medium)
     : lcdPalette.text
   const averageTitleColor = config.style.useColorLabels
-    ? rgb(resolveGaugePointerColor(config.style.pointerAverage.color).medium)
+    ? rgbTupleToCss(resolveGaugePointerColor(config.style.pointerAverage.color).medium)
     : lcdPalette.text
 
   // Latest LCD (top)
@@ -234,20 +231,6 @@ const drawLcds = (
   )
 }
 
-const drawPointerShape = (
-  context: WindDirectionDrawContext,
-  pointer: WindDirectionPointer,
-  imageWidth: number
-): void => {
-  drawGaugePointer({
-    context,
-    pointerType: pointer.type,
-    pointerColor: resolveGaugePointerColor(pointer.color),
-    imageWidth,
-    family: 'wind'
-  })
-}
-
 const drawPointers = (
   context: WindDirectionDrawContext,
   config: WindDirectionGaugeConfig,
@@ -271,7 +254,13 @@ const drawPointers = (
   context.rotate(averageAngle * RAD_FACTOR)
 
   // Step 2: Draw average pointer
-  drawPointerShape(context, config.style.pointerAverage, imageWidth)
+  drawGaugePointer({
+    context,
+    pointerType: config.style.pointerAverage.type,
+    pointerColor: resolveGaugePointerColor(config.style.pointerAverage.color),
+    imageWidth,
+    family: 'wind'
+  })
 
   // Step 3: Calculate and apply RELATIVE rotation for latest
   // CRITICAL: Subtract current rotation to get relative angle
@@ -279,7 +268,13 @@ const drawPointers = (
   context.rotate(relativeAngle)
 
   // Step 4: Draw latest pointer
-  drawPointerShape(context, config.style.pointerLatest, imageWidth)
+  drawGaugePointer({
+    context,
+    pointerType: config.style.pointerLatest.type,
+    pointerColor: resolveGaugePointerColor(config.style.pointerLatest.color),
+    imageWidth,
+    family: 'wind'
+  })
 
   // Clear shadow after drawing
   context.shadowColor = 'transparent'
@@ -366,7 +361,7 @@ export const renderWindDirectionGauge = (
       centerY,
       Math.min(width, height) / 2,
       paint,
-      rgb(palette.labelColor)
+      rgbTupleToCss(palette.labelColor)
     )
 
     if (config.style.customLayer?.image && config.style.customLayer.visible) {

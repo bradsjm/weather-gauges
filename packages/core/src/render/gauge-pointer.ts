@@ -205,6 +205,19 @@ const resolvePointerVariant = (
   pointerType: CompassPointerType,
   family: GaugePointerFamily
 ): 'compass1' | 'compass2' | 'compass3' | 'windClassic' => {
+  if (family === 'wind') {
+    if (pointerType === 'type2') {
+      return 'compass2'
+    }
+    if (pointerType === 'type3') {
+      return 'compass3'
+    }
+
+    // Preserve historical wind-direction behavior for default and
+    // unimplemented pointer types: use wind classic geometry.
+    return 'windClassic'
+  }
+
   if (pointerType === 'type2') {
     return 'compass2'
   }
@@ -212,9 +225,6 @@ const resolvePointerVariant = (
     return 'compass3'
   }
   if (pointerType === 'type8') {
-    return 'windClassic'
-  }
-  if (family === 'wind' && pointerType === 'type1') {
     return 'windClassic'
   }
   return 'compass1'
