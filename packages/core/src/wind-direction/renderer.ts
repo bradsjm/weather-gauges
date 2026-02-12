@@ -1,6 +1,10 @@
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
 import { drawCompassRose as drawSharedCompassRose } from '../render/compass-scales.js'
-import type { ThemePaint } from '../theme/tokens.js'
+import {
+  drawGaugeRadialBackgroundByStyle,
+  drawGaugeRadialFrameByDesign
+} from '../render/gauge-materials.js'
+import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   WindDirectionGaugeConfig,
   WindDirectionPointer,
@@ -337,276 +341,6 @@ const LCD_COLORS: Record<WindDirectionGaugeConfig['style']['lcdColor'], LcdColor
     gradientStop: [51, 51, 51],
     text: [204, 204, 204]
   }
-}
-
-const drawFrame = (
-  context: WindDirectionDrawContext,
-  frameDesign: WindDirectionGaugeConfig['style']['frameDesign'],
-  centerX: number,
-  centerY: number,
-  imageWidth: number,
-  imageHeight: number
-): void => {
-  context.save()
-  context.beginPath()
-  context.arc(centerX, centerY, imageWidth / 2, 0, TWO_PI)
-  closePathSafe(context)
-  context.fillStyle = '#848484'
-  context.fill()
-  context.lineWidth = 1
-  context.strokeStyle = 'rgba(132,132,132,0.5)'
-  context.stroke()
-
-  context.beginPath()
-  context.arc(centerX, centerY, (0.990654 * imageWidth) / 2, 0, TWO_PI)
-  closePathSafe(context)
-
-  const fillFrameWithLinearGradient = (
-    x0: number,
-    y0: number,
-    x1: number,
-    y1: number,
-    stops: Array<readonly [number, string]>
-  ): void => {
-    context.fillStyle = addColorStops(
-      createLinearGradientSafe(context, x0, y0, x1, y1, stops[stops.length - 1]?.[1] ?? '#888'),
-      stops
-    )
-    context.fill()
-  }
-
-  switch (frameDesign) {
-    case 'metal':
-      fillFrameWithLinearGradient(0, imageHeight * 0.004672, 0, imageHeight * 0.990654, [
-        [0, '#fefefe'],
-        [0.07, 'rgb(210,210,210)'],
-        [0.12, 'rgb(179,179,179)'],
-        [1, 'rgb(213,213,213)']
-      ])
-      break
-    case 'brass':
-      fillFrameWithLinearGradient(0, imageHeight * 0.004672, 0, imageHeight * 0.990654, [
-        [0, 'rgb(249,243,155)'],
-        [0.05, 'rgb(246,226,101)'],
-        [0.1, 'rgb(240,225,132)'],
-        [0.5, 'rgb(90,57,22)'],
-        [0.9, 'rgb(249,237,139)'],
-        [0.95, 'rgb(243,226,108)'],
-        [1, 'rgb(202,182,113)']
-      ])
-      break
-    case 'steel':
-      fillFrameWithLinearGradient(0, imageHeight * 0.004672, 0, imageHeight * 0.990654, [
-        [0, 'rgb(231,237,237)'],
-        [0.05, 'rgb(189,199,198)'],
-        [0.1, 'rgb(192,201,200)'],
-        [0.5, 'rgb(23,31,33)'],
-        [0.9, 'rgb(196,205,204)'],
-        [0.95, 'rgb(194,204,203)'],
-        [1, 'rgb(189,201,199)']
-      ])
-      break
-    case 'chrome':
-      fillFrameWithLinearGradient(0, imageHeight * 0.004672, 0, imageHeight * 0.990654, [
-        [0, 'rgb(255,255,255)'],
-        [0.05, 'rgb(219,219,219)'],
-        [0.1, 'rgb(227,227,227)'],
-        [0.5, 'rgb(63,63,63)'],
-        [0.9, 'rgb(227,227,227)'],
-        [0.95, 'rgb(219,219,219)'],
-        [1, 'rgb(255,255,255)']
-      ])
-      break
-    case 'gold':
-      fillFrameWithLinearGradient(0, imageHeight * 0.004672, 0, imageHeight * 0.990654, [
-        [0, 'rgb(255,255,207)'],
-        [0.15, 'rgb(255,237,96)'],
-        [0.22, 'rgb(254,199,57)'],
-        [0.3, 'rgb(255,249,203)'],
-        [0.38, 'rgb(255,199,64)'],
-        [0.44, 'rgb(252,194,60)'],
-        [0.51, 'rgb(255,204,59)'],
-        [0.6, 'rgb(213,134,29)'],
-        [0.68, 'rgb(255,201,56)'],
-        [0.75, 'rgb(212,135,29)'],
-        [1, 'rgb(247,238,101)']
-      ])
-      break
-    case 'blackMetal':
-      fillFrameWithLinearGradient(0, imageHeight * 0.004672, 0, imageHeight * 0.990654, [
-        [0, 'rgb(102,102,102)'],
-        [0.05, 'rgb(51,51,51)'],
-        [0.1, 'rgb(76,76,76)'],
-        [0.5, 'rgb(8,8,8)'],
-        [0.9, 'rgb(89,89,89)'],
-        [0.95, 'rgb(56,56,56)'],
-        [1, 'rgb(51,51,51)']
-      ])
-      break
-    case 'anthracite':
-      fillFrameWithLinearGradient(0, imageHeight * 0.004672, 0, imageHeight * 0.990654, [
-        [0, 'rgb(118,117,135)'],
-        [0.06, 'rgb(74,74,82)'],
-        [0.12, 'rgb(50,50,54)'],
-        [1, 'rgb(79,79,87)']
-      ])
-      break
-    case 'shinyMetal':
-      fillFrameWithLinearGradient(0, imageHeight * 0.004672, 0, imageHeight * 0.990654, [
-        [0, '#ffffff'],
-        [0.05, 'rgb(219,219,219)'],
-        [0.1, 'rgb(227,227,227)'],
-        [0.5, 'rgb(63,63,63)'],
-        [0.9, 'rgb(227,227,227)'],
-        [0.95, 'rgb(219,219,219)'],
-        [1, '#ffffff']
-      ])
-      break
-    case 'tiltedGray':
-      fillFrameWithLinearGradient(
-        0.233644 * imageWidth,
-        0.084112 * imageHeight,
-        0.81258 * imageWidth,
-        0.910919 * imageHeight,
-        [
-          [0, '#ffffff'],
-          [0.07, 'rgb(210,210,210)'],
-          [0.16, 'rgb(179,179,179)'],
-          [0.33, '#ffffff'],
-          [0.55, '#c5c5c5'],
-          [0.79, '#ffffff'],
-          [1, '#666666']
-        ]
-      )
-      break
-    case 'tiltedBlack':
-      fillFrameWithLinearGradient(
-        0.228971 * imageWidth,
-        0.079439 * imageHeight,
-        0.802547 * imageWidth,
-        0.943925 * imageHeight,
-        [
-          [0, '#666666'],
-          [0.21, '#000000'],
-          [0.47, '#666666'],
-          [0.99, '#000000'],
-          [1, '#000000']
-        ]
-      )
-      break
-    case 'glossyMetal': {
-      const radial = addColorStops(
-        createRadialGradientSafe(
-          context,
-          centerX,
-          centerY,
-          0,
-          centerX,
-          centerY,
-          imageWidth / 2,
-          '#cfcfcf'
-        ),
-        [
-          [0, 'rgb(207,207,207)'],
-          [0.96, 'rgb(205,204,205)'],
-          [1, 'rgb(244,244,244)']
-        ]
-      )
-      context.fillStyle = radial
-      context.fill()
-      context.beginPath()
-      context.arc(centerX, centerY, (0.973962 * imageWidth) / 2, 0, TWO_PI)
-      closePathSafe(context)
-      context.fillStyle = addColorStops(
-        createLinearGradientSafe(
-          context,
-          0,
-          0.018691 * imageHeight,
-          0,
-          0.981308 * imageHeight,
-          '#d1d1d1'
-        ),
-        [
-          [0, 'rgb(249,249,249)'],
-          [0.23, 'rgb(200,195,191)'],
-          [0.36, '#ffffff'],
-          [0.59, 'rgb(219,219,219)'],
-          [0.76, 'rgb(197,199,198)'],
-          [0.99, 'rgb(249,249,249)']
-        ]
-      )
-      context.fill()
-      break
-    }
-  }
-
-  context.restore()
-}
-
-const drawBackground = (
-  context: WindDirectionDrawContext,
-  backgroundColor: WindDirectionGaugeConfig['style']['backgroundColor'],
-  centerX: number,
-  centerY: number,
-  imageWidth: number
-): void => {
-  const palette = BACKGROUND_COLORS[backgroundColor]
-  // Match compass: use imageWidth-based background radius
-  const backgroundRadius = (0.831775 * imageWidth) / 2
-
-  context.save()
-  context.beginPath()
-  context.arc(centerX, centerY, backgroundRadius, 0, TWO_PI)
-  closePathSafe(context)
-
-  // Match compass: vertical gradient with imageWidth-based calculations
-  const gradient = addColorStops(
-    createLinearGradientSafe(
-      context,
-      0,
-      0.084112 * imageWidth,
-      0,
-      backgroundRadius * 2,
-      rgb(palette.gradientFraction)
-    ),
-    [
-      [0, rgb(palette.gradientStart)],
-      [0.4, rgb(palette.gradientFraction)], // v2 uses 0.4, not 0.5
-      [1, rgb(palette.gradientStop)]
-    ]
-  )
-  context.fillStyle = gradient
-  context.fill()
-
-  // Add inner shadow (v2 feature)
-  const innerShadow = addColorStops(
-    createRadialGradientSafe(
-      context,
-      centerX,
-      centerY,
-      0,
-      centerX,
-      centerY,
-      backgroundRadius,
-      'rgba(0,0,0,0)'
-    ),
-    [
-      [0, 'rgba(0, 0, 0, 0)'],
-      [0.7, 'rgba(0, 0, 0, 0)'],
-      [0.71, 'rgba(0, 0, 0, 0)'],
-      [0.86, 'rgba(0, 0, 0, 0.03)'],
-      [0.92, 'rgba(0, 0, 0, 0.07)'],
-      [0.97, 'rgba(0, 0, 0, 0.15)'],
-      [1, 'rgba(0, 0, 0, 0.3)']
-    ]
-  )
-  context.fillStyle = innerShadow
-  context.beginPath()
-  context.arc(centerX, centerY, backgroundRadius, 0, TWO_PI)
-  closePathSafe(context)
-  context.fill()
-
-  context.restore()
 }
 
 const drawPointSymbols = (
@@ -1113,6 +847,10 @@ export const renderWindDirectionGauge = (
   const centerX = width / 2
   const centerY = height / 2
   const radius = Math.min(width, height) / 2 - 4
+  const paint = {
+    ...resolveThemePaint(),
+    ...options.paint
+  }
 
   const latest = normalizeAngle(options.latest ?? config.value.latest)
   const average = normalizeAngle(options.average ?? config.value.average)
@@ -1121,11 +859,26 @@ export const renderWindDirectionGauge = (
   context.clearRect(0, 0, width, height)
 
   if (config.visibility.showFrame) {
-    drawFrame(context, config.style.frameDesign, centerX, centerY, width, height)
+    drawGaugeRadialFrameByDesign(
+      context,
+      config.style.frameDesign,
+      centerX,
+      centerY,
+      Math.min(width, height) / 2
+    )
   }
 
   if (config.visibility.showBackground) {
-    drawBackground(context, config.style.backgroundColor, centerX, centerY, width)
+    drawGaugeRadialBackgroundByStyle(
+      context,
+      config.style.backgroundColor,
+      width,
+      centerX,
+      centerY,
+      Math.min(width, height) / 2,
+      paint,
+      rgb(palette.labelColor)
+    )
 
     if (config.style.customLayer?.image && config.style.customLayer.visible) {
       context.drawImage(config.style.customLayer.image, 0, 0, width, height)
