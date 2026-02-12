@@ -668,7 +668,7 @@ const renderPlaygroundPage = (
   const apply = () => {
     normalizeState?.(state, controls)
     syncControlInputs(controlGrid, controls, state)
-    applyGaugeProps(gauge, { ...state, animateValue: false, size: 360 })
+    applyGaugeProps(gauge, { ...state, size: 360 })
     preview.textContent = JSON.stringify(state, null, 2)
   }
 
@@ -703,6 +703,7 @@ const renderRadialPage = (root: HTMLElement): void => {
     showBackground: true,
     showForeground: true,
     showLcd: true,
+    animateValue: true,
     ledVisible: false,
     userLedVisible: false,
     trendVisible: false,
@@ -874,6 +875,12 @@ const renderRadialPage = (root: HTMLElement): void => {
     },
     { key: 'showLcd', label: 'Show LCD', description: 'Toggle LCD visibility.', type: 'checkbox' },
     {
+      key: 'animateValue',
+      label: 'Animate Value',
+      description: 'Animate value transitions when reading changes.',
+      type: 'checkbox'
+    },
+    {
       key: 'ledVisible',
       label: 'Show Alert LED',
       description: 'Toggle threshold LED.',
@@ -977,6 +984,7 @@ const renderCompassPage = (root: HTMLElement): void => {
     degreeScaleHalf: false,
     roseVisible: true,
     rotateFace: false,
+    animateValue: true,
     pointSymbolsVisible: true,
     showHeadingReadout: true,
     alertsEnabled: false,
@@ -1114,6 +1122,12 @@ const renderCompassPage = (root: HTMLElement): void => {
       type: 'checkbox'
     },
     {
+      key: 'animateValue',
+      label: 'Animate Value',
+      description: 'Animate heading transitions when heading changes.',
+      type: 'checkbox'
+    },
+    {
       key: 'pointSymbolN',
       label: 'North Symbol',
       description: 'Text used for north point marker.',
@@ -1207,6 +1221,7 @@ const renderWindPage = (root: HTMLElement): void => {
     showBackground: true,
     showForeground: true,
     showLcd: true,
+    animateValue: true,
     showPointSymbols: true,
     showDegreeScale: true,
     showRose: true,
@@ -1361,6 +1376,12 @@ const renderWindPage = (root: HTMLElement): void => {
       type: 'checkbox'
     },
     { key: 'showLcd', label: 'Show LCD', description: 'Toggle LCD visibility.', type: 'checkbox' },
+    {
+      key: 'animateValue',
+      label: 'Animate Value',
+      description: 'Animate latest/average pointer transitions when values change.',
+      type: 'checkbox'
+    },
     {
       key: 'showPointSymbols',
       label: 'Show Point Symbols',
