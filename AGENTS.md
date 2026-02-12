@@ -150,7 +150,7 @@ ESLint highlights (from `eslint.config.mjs`):
 
 ## 15) Testing Expectations Before Merge
 
-- Minimum full check: `pnpm typecheck && pnpm build && pnpm test`
+- Required full check before completing work: `pnpm lint && pnpm typecheck && pnpm build && pnpm test`
 - Add tests for changed behavior in `core`
 - Visual tests are only passing when they have been viewed and visually reviewed
 
@@ -164,5 +164,5 @@ ESLint highlights (from `eslint.config.mjs`):
 
 1. Read relevant package scripts before introducing new commands.
 2. Keep changes minimal, typed, and package-scoped.
-3. Run targeted checks during iteration; run full root checks before finishing.
+3. Run targeted checks during iteration; before finishing, run and pass `pnpm lint && pnpm typecheck && pnpm build && pnpm test`.
 4. Update docs when changing APIs, workflows, or conventions.

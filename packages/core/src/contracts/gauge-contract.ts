@@ -5,10 +5,7 @@ import {
   radialBargraphGaugeConfigSchema,
   type RadialBargraphRenderResult
 } from '../radial-bargraph/index.js'
-import {
-  windDirectionGaugeConfigSchema,
-  type WindDirectionRenderResult
-} from '../wind-direction/index.js'
+import { type WindDirectionRenderResult } from '../wind-direction/index.js'
 import {
   formatZodError,
   type ValidationIssue,

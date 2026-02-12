@@ -22,12 +22,7 @@ import {
   rgbTupleToCss,
   type GaugeBackgroundPalette
 } from '../render/gauge-color-palettes.js'
-import {
-  addColorStops,
-  closePathSafe,
-  createLinearGradientSafe,
-  createRadialGradientSafe
-} from '../render/gauge-canvas-primitives.js'
+import { closePathSafe } from '../render/gauge-canvas-primitives.js'
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
 import {
   drawRadialLcdBox,
@@ -44,7 +39,6 @@ import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   WindDirectionAlert,
   WindDirectionGaugeConfig,
-  WindDirectionPointer,
   WindDirectionSection
 } from './schema.js'
 
@@ -84,8 +78,6 @@ type WindDirectionPipelineContext = GaugeRenderContextContract & {
 }
 
 const PI = Math.PI
-const TWO_PI = Math.PI * 2
-const HALF_PI = Math.PI / 2
 const RAD_FACTOR = PI / 180
 
 type CompassPointSymbolsTuple = readonly [
