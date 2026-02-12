@@ -1,378 +1,1318 @@
 import '@bradsjm/steelseries-v3-elements'
 
+type Route = '/' | '/radial-bargraph' | '/compass' | '/wind-direction'
+
+type SelectOption = { value: string; label: string }
+
+type ControlType = 'range' | 'number' | 'text' | 'select' | 'checkbox'
+
+type ControlDef = {
+  key: string
+  label: string
+  description: string
+  type: ControlType
+  min?: number
+  max?: number
+  step?: number
+  options?: SelectOption[]
+  documentation?: string
+}
+
 const app = document.querySelector<HTMLDivElement>('#app')
-const searchParams = new URLSearchParams(window.location.search)
 
-if (app) {
-  if (searchParams.get('view') === 'visual') {
-    const kind = searchParams.get('kind') ?? 'radial-bargraph'
-    const id = searchParams.get('id') ?? 'reference'
-    const value = Number(searchParams.get('value') ?? '50')
-    const heading = Number(searchParams.get('heading') ?? '90')
-    const min = Number(searchParams.get('min') ?? '0')
-    const max = Number(searchParams.get('max') ?? '100')
-    const threshold = Number(searchParams.get('threshold') ?? '80')
-    const title = searchParams.get('title') ?? 'Gauge'
-    const unit = searchParams.get('unit') ?? ''
-    const label = searchParams.get('label') ?? id
-    const size = Number(searchParams.get('size') ?? '220')
+const frameOptions: SelectOption[] = [
+  'blackMetal',
+  'metal',
+  'shinyMetal',
+  'brass',
+  'steel',
+  'chrome',
+  'gold',
+  'anthracite',
+  'tiltedGray',
+  'tiltedBlack',
+  'glossyMetal'
+].map((value) => ({ value, label: value }))
 
-    const radialBargraphAttributeString = [
-      searchParams.get('frameDesign')
-        ? `frame-design="${searchParams.get('frameDesign')}"`
-        : undefined,
-      searchParams.get('radialBackgroundColor')
-        ? `background-color="${searchParams.get('radialBackgroundColor')}"`
-        : undefined,
-      searchParams.get('radialBargraphForegroundType')
-        ? `foreground-type="${searchParams.get('radialBargraphForegroundType')}"`
-        : undefined,
-      searchParams.get('radialGaugeType')
-        ? `gauge-type="${searchParams.get('radialGaugeType')}"`
-        : undefined,
-      searchParams.get('radialBargraphValueColor')
-        ? `value-color="${searchParams.get('radialBargraphValueColor')}"`
-        : undefined,
-      searchParams.get('radialBargraphLcdColor')
-        ? `lcd-color="${searchParams.get('radialBargraphLcdColor')}"`
-        : undefined,
-      searchParams.get('tickLabelOrientation')
-        ? `tick-label-orientation="${searchParams.get('tickLabelOrientation')}"`
-        : undefined,
-      searchParams.get('labelNumberFormat')
-        ? `label-number-format="${searchParams.get('labelNumberFormat')}"`
-        : undefined,
-      searchParams.get('useSectionColors')
-        ? `use-section-colors="${searchParams.get('useSectionColors')}"`
-        : undefined,
-      searchParams.get('useValueGradient')
-        ? `use-value-gradient="${searchParams.get('useValueGradient')}"`
-        : undefined,
-      searchParams.get('showLcd') ? `show-lcd="${searchParams.get('showLcd')}"` : undefined,
-      searchParams.get('digitalFont')
-        ? `digital-font="${searchParams.get('digitalFont')}"`
-        : undefined,
-      searchParams.get('ledVisible')
-        ? `led-visible="${searchParams.get('ledVisible')}"`
-        : undefined,
-      searchParams.get('userLedVisible')
-        ? `user-led-visible="${searchParams.get('userLedVisible')}"`
-        : undefined,
-      searchParams.get('trendVisible')
-        ? `trend-visible="${searchParams.get('trendVisible')}"`
-        : undefined,
-      searchParams.get('trendState') ? `trend-state="${searchParams.get('trendState')}"` : undefined
-    ]
-      .filter((value): value is string => value !== undefined)
-      .join(' ')
+const backgroundOptions: SelectOption[] = [
+  'DARK_GRAY',
+  'SATIN_GRAY',
+  'LIGHT_GRAY',
+  'WHITE',
+  'BLACK',
+  'BEIGE',
+  'BROWN',
+  'RED',
+  'GREEN',
+  'BLUE',
+  'ANTHRACITE',
+  'MUD',
+  'PUNCHED_SHEET',
+  'CARBON',
+  'STAINLESS',
+  'BRUSHED_METAL',
+  'BRUSHED_STAINLESS',
+  'TURNED'
+].map((value) => ({ value, label: value }))
 
-    const compassAttributeString = [
-      searchParams.get('frameDesign')
-        ? `frame-design="${searchParams.get('frameDesign')}"`
-        : undefined,
-      searchParams.get('compassBackgroundColor')
-        ? `background-color="${searchParams.get('compassBackgroundColor')}"`
-        : undefined,
-      searchParams.get('pointerType')
-        ? `pointer-type="${searchParams.get('pointerType')}"`
-        : undefined,
-      searchParams.get('pointerColor')
-        ? `pointer-color="${searchParams.get('pointerColor')}"`
-        : undefined,
-      searchParams.get('knobType') ? `knob-type="${searchParams.get('knobType')}"` : undefined,
-      searchParams.get('knobStyle') ? `knob-style="${searchParams.get('knobStyle')}"` : undefined,
-      searchParams.get('foregroundType')
-        ? `foreground-type="${searchParams.get('foregroundType')}"`
-        : undefined,
-      searchParams.get('degreeScale')
-        ? `degree-scale="${searchParams.get('degreeScale')}"`
-        : undefined,
-      searchParams.get('roseVisible')
-        ? `rose-visible="${searchParams.get('roseVisible')}"`
-        : undefined,
-      searchParams.get('rotateFace')
-        ? `rotate-face="${searchParams.get('rotateFace')}"`
-        : undefined,
-      searchParams.get('pointSymbolsVisible')
-        ? `point-symbols-visible="${searchParams.get('pointSymbolsVisible')}"`
-        : undefined,
-      searchParams.get('pointSymbolN')
-        ? `point-symbol-n="${searchParams.get('pointSymbolN')}"`
-        : undefined,
-      searchParams.get('pointSymbolNE')
-        ? `point-symbol-ne="${searchParams.get('pointSymbolNE')}"`
-        : undefined,
-      searchParams.get('pointSymbolE')
-        ? `point-symbol-e="${searchParams.get('pointSymbolE')}"`
-        : undefined,
-      searchParams.get('pointSymbolSE')
-        ? `point-symbol-se="${searchParams.get('pointSymbolSE')}"`
-        : undefined,
-      searchParams.get('pointSymbolS')
-        ? `point-symbol-s="${searchParams.get('pointSymbolS')}"`
-        : undefined,
-      searchParams.get('pointSymbolSW')
-        ? `point-symbol-sw="${searchParams.get('pointSymbolSW')}"`
-        : undefined,
-      searchParams.get('pointSymbolW')
-        ? `point-symbol-w="${searchParams.get('pointSymbolW')}"`
-        : undefined,
-      searchParams.get('pointSymbolNW')
-        ? `point-symbol-nw="${searchParams.get('pointSymbolNW')}"`
-        : undefined
-    ]
-      .filter((value): value is string => value !== undefined)
-      .join(' ')
+const pointerTypeOptions: SelectOption[] = Array.from({ length: 16 }, (_, index) => {
+  const value = `type${index + 1}`
+  return { value, label: value }
+})
 
-    const tokenStyle = [
-      searchParams.get('fontFamily')
-        ? `--ss3-font-family:${searchParams.get('fontFamily')};`
-        : undefined,
-      searchParams.get('textColor')
-        ? `--ss3-text-color:${searchParams.get('textColor')};`
-        : undefined,
-      searchParams.get('backgroundColor')
-        ? `--ss3-background-color:${searchParams.get('backgroundColor')};`
-        : undefined,
-      searchParams.get('frameColor')
-        ? `--ss3-frame-color:${searchParams.get('frameColor')};`
-        : undefined,
-      searchParams.get('accentColor')
-        ? `--ss3-accent-color:${searchParams.get('accentColor')};`
-        : undefined,
-      searchParams.get('warningColor')
-        ? `--ss3-warning-color:${searchParams.get('warningColor')};`
-        : undefined,
-      searchParams.get('dangerColor')
-        ? `--ss3-danger-color:${searchParams.get('dangerColor')};`
-        : undefined
-    ]
-      .filter((value): value is string => value !== undefined)
-      .join(' ')
+const pointerColorOptions: SelectOption[] = [
+  'RED',
+  'GREEN',
+  'BLUE',
+  'ORANGE',
+  'YELLOW',
+  'CYAN',
+  'MAGENTA',
+  'WHITE',
+  'GRAY',
+  'BLACK',
+  'RAITH',
+  'GREEN_LCD',
+  'JUG_GREEN'
+].map((value) => ({ value, label: value }))
 
-    const fixtureTag =
-      kind === 'compass'
-        ? `<steelseries-compass-v3
-            title="${title}"
-            unit="${unit}"
-            heading="${heading}"
-            size="${size}"
-            animate-value="false"
-            ${compassAttributeString}
-            style="${tokenStyle}"
-          ></steelseries-compass-v3>`
-        : `<steelseries-radial-bargraph-v3
-            title="${title}"
-            unit="${unit}"
-            value="${value}"
-            min-value="${min}"
-            max-value="${max}"
-            threshold="${threshold}"
-            size="${size}"
-            animate-value="false"
-            ${radialBargraphAttributeString}
-            style="${tokenStyle}"
-          ></steelseries-radial-bargraph-v3>`
+const foregroundTypeOptions: SelectOption[] = ['type1', 'type2', 'type3', 'type4', 'type5'].map(
+  (value) => ({ value, label: value })
+)
 
-    const testId = `${kind}-fixture`
+const knobTypeOptions: SelectOption[] = ['standardKnob', 'metalKnob'].map((value) => ({
+  value,
+  label: value
+}))
 
-    app.innerHTML = `
-      <main style="font-family: 'Avenir Next', 'Segoe UI', sans-serif; padding: 24px; background: #f3f4f6; min-height: 100vh; box-sizing: border-box;">
-        <section data-testid="${testId}" style="width: 320px; background: white; border-radius: 16px; padding: 16px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14); display: grid; place-items: center;">
-          <div style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #334155; margin-bottom: 8px;">Fixture ${label}</div>
-          ${fixtureTag}
-        </section>
-      </main>
-    `
-  } else {
-    app.innerHTML = `
-      <main style="font-family: 'Avenir Next', 'Segoe UI', sans-serif; padding: 1.25rem; max-width: 980px; margin: 0 auto;">
-        <h1 style="margin: 0;">SteelSeries v3 Demos</h1>
-        <p style="margin: 0.5rem 0 1rem; color: #334155;">Radial bargraph and compass demos with legacy parity options.</p>
+const knobStyleOptions: SelectOption[] = ['black', 'brass', 'silver'].map((value) => ({
+  value,
+  label: value
+}))
 
-        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: start;">
-          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Radial Bargraph Reference</h2>
-            <steelseries-radial-bargraph-v3 title="Pressure" unit="psi" value="75" threshold="80" size="220"></steelseries-radial-bargraph-v3>
-          </article>
+const lcdColorOptions: SelectOption[] = [
+  'STANDARD',
+  'STANDARD_GREEN',
+  'BLUE',
+  'ORANGE',
+  'RED',
+  'YELLOW',
+  'WHITE',
+  'GRAY',
+  'BLACK'
+].map((value) => ({ value, label: value }))
 
-          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Radial Bargraph Type1</h2>
-            <steelseries-radial-bargraph-v3
-              title="Load"
-              unit="%"
-              value="42"
-              threshold="70"
-              size="240"
-              gauge-type="type1"
-              tick-label-orientation="tangent"
-              animate-value="false"
-            ></steelseries-radial-bargraph-v3>
-          </article>
+const rootStyles = `
+  .docs-shell {
+    min-height: 100vh;
+    background: linear-gradient(145deg, #f6f3ec 0%, #e8eef6 60%, #f7f9fc 100%);
+    color: #10243a;
+    font-family: 'Avenir Next', 'Gill Sans', 'Trebuchet MS', sans-serif;
+  }
+  .docs-nav {
+    display: flex;
+    gap: 0.65rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(16, 36, 58, 0.12);
+    backdrop-filter: blur(2px);
+    position: sticky;
+    top: 0;
+    background: rgba(247, 249, 252, 0.92);
+    z-index: 2;
+  }
+  .docs-nav a {
+    text-decoration: none;
+    color: #284766;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+  }
+  .docs-nav a.active {
+    background: #284766;
+    color: #f6f8fb;
+  }
+  .docs-main {
+    padding: 1.5rem;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+  .page-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.45rem;
+    letter-spacing: 0.01em;
+  }
+  .page-subtitle {
+    margin: 0 0 1.25rem;
+    color: #355577;
+    max-width: 78ch;
+  }
+  .index-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .demo-card {
+    background: #ffffff;
+    border: 1px solid rgba(16, 36, 58, 0.12);
+    border-radius: 16px;
+    padding: 0.9rem;
+    box-shadow: 0 10px 24px rgba(16, 36, 58, 0.08);
+  }
+  .demo-card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.86rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #3a5e80;
+  }
+  .demo-stage {
+    min-height: 235px;
+    display: grid;
+    place-items: center;
+  }
+  .page-layout {
+    display: grid;
+    grid-template-columns: minmax(380px, 520px) minmax(320px, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+  .gauge-panel,
+  .control-panel {
+    background: #ffffff;
+    border: 1px solid rgba(16, 36, 58, 0.12);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 10px 24px rgba(16, 36, 58, 0.08);
+  }
+  .gauge-panel {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: center;
+  }
+  .control-grid {
+    display: grid;
+    gap: 0.6rem;
+  }
+  .control-item {
+    border: 1px solid rgba(30, 55, 81, 0.16);
+    border-radius: 10px;
+    padding: 0.55rem 0.65rem;
+    background: #f8fbff;
+  }
+  .control-item label {
+    display: block;
+    font-weight: 700;
+    color: #1f4363;
+    margin-bottom: 0.2rem;
+  }
+  .control-item p {
+    margin: 0.2rem 0 0.45rem;
+    font-size: 0.8rem;
+    color: #476789;
+  }
+  .control-item input,
+  .control-item select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(16, 36, 58, 0.25);
+    border-radius: 8px;
+    padding: 0.35rem 0.45rem;
+    font: inherit;
+    color: #10243a;
+    background: #ffffff;
+  }
+  .control-item input[type='checkbox'] {
+    width: auto;
+    transform: scale(1.1);
+    margin-right: 0.55rem;
+  }
+  .control-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .setting-reference {
+    margin-top: 0.9rem;
+    border-top: 1px dashed rgba(16, 36, 58, 0.2);
+    padding-top: 0.8rem;
+  }
+  .setting-reference h4 {
+    margin: 0 0 0.45rem;
+    font-size: 0.86rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #3a5e80;
+  }
+  .setting-reference ul {
+    margin: 0;
+    padding-left: 1rem;
+    display: grid;
+    gap: 0.35rem;
+  }
+  .setting-reference li {
+    font-size: 0.82rem;
+    color: #244260;
+  }
+  .state-preview {
+    margin: 0;
+    width: 100%;
+    background: #0d1d2b;
+    color: #d6e3f0;
+    border-radius: 10px;
+    padding: 0.7rem;
+    font-size: 0.72rem;
+    overflow: auto;
+  }
+  .card-link {
+    margin-top: 0.55rem;
+    display: inline-block;
+    color: #214e73;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  @media (max-width: 980px) {
+    .page-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+`
 
-          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Radial Bargraph Gradient</h2>
-            <steelseries-radial-bargraph-v3
-              title="Temperature"
-              unit="°C"
-              value="76"
-              threshold="85"
-              size="240"
-              frame-design="brass"
-              background-color="BEIGE"
-              gauge-type="type3"
-              value-color="GREEN"
-              foreground-type="type3"
-              lcd-color="BLUE"
-              use-value-gradient="true"
-              digital-font="true"
-              led-visible="true"
-              trend-visible="true"
-              trend-state="up"
-              animate-value="false"
-              style="
-                --ss3-accent-color: #0f766e;
-                --ss3-warning-color: #ca8a04;
-                --ss3-danger-color: #dc2626;
-              "
-            ></steelseries-radial-bargraph-v3>
-          </article>
-        </section>
+const currentRoute = (): Route => {
+  const path = window.location.pathname
+  if (path === '/radial-bargraph' || path === '/compass' || path === '/wind-direction') {
+    return path
+  }
+  return '/'
+}
 
-        <section style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: start;">
-          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Compass Default</h2>
-            <steelseries-compass-v3 title="Heading" unit="deg" heading="92" size="240" animate-value="false"></steelseries-compass-v3>
-          </article>
+const renderShell = (route: Route): string => {
+  const links: Array<{ path: Route; label: string }> = [
+    { path: '/', label: 'Index' },
+    { path: '/radial-bargraph', label: 'Radial Bargraph' },
+    { path: '/compass', label: 'Compass' },
+    { path: '/wind-direction', label: 'Wind Direction' }
+  ]
 
-          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Compass Legacy Styles</h2>
-            <steelseries-compass-v3
-              title="Marine"
-              unit="deg"
-              heading="184"
-              size="240"
-              frame-design="brass"
-              background-color="BEIGE"
-              pointer-type="type1"
-              pointer-type-average="type8"
-              pointer-color="BLUE"
-              knob-type="metalKnob"
-              knob-style="brass"
-              foreground-type="type3"
-              point-symbols-visible="true"
-              degree-scale="false"
-              animate-value="false"
-            ></steelseries-compass-v3>
-          </article>
-        </section>
+  return `
+    <style>${rootStyles}</style>
+    <div class="docs-shell">
+      <nav class="docs-nav">
+        ${links
+          .map(
+            (link) =>
+              `<a href="${link.path}" data-nav="true" class="${route === link.path ? 'active' : ''}">${link.label}</a>`
+          )
+          .join('')}
+      </nav>
+      <main class="docs-main" id="page-root"></main>
+    </div>
+  `
+}
 
-        <section style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: start;">
-          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Wind Direction Compass Style</h2>
-            <steelseries-wind-direction-v3
-              title="Wind"
-              unit="deg"
-              value-latest="45"
-              value-average="60"
-              size="240"
-              frame-design="shinyMetal"
-              background-color="SATIN_GRAY"
-              pointer-type-latest="type1"
-              pointer-type-average="type8"
-              pointer-color-latest="RED"
-              pointer-color-average="BLUE"
-              knob-type="metalKnob"
-              knob-style="silver"
-              foreground-type="type2"
-              show-degree-scale="true"
-              show-point-symbols="true"
-              show-rose="true"
-              show-lcd="true"
-              animate-value="false"
-            ></steelseries-wind-direction-v3>
-          </article>
+const applyGaugeProps = (element: Element | null, props: Record<string, unknown>): void => {
+  if (!element) {
+    return
+  }
 
-          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Wind Direction (v2 Demo Match)</h2>
-            <steelseries-wind-direction-v3
-              value-latest="25"
-              value-average="75"
-              size="200"
-              frame-design="metal"
-              background-color="DARK_GRAY"
-              pointer-type-latest="type1"
-              pointer-type-average="type8"
-              pointer-color-latest="RED"
-              pointer-color-average="BLUE"
-              knob-type="standardKnob"
-              knob-style="silver"
-              foreground-type="type1"
-              show-degree-scale="true"
-              show-point-symbols="true"
-              show-rose="false"
-              show-lcd="true"
-              lcd-color="STANDARD"
-              animate-value="false"
-            ></steelseries-wind-direction-v3>
-          </article>
-
-          <article style="padding: 1rem; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;">
-            <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">Wind Direction Marine Style</h2>
-            <steelseries-wind-direction-v3
-              title="Wind"
-              unit=""
-              value-latest="270"
-              value-average="265"
-              size="240"
-              frame-design="brass"
-              background-color="BEIGE"
-              pointer-type-latest="type1"
-              pointer-type-average="type8"
-              pointer-color-latest="GREEN"
-              pointer-color-average="ORANGE"
-              knob-type="metalKnob"
-              knob-style="brass"
-              foreground-type="type3"
-              show-degree-scale="true"
-              show-rose="true"
-              lcd-color="STANDARD_GREEN"
-              digital-font="true"
-              animate-value="false"
-            ></steelseries-wind-direction-v3>
-          </article>
-        </section>
-
-        <pre style="margin-top: 1rem; font-size: 0.8rem; background: #0b1120; color: #cbd5e1; padding: 0.75rem; border-radius: 10px; overflow: auto;">steelseries-radial-bargraph-v3 {
-  --ss3-font-family: 'IBM Plex Sans', sans-serif;
-  --ss3-background-color: #e0f2fe;
-  --ss3-frame-color: #bae6fd;
-  --ss3-text-color: #0c4a6e;
-  --ss3-accent-color: #0f766e;
-  --ss3-warning-color: #ca8a04;
-  --ss3-danger-color: #dc2626;
-}</pre>
-
-        <section style="margin-top: 1rem; padding: 1rem; border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0;">
-          <h2 style="margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;">API</h2>
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
-            <thead>
-              <tr>
-                <th style="text-align: left; padding: 0.35rem; border-bottom: 1px solid #cbd5e1;">Attribute</th>
-                <th style="text-align: left; padding: 0.35rem; border-bottom: 1px solid #cbd5e1;">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">value</td><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">Current gauge value</td></tr>
-              <tr><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">min-value / max-value</td><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">Scale range bounds</td></tr>
-              <tr><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">threshold</td><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">Warning marker value</td></tr>
-              <tr><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">title / unit</td><td style="padding: 0.35rem; border-bottom: 1px solid #e2e8f0;">Label metadata</td></tr>
-              <tr><td style="padding: 0.35rem;">animate-value</td><td style="padding: 0.35rem;">Enable/disable value transition animation</td></tr>
-            </tbody>
-          </table>
-          <p style="margin: 0.75rem 0 0; color: #475569; font-size: 0.8rem;">Caveat: use <code>animate-value="false"</code> for deterministic screenshot capture in visual CI.</p>
-        </section>
-      </main>
-    `
+  const target = element as unknown as Record<string, unknown>
+  for (const [key, value] of Object.entries(props)) {
+    target[key] = value
   }
 }
+
+const clampNumber = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value))
+
+const asFiniteNumber = (value: unknown, fallback: number): number =>
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback
+
+const renderIndexPage = (root: HTMLElement): void => {
+  root.innerHTML = `
+    <h1 class="page-title">SteelSeries v3 Showcase</h1>
+    <p class="page-subtitle">Every preview uses a consistent 220px gauge size. Each card highlights significant visual variations. Open a gauge page to tweak settings live with documented controls.</p>
+    <div class="index-grid" id="index-grid"></div>
+  `
+
+  const grid = root.querySelector('#index-grid') as HTMLDivElement
+  const cards: Array<{
+    title: string
+    link: Route
+    create: () => HTMLElement
+  }> = [
+    {
+      title: 'Radial Reference',
+      link: '/radial-bargraph',
+      create: () => {
+        const node = document.createElement('steelseries-radial-bargraph-v3')
+        applyGaugeProps(node, {
+          title: 'Pressure',
+          unit: 'psi',
+          size: 220,
+          value: 74,
+          threshold: 80,
+          animateValue: false,
+          gaugeType: 'type4'
+        })
+        return node
+      }
+    },
+    {
+      title: 'Radial Gradient + LCD',
+      link: '/radial-bargraph',
+      create: () => {
+        const node = document.createElement('steelseries-radial-bargraph-v3')
+        applyGaugeProps(node, {
+          title: 'Temp',
+          unit: '°C',
+          size: 220,
+          value: 66,
+          threshold: 80,
+          frameDesign: 'brass',
+          backgroundColor: 'BEIGE',
+          foregroundType: 'type3',
+          gaugeType: 'type3',
+          valueColor: 'GREEN',
+          lcdColor: 'BLUE',
+          useValueGradient: true,
+          digitalFont: true,
+          trendVisible: true,
+          trendState: 'up',
+          animateValue: false
+        })
+        return node
+      }
+    },
+    {
+      title: 'Compass Default',
+      link: '/compass',
+      create: () => {
+        const node = document.createElement('steelseries-compass-v3')
+        applyGaugeProps(node, {
+          title: 'Heading',
+          unit: 'deg',
+          size: 220,
+          heading: 92,
+          animateValue: false
+        })
+        return node
+      }
+    },
+    {
+      title: 'Compass Marine',
+      link: '/compass',
+      create: () => {
+        const node = document.createElement('steelseries-compass-v3')
+        applyGaugeProps(node, {
+          title: 'Marine',
+          unit: 'deg',
+          size: 220,
+          heading: 184,
+          frameDesign: 'brass',
+          backgroundColor: 'BEIGE',
+          pointerType: 'type1',
+          pointerColor: 'BLUE',
+          knobType: 'metalKnob',
+          knobStyle: 'brass',
+          foregroundType: 'type3',
+          animateValue: false
+        })
+        return node
+      }
+    },
+    {
+      title: 'Wind Dual Pointer',
+      link: '/wind-direction',
+      create: () => {
+        const node = document.createElement('steelseries-wind-direction-v3')
+        applyGaugeProps(node, {
+          title: 'Wind',
+          unit: 'deg',
+          size: 220,
+          valueLatest: 45,
+          valueAverage: 60,
+          frameDesign: 'shinyMetal',
+          backgroundColor: 'SATIN_GRAY',
+          pointerTypeLatest: 'type1',
+          pointerTypeAverage: 'type8',
+          pointerColorLatest: 'RED',
+          pointerColorAverage: 'BLUE',
+          showDegreeScale: true,
+          showPointSymbols: true,
+          showRose: true,
+          animateValue: false
+        })
+        return node
+      }
+    },
+    {
+      title: 'Wind Marine',
+      link: '/wind-direction',
+      create: () => {
+        const node = document.createElement('steelseries-wind-direction-v3')
+        applyGaugeProps(node, {
+          title: 'Marine Wind',
+          unit: '',
+          size: 220,
+          valueLatest: 275,
+          valueAverage: 265,
+          frameDesign: 'brass',
+          backgroundColor: 'BEIGE',
+          pointerColorLatest: 'GREEN',
+          pointerColorAverage: 'ORANGE',
+          knobType: 'metalKnob',
+          knobStyle: 'brass',
+          foregroundType: 'type3',
+          lcdColor: 'STANDARD_GREEN',
+          digitalFont: true,
+          showDegreeScale: true,
+          showRose: true,
+          animateValue: false
+        })
+        return node
+      }
+    }
+  ]
+
+  cards.forEach((card) => {
+    const article = document.createElement('article')
+    article.className = 'demo-card'
+    article.innerHTML = `
+      <h3>${card.title}</h3>
+      <div class="demo-stage"></div>
+      <a class="card-link" href="${card.link}" data-nav="true">Open ${card.link.slice(1) || 'index'} controls</a>
+    `
+    const stage = article.querySelector('.demo-stage') as HTMLDivElement
+    stage.append(card.create())
+    grid.append(article)
+  })
+}
+
+const renderControls = (
+  container: HTMLElement,
+  controls: ControlDef[],
+  state: Record<string, unknown>,
+  onChange: () => void
+): void => {
+  container.innerHTML = ''
+  controls.forEach((control) => {
+    const item = document.createElement('div')
+    item.className = 'control-item'
+    const inputId = `ctrl-${control.key}`
+    const value = state[control.key]
+
+    let inputMarkup = ''
+    if (control.type === 'select') {
+      inputMarkup = `<select id="${inputId}">${(control.options ?? [])
+        .map(
+          (option) =>
+            `<option value="${option.value}" ${value === option.value ? 'selected' : ''}>${option.label}</option>`
+        )
+        .join('')}</select>`
+    } else if (control.type === 'checkbox') {
+      inputMarkup = `<div class="control-inline"><input id="${inputId}" type="checkbox" ${value ? 'checked' : ''} /><span>${value ? 'Enabled' : 'Disabled'}</span></div>`
+    } else {
+      const inputType = control.type === 'range' ? 'range' : control.type
+      inputMarkup = `<input id="${inputId}" type="${inputType}" value="${value ?? ''}" ${control.min !== undefined ? `min="${control.min}"` : ''} ${control.max !== undefined ? `max="${control.max}"` : ''} ${control.step !== undefined ? `step="${control.step}"` : ''} />`
+    }
+
+    item.innerHTML = `
+      <label for="${inputId}">${control.label}</label>
+      <p>${control.description}</p>
+      ${inputMarkup}
+    `
+
+    const input = item.querySelector(`#${inputId}`) as HTMLInputElement | HTMLSelectElement
+    const handler = () => {
+      if (control.type === 'checkbox') {
+        state[control.key] = (input as HTMLInputElement).checked
+      } else if (control.type === 'range' || control.type === 'number') {
+        state[control.key] = Number(input.value)
+      } else {
+        state[control.key] = input.value
+      }
+      onChange()
+    }
+
+    input.addEventListener('input', handler)
+    input.addEventListener('change', handler)
+    container.append(item)
+  })
+}
+
+const syncControlInputs = (
+  container: HTMLElement,
+  controls: ControlDef[],
+  state: Record<string, unknown>
+): void => {
+  controls.forEach((control) => {
+    const input = container.querySelector(`#ctrl-${control.key}`) as
+      | HTMLInputElement
+      | HTMLSelectElement
+      | null
+    if (!input) {
+      return
+    }
+
+    if (control.type === 'checkbox') {
+      const checkbox = input as HTMLInputElement
+      checkbox.checked = Boolean(state[control.key])
+      const status = checkbox.parentElement?.querySelector('span')
+      if (status) {
+        status.textContent = checkbox.checked ? 'Enabled' : 'Disabled'
+      }
+      return
+    }
+
+    if (input instanceof HTMLInputElement) {
+      if (control.min !== undefined) {
+        input.min = String(control.min)
+      }
+      if (control.max !== undefined) {
+        input.max = String(control.max)
+      }
+      if (control.step !== undefined) {
+        input.step = String(control.step)
+      }
+    }
+
+    input.value = String(state[control.key] ?? '')
+  })
+}
+
+const renderSettingReference = (
+  container: HTMLElement,
+  controls: ControlDef[],
+  defaults: Record<string, unknown>
+): void => {
+  const docsForControl = (control: ControlDef): string => {
+    const typeLabel =
+      control.type === 'checkbox'
+        ? 'boolean'
+        : control.type === 'number' || control.type === 'range'
+          ? 'number'
+          : control.type === 'select'
+            ? 'enum'
+            : 'string'
+    const bounds =
+      control.type === 'number' || control.type === 'range'
+        ? ` Range: ${control.min ?? '-inf'} to ${control.max ?? 'inf'}${control.step !== undefined ? ` (step ${control.step})` : ''}.`
+        : ''
+    const optionSummary =
+      control.type === 'select'
+        ? ` Allowed: ${(control.options ?? []).map((option) => option.value).join(', ')}.`
+        : ''
+    const extra = control.documentation ? ` ${control.documentation}` : ''
+    return `Type: ${typeLabel}.${bounds}${optionSummary}${extra}`
+  }
+
+  const list = controls
+    .map(
+      (control) =>
+        `<li><strong>${control.label}</strong> (<code>${control.key}</code>) - ${control.description} ${docsForControl(control)} Default: <code>${String(defaults[control.key])}</code></li>`
+    )
+    .join('')
+  container.innerHTML = `<div class="setting-reference"><h4>Setting Reference</h4><ul>${list}</ul></div>`
+}
+
+const renderPlaygroundPage = (
+  root: HTMLElement,
+  title: string,
+  subtitle: string,
+  gaugeTag: string,
+  controls: ControlDef[],
+  defaults: Record<string, unknown>,
+  normalizeState?: (state: Record<string, unknown>, controls: ControlDef[]) => void
+): void => {
+  root.innerHTML = `
+    <h1 class="page-title">${title}</h1>
+    <p class="page-subtitle">${subtitle}</p>
+    <div class="page-layout">
+      <section class="gauge-panel">
+        <div id="gauge-stage"></div>
+        <pre class="state-preview" id="state-preview"></pre>
+      </section>
+      <section class="control-panel">
+        <div class="control-grid" id="control-grid"></div>
+        <div id="setting-reference"></div>
+      </section>
+    </div>
+  `
+
+  const state: Record<string, unknown> = { ...defaults }
+  const stage = root.querySelector('#gauge-stage') as HTMLDivElement
+  const preview = root.querySelector('#state-preview') as HTMLPreElement
+  const controlGrid = root.querySelector('#control-grid') as HTMLDivElement
+  const settingReference = root.querySelector('#setting-reference') as HTMLDivElement
+  const gauge = document.createElement(gaugeTag)
+  stage.append(gauge)
+
+  const apply = () => {
+    normalizeState?.(state, controls)
+    syncControlInputs(controlGrid, controls, state)
+    applyGaugeProps(gauge, { ...state, animateValue: false, size: 360 })
+    preview.textContent = JSON.stringify(state, null, 2)
+  }
+
+  renderControls(controlGrid, controls, state, apply)
+  renderSettingReference(settingReference, controls, defaults)
+  apply()
+}
+
+const renderRadialPage = (root: HTMLElement): void => {
+  const defaults: Record<string, unknown> = {
+    value: 72,
+    minValue: 0,
+    maxValue: 100,
+    threshold: 80,
+    title: 'Pressure',
+    unit: 'psi',
+    frameDesign: 'metal',
+    backgroundColor: 'DARK_GRAY',
+    foregroundType: 'type1',
+    gaugeType: 'type4',
+    valueColor: 'RED',
+    lcdColor: 'STANDARD',
+    lcdDecimals: 2,
+    labelNumberFormat: 'standard',
+    tickLabelOrientation: 'normal',
+    fractionalScaleDecimals: 1,
+    digitalFont: false,
+    showFrame: true,
+    showBackground: true,
+    showForeground: true,
+    showLcd: true,
+    ledVisible: false,
+    userLedVisible: false,
+    trendVisible: false,
+    trendState: 'off',
+    useSectionColors: false,
+    useValueGradient: false
+  }
+
+  const controls: ControlDef[] = [
+    {
+      key: 'minValue',
+      label: 'Min Value',
+      description: 'Lower bound for gauge range.',
+      type: 'number',
+      min: -999,
+      max: 999,
+      step: 1
+    },
+    {
+      key: 'maxValue',
+      label: 'Max Value',
+      description: 'Upper bound for gauge range.',
+      type: 'number',
+      min: -999,
+      max: 999,
+      step: 1
+    },
+    {
+      key: 'value',
+      label: 'Value',
+      description: 'Primary gauge value (constrained to Min/Max range).',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    {
+      key: 'threshold',
+      label: 'Threshold',
+      description: 'Warning threshold marker (constrained to Min/Max range).',
+      type: 'range',
+      min: 0,
+      max: 100,
+      step: 1
+    },
+    { key: 'title', label: 'Title', description: 'Displayed title text.', type: 'text' },
+    { key: 'unit', label: 'Unit', description: 'Displayed unit text.', type: 'text' },
+    {
+      key: 'frameDesign',
+      label: 'Frame Design',
+      description: 'Outer bezel style.',
+      type: 'select',
+      options: frameOptions
+    },
+    {
+      key: 'backgroundColor',
+      label: 'Background',
+      description: 'Dial background material/palette.',
+      type: 'select',
+      options: backgroundOptions
+    },
+    {
+      key: 'foregroundType',
+      label: 'Foreground',
+      description: 'Glass overlay type.',
+      type: 'select',
+      options: foregroundTypeOptions
+    },
+    {
+      key: 'gaugeType',
+      label: 'Gauge Type',
+      description: 'Arc geometry variant.',
+      type: 'select',
+      options: ['type1', 'type2', 'type3', 'type4'].map((value) => ({ value, label: value }))
+    },
+    {
+      key: 'valueColor',
+      label: 'Value Color',
+      description: 'LED/pointer color family.',
+      type: 'select',
+      options: pointerColorOptions
+    },
+    {
+      key: 'lcdColor',
+      label: 'LCD Color',
+      description: 'LCD panel palette.',
+      type: 'select',
+      options: lcdColorOptions
+    },
+    {
+      key: 'lcdDecimals',
+      label: 'LCD Decimals',
+      description: 'Decimals shown in LCD readout.',
+      type: 'number',
+      min: 0,
+      max: 6,
+      step: 1
+    },
+    {
+      key: 'labelNumberFormat',
+      label: 'Label Format',
+      description: 'Tick label number format.',
+      type: 'select',
+      options: ['standard', 'fractional', 'scientific'].map((value) => ({ value, label: value }))
+    },
+    {
+      key: 'tickLabelOrientation',
+      label: 'Tick Label Orientation',
+      description: 'How labels orient around arc.',
+      type: 'select',
+      options: ['normal', 'horizontal', 'tangent'].map((value) => ({ value, label: value }))
+    },
+    {
+      key: 'fractionalScaleDecimals',
+      label: 'Fractional Decimals',
+      description: 'Decimals used when label format is fractional.',
+      type: 'number',
+      min: 0,
+      max: 4,
+      step: 1
+    },
+    {
+      key: 'digitalFont',
+      label: 'Digital Font',
+      description: 'Use digital LCD font.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showFrame',
+      label: 'Show Frame',
+      description: 'Toggle frame visibility.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showBackground',
+      label: 'Show Background',
+      description: 'Toggle dial background visibility.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showForeground',
+      label: 'Show Foreground',
+      description: 'Toggle glass foreground visibility.',
+      type: 'checkbox'
+    },
+    { key: 'showLcd', label: 'Show LCD', description: 'Toggle LCD visibility.', type: 'checkbox' },
+    {
+      key: 'ledVisible',
+      label: 'Show Alert LED',
+      description: 'Toggle threshold LED.',
+      type: 'checkbox'
+    },
+    {
+      key: 'userLedVisible',
+      label: 'Show User LED',
+      description: 'Toggle secondary LED indicator.',
+      type: 'checkbox'
+    },
+    {
+      key: 'trendVisible',
+      label: 'Show Trend',
+      description: 'Toggle trend indicator.',
+      type: 'checkbox'
+    },
+    {
+      key: 'trendState',
+      label: 'Trend State',
+      description: 'Current trend arrow state.',
+      type: 'select',
+      options: ['off', 'up', 'steady', 'down'].map((value) => ({ value, label: value }))
+    },
+    {
+      key: 'useSectionColors',
+      label: 'Use Section Colors',
+      description: 'Colorize active segments based on threshold (overrides gradient).',
+      type: 'checkbox'
+    },
+    {
+      key: 'useValueGradient',
+      label: 'Use Value Gradient',
+      description: 'Blend bar colors from low to high range (disabled when section colors are on).',
+      type: 'checkbox'
+    }
+  ]
+
+  renderPlaygroundPage(
+    root,
+    'Radial Bargraph Playground',
+    'Adjust radial-bargraph settings live on a single larger gauge. Each control includes behavior notes and defaults.',
+    'steelseries-radial-bargraph-v3',
+    controls,
+    defaults,
+    (state, controlDefs) => {
+      const rawMin = asFiniteNumber(state.minValue, 0)
+      const rawMax = asFiniteNumber(state.maxValue, 100)
+      const minValue = Math.min(rawMin, rawMax)
+      const maxValue = Math.max(rawMin, rawMax)
+
+      state.minValue = minValue
+      state.maxValue = maxValue
+      state.value = clampNumber(asFiniteNumber(state.value, minValue), minValue, maxValue)
+      state.threshold = clampNumber(asFiniteNumber(state.threshold, minValue), minValue, maxValue)
+
+      if (Boolean(state.useSectionColors) && Boolean(state.useValueGradient)) {
+        state.useValueGradient = false
+      }
+
+      for (const key of ['value', 'threshold']) {
+        const control = controlDefs.find((entry) => entry.key === key)
+        if (!control) {
+          continue
+        }
+        control.min = minValue
+        control.max = maxValue
+      }
+    }
+  )
+}
+
+const renderCompassPage = (root: HTMLElement): void => {
+  const defaults: Record<string, unknown> = {
+    heading: 125,
+    title: 'Heading',
+    unit: 'deg',
+    frameDesign: 'metal',
+    backgroundColor: 'DARK_GRAY',
+    pointerType: 'type2',
+    pointerColor: 'RED',
+    knobType: 'standardKnob',
+    knobStyle: 'silver',
+    foregroundType: 'type1',
+    degreeScale: false,
+    roseVisible: true,
+    rotateFace: false,
+    pointSymbolsVisible: true,
+    showHeadingReadout: true,
+    pointSymbolN: 'N',
+    pointSymbolNE: 'NE',
+    pointSymbolE: 'E',
+    pointSymbolSE: 'SE',
+    pointSymbolS: 'S',
+    pointSymbolSW: 'SW',
+    pointSymbolW: 'W',
+    pointSymbolNW: 'NW'
+  }
+
+  const controls: ControlDef[] = [
+    {
+      key: 'heading',
+      label: 'Heading',
+      description: 'Current compass heading in degrees.',
+      type: 'range',
+      min: 0,
+      max: 359,
+      step: 1
+    },
+    { key: 'title', label: 'Title', description: 'Displayed heading label.', type: 'text' },
+    { key: 'unit', label: 'Unit', description: 'Displayed heading unit.', type: 'text' },
+    {
+      key: 'frameDesign',
+      label: 'Frame Design',
+      description: 'Outer bezel style.',
+      type: 'select',
+      options: frameOptions
+    },
+    {
+      key: 'backgroundColor',
+      label: 'Background',
+      description: 'Dial background material/palette.',
+      type: 'select',
+      options: backgroundOptions
+    },
+    {
+      key: 'pointerType',
+      label: 'Pointer Type',
+      description: 'Needle geometry style.',
+      type: 'select',
+      options: pointerTypeOptions
+    },
+    {
+      key: 'pointerColor',
+      label: 'Pointer Color',
+      description: 'Needle color family.',
+      type: 'select',
+      options: pointerColorOptions
+    },
+    {
+      key: 'knobType',
+      label: 'Knob Type',
+      description: 'Hub type used at center.',
+      type: 'select',
+      options: knobTypeOptions
+    },
+    {
+      key: 'knobStyle',
+      label: 'Knob Style',
+      description: 'Hub surface finish.',
+      type: 'select',
+      options: knobStyleOptions
+    },
+    {
+      key: 'foregroundType',
+      label: 'Foreground',
+      description: 'Glass overlay type.',
+      type: 'select',
+      options: foregroundTypeOptions
+    },
+    {
+      key: 'degreeScale',
+      label: 'Show Degree Scale',
+      description: 'Switch to degree labels instead of cardinal-only emphasis.',
+      type: 'checkbox'
+    },
+    {
+      key: 'pointSymbolsVisible',
+      label: 'Show Point Symbols',
+      description: 'Show N/NE/E... labels.',
+      type: 'checkbox'
+    },
+    {
+      key: 'roseVisible',
+      label: 'Show Rose',
+      description: 'Toggle rose rays and inner ring.',
+      type: 'checkbox'
+    },
+    {
+      key: 'rotateFace',
+      label: 'Rotate Face',
+      description: 'Rotate face opposite heading instead of pointer-only movement.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showHeadingReadout',
+      label: 'Show Heading Readout',
+      description: 'Show text readout under center.',
+      type: 'checkbox'
+    },
+    {
+      key: 'pointSymbolN',
+      label: 'North Symbol',
+      description: 'Text used for north point marker.',
+      type: 'text'
+    },
+    {
+      key: 'pointSymbolNE',
+      label: 'North-East Symbol',
+      description: 'Text used for north-east marker.',
+      type: 'text'
+    },
+    {
+      key: 'pointSymbolE',
+      label: 'East Symbol',
+      description: 'Text used for east marker.',
+      type: 'text'
+    },
+    {
+      key: 'pointSymbolSE',
+      label: 'South-East Symbol',
+      description: 'Text used for south-east marker.',
+      type: 'text'
+    },
+    {
+      key: 'pointSymbolS',
+      label: 'South Symbol',
+      description: 'Text used for south marker.',
+      type: 'text'
+    },
+    {
+      key: 'pointSymbolSW',
+      label: 'South-West Symbol',
+      description: 'Text used for south-west marker.',
+      type: 'text'
+    },
+    {
+      key: 'pointSymbolW',
+      label: 'West Symbol',
+      description: 'Text used for west marker.',
+      type: 'text'
+    },
+    {
+      key: 'pointSymbolNW',
+      label: 'North-West Symbol',
+      description: 'Text used for north-west marker.',
+      type: 'text'
+    }
+  ]
+
+  renderPlaygroundPage(
+    root,
+    'Compass Playground',
+    'Live tune compass styling and behavior. Use pointer, rose, and foreground controls to compare variants.',
+    'steelseries-compass-v3',
+    controls,
+    defaults
+  )
+}
+
+const renderWindPage = (root: HTMLElement): void => {
+  const defaults: Record<string, unknown> = {
+    valueLatest: 48,
+    valueAverage: 63,
+    title: 'Wind',
+    unit: 'deg',
+    frameDesign: 'metal',
+    backgroundColor: 'DARK_GRAY',
+    pointerTypeLatest: 'type1',
+    pointerTypeAverage: 'type8',
+    pointerColorLatest: 'RED',
+    pointerColorAverage: 'BLUE',
+    knobType: 'standardKnob',
+    knobStyle: 'silver',
+    foregroundType: 'type1',
+    lcdColor: 'STANDARD',
+    lcdTitleLatest: 'Latest',
+    lcdTitleAverage: 'Average',
+    showFrame: true,
+    showBackground: true,
+    showForeground: true,
+    showLcd: true,
+    showPointSymbols: true,
+    showDegreeScale: true,
+    showRose: true,
+    degreeScaleHalf: false,
+    digitalFont: false,
+    useColorLabels: false
+  }
+
+  const controls: ControlDef[] = [
+    {
+      key: 'valueLatest',
+      label: 'Latest Value',
+      description: 'Latest wind direction value.',
+      type: 'range',
+      min: 0,
+      max: 359,
+      step: 1
+    },
+    {
+      key: 'valueAverage',
+      label: 'Average Value',
+      description: 'Average wind direction value.',
+      type: 'range',
+      min: 0,
+      max: 359,
+      step: 1
+    },
+    { key: 'title', label: 'Title', description: 'Gauge title text.', type: 'text' },
+    { key: 'unit', label: 'Unit', description: 'Unit text.', type: 'text' },
+    {
+      key: 'frameDesign',
+      label: 'Frame Design',
+      description: 'Outer bezel style.',
+      type: 'select',
+      options: frameOptions
+    },
+    {
+      key: 'backgroundColor',
+      label: 'Background',
+      description: 'Dial background material/palette.',
+      type: 'select',
+      options: backgroundOptions
+    },
+    {
+      key: 'pointerTypeLatest',
+      label: 'Latest Pointer Type',
+      description: 'Pointer style for latest value.',
+      type: 'select',
+      options: pointerTypeOptions
+    },
+    {
+      key: 'pointerTypeAverage',
+      label: 'Average Pointer Type',
+      description: 'Pointer style for average value.',
+      type: 'select',
+      options: pointerTypeOptions
+    },
+    {
+      key: 'pointerColorLatest',
+      label: 'Latest Pointer Color',
+      description: 'Pointer color family for latest.',
+      type: 'select',
+      options: pointerColorOptions
+    },
+    {
+      key: 'pointerColorAverage',
+      label: 'Average Pointer Color',
+      description: 'Pointer color family for average.',
+      type: 'select',
+      options: pointerColorOptions
+    },
+    {
+      key: 'knobType',
+      label: 'Knob Type',
+      description: 'Hub type used at center.',
+      type: 'select',
+      options: knobTypeOptions
+    },
+    {
+      key: 'knobStyle',
+      label: 'Knob Style',
+      description: 'Hub finish style.',
+      type: 'select',
+      options: knobStyleOptions
+    },
+    {
+      key: 'foregroundType',
+      label: 'Foreground',
+      description: 'Glass overlay type.',
+      type: 'select',
+      options: foregroundTypeOptions
+    },
+    {
+      key: 'lcdColor',
+      label: 'LCD Color',
+      description: 'LCD panel palette.',
+      type: 'select',
+      options: lcdColorOptions
+    },
+    {
+      key: 'lcdTitleLatest',
+      label: 'Latest LCD Title',
+      description: 'Title above latest LCD row.',
+      type: 'text'
+    },
+    {
+      key: 'lcdTitleAverage',
+      label: 'Average LCD Title',
+      description: 'Title above average LCD row.',
+      type: 'text'
+    },
+    {
+      key: 'showFrame',
+      label: 'Show Frame',
+      description: 'Toggle frame visibility.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showBackground',
+      label: 'Show Background',
+      description: 'Toggle dial background visibility.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showForeground',
+      label: 'Show Foreground',
+      description: 'Toggle glass foreground visibility.',
+      type: 'checkbox'
+    },
+    { key: 'showLcd', label: 'Show LCD', description: 'Toggle LCD visibility.', type: 'checkbox' },
+    {
+      key: 'showPointSymbols',
+      label: 'Show Point Symbols',
+      description: 'Show N/NE/E labels.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showDegreeScale',
+      label: 'Show Degree Scale',
+      description: 'Show degree scale labels.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showRose',
+      label: 'Show Rose',
+      description: 'Show compass rose overlay.',
+      type: 'checkbox'
+    },
+    {
+      key: 'degreeScaleHalf',
+      label: 'Half Degree Scale',
+      description: 'Half-scale mode for degree labels.',
+      type: 'checkbox'
+    },
+    {
+      key: 'digitalFont',
+      label: 'Digital Font',
+      description: 'Use digital LCD font style.',
+      type: 'checkbox'
+    },
+    {
+      key: 'useColorLabels',
+      label: 'Color LCD Labels',
+      description: 'Color latest/average labels to match pointer colors.',
+      type: 'checkbox'
+    }
+  ]
+
+  renderPlaygroundPage(
+    root,
+    'Wind Direction Playground',
+    'Tune the dual-pointer wind-direction gauge live, including rose, LCD, pointer styles, and visibility options.',
+    'steelseries-wind-direction-v3',
+    controls,
+    defaults
+  )
+}
+
+const renderPage = (): void => {
+  if (!app) {
+    return
+  }
+
+  const route = currentRoute()
+  app.innerHTML = renderShell(route)
+  const root = app.querySelector('#page-root') as HTMLDivElement
+
+  if (route === '/radial-bargraph') {
+    renderRadialPage(root)
+  } else if (route === '/compass') {
+    renderCompassPage(root)
+  } else if (route === '/wind-direction') {
+    renderWindPage(root)
+  } else {
+    renderIndexPage(root)
+  }
+
+  app.querySelectorAll('a[data-nav="true"]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const anchor = event.currentTarget as HTMLAnchorElement
+      const target = anchor.getAttribute('href')
+      if (!target) {
+        return
+      }
+      event.preventDefault()
+      if (window.location.pathname !== target) {
+        window.history.pushState({}, '', target)
+      }
+      renderPage()
+    })
+  })
+}
+
+window.addEventListener('popstate', renderPage)
+renderPage()
