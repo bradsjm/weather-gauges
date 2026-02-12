@@ -14,6 +14,31 @@ const HALF_PI = PI * 0.5
 const TWO_PI = PI * 2
 const RAD_FACTOR = PI / 180
 
+export const normalizeCompassHeadingForScale = (
+  heading: number,
+  degreeScaleHalf: boolean
+): number => {
+  const normalized = ((heading % 360) + 360) % 360
+  if (!degreeScaleHalf) {
+    return normalized
+  }
+
+  return normalized > 180 ? normalized - 360 : normalized
+}
+
+const formatCompassDegreeLabel = (heading: number, degreeScaleHalf: boolean): string => {
+  const normalized = normalizeCompassHeadingForScale(heading, degreeScaleHalf)
+  if (degreeScaleHalf) {
+    return String(normalized)
+  }
+
+  return `${normalized >= 100 ? '' : '0'}${normalized}`
+}
+
+type CompassTickmarkOptions = {
+  degreeScaleHalf?: boolean
+}
+
 export const drawCompassRose = (
   context: RadialDrawContext,
   centerX: number,
@@ -110,10 +135,12 @@ export const drawCompassTickmarks = (
   imageWidth: number,
   pointSymbols: readonly [string, string, string, string, string, string, string, string],
   labelColor: Rgb,
-  symbolColor: Rgb
+  symbolColor: Rgb,
+  options: CompassTickmarkOptions = {}
 ): void => {
   const degreeScale = config.style.degreeScale || config.rose.showDegreeLabels
   const pointSymbolsVisible = config.style.pointSymbolsVisible && config.rose.showOrdinalMarkers
+  const degreeScaleHalf = options.degreeScaleHalf ?? false
 
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -219,7 +246,7 @@ export const drawCompassTickmarks = (
               context,
               0.37 * imageWidth,
               HALF_PI,
-              `${val >= 100 ? '' : '0'}${val}`
+              formatCompassDegreeLabel(val, degreeScaleHalf)
             )
             break
           }
@@ -227,7 +254,12 @@ export const drawCompassTickmarks = (
       } else {
         const val = (i + 90) % 360
         context.font = smlFont
-        drawRadialTextLabel(context, 0.37 * imageWidth, HALF_PI, `${val >= 100 ? '' : '0'}${val}`)
+        drawRadialTextLabel(
+          context,
+          0.37 * imageWidth,
+          HALF_PI,
+          formatCompassDegreeLabel(val, degreeScaleHalf)
+        )
       }
 
       context.restore()

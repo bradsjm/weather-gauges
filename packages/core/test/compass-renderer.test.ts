@@ -206,6 +206,33 @@ describe('compass renderer', () => {
     expect(texts.some((text) => /^\d{1,3}$/.test(text))).toBe(true)
   })
 
+  it('renders half heading scale labels when enabled', () => {
+    const baseConfig = createConfig(225)
+
+    const degreeScaleMock = createMockContext()
+    renderCompassGauge(
+      degreeScaleMock.context,
+      compassGaugeConfigSchema.parse({
+        ...baseConfig,
+        rose: { showDegreeLabels: true, showOrdinalMarkers: false },
+        scale: {
+          degreeScaleHalf: true
+        },
+        style: {
+          ...baseConfig.style,
+          degreeScale: true,
+          pointSymbolsVisible: false
+        }
+      }),
+      { showHeadingReadout: true }
+    )
+
+    const texts = getRenderedTexts(degreeScaleMock.operations)
+    expect(texts).toContain('-170')
+    expect(texts).toContain('180')
+    expect(texts).toContain('-135°')
+  })
+
   it('applies opposite-face rotation when rotateFace is enabled', () => {
     const heading = 90
     const radFactor = Math.PI / 180

@@ -126,7 +126,8 @@ export const renderCompassGauge = (
         imageWidth,
         config.style.pointSymbols,
         backgroundPalette.labelColor,
-        backgroundPalette.symbolColor
+        backgroundPalette.symbolColor,
+        { degreeScaleHalf: config.scale.degreeScaleHalf }
       )
 
       context.restore()
@@ -148,7 +149,8 @@ export const renderCompassGauge = (
         imageWidth,
         config.style.pointSymbols,
         backgroundPalette.labelColor,
-        backgroundPalette.symbolColor
+        backgroundPalette.symbolColor,
+        { degreeScaleHalf: config.scale.degreeScaleHalf }
       )
     }
   }

@@ -105,6 +105,9 @@ export class SteelseriesCompassV3Element extends LitElement {
   @property({ type: Boolean, attribute: 'degree-scale' })
   degreeScale = false
 
+  @property({ type: Boolean, attribute: 'degree-scale-half' })
+  degreeScaleHalf = false
+
   @property({ type: Boolean, attribute: 'rose-visible' })
   roseVisible = true
 
@@ -241,6 +244,9 @@ export class SteelseriesCompassV3Element extends LitElement {
       rose: {
         showDegreeLabels: this.degreeScale,
         showOrdinalMarkers: this.pointSymbolsVisible
+      },
+      scale: {
+        degreeScaleHalf: this.degreeScaleHalf
       },
       style: {
         frameDesign: this.frameDesign,

@@ -956,6 +956,7 @@ const renderCompassPage = (root: HTMLElement): void => {
     knobStyle: 'silver',
     foregroundType: 'type1',
     degreeScale: false,
+    degreeScaleHalf: false,
     roseVisible: true,
     rotateFace: false,
     pointSymbolsVisible: true,
@@ -1062,6 +1063,12 @@ const renderCompassPage = (root: HTMLElement): void => {
       key: 'degreeScale',
       label: 'Show Degree Scale',
       description: 'Switch to degree labels instead of cardinal-only emphasis.',
+      type: 'checkbox'
+    },
+    {
+      key: 'degreeScaleHalf',
+      label: 'Half Heading Scale',
+      description: 'Show degree labels as -180 to 180 instead of 0 to 360.',
       type: 'checkbox'
     },
     {
@@ -1356,8 +1363,8 @@ const renderWindPage = (root: HTMLElement): void => {
     },
     {
       key: 'degreeScaleHalf',
-      label: 'Half Degree Scale',
-      description: 'Half-scale mode for degree labels.',
+      label: 'Half Heading Scale',
+      description: 'Show degree labels and LCD values as -180 to 180 instead of 0 to 360.',
       type: 'checkbox'
     },
     {

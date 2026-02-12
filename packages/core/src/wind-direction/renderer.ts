@@ -1,7 +1,8 @@
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
 import {
   drawCompassRose as drawSharedCompassRose,
-  drawCompassTickmarks
+  drawCompassTickmarks,
+  normalizeCompassHeadingForScale
 } from '../render/compass-scales.js'
 import { drawGaugePointer, resolveGaugePointerColor } from '../render/gauge-pointer.js'
 import {
@@ -116,8 +117,18 @@ const drawWindDirectionCompassTicks = (
       string
     ],
     palette.labelColor,
-    palette.symbolColor
+    palette.symbolColor,
+    { degreeScaleHalf: config.scale.degreeScaleHalf }
   )
+}
+
+const formatWindHeadingText = (heading: number, degreeScaleHalf: boolean): string => {
+  const normalized = normalizeCompassHeadingForScale(heading, degreeScaleHalf)
+  if (degreeScaleHalf) {
+    return String(normalized)
+  }
+
+  return String(normalized).padStart(3, '0')
 }
 
 const drawLcdTitle = (
@@ -178,7 +189,7 @@ const drawLcds = (
   }
   drawRadialLcdValueText({
     context,
-    text: latest.toFixed(0).padStart(3, '0'),
+    text: formatWindHeadingText(Math.round(latest), config.scale.degreeScaleHalf),
     x: lcdX,
     y: lcdY1,
     width: lcdWidth,
@@ -204,7 +215,7 @@ const drawLcds = (
   }
   drawRadialLcdValueText({
     context,
-    text: average.toFixed(0).padStart(3, '0'),
+    text: formatWindHeadingText(Math.round(average), config.scale.degreeScaleHalf),
     x: lcdX,
     y: lcdY2,
     width: lcdWidth,

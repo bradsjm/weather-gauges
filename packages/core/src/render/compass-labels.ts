@@ -1,6 +1,7 @@
 import type { CompassGaugeConfig } from '../compass/schema.js'
 import type { RadialDrawContext } from '../radial/renderer.js'
 import type { ThemePaint } from '../theme/tokens.js'
+import { normalizeCompassHeadingForScale } from './compass-scales.js'
 import { buildGaugeFont, configureGaugeTextLayout, drawGaugeText } from './gauge-text-primitives.js'
 
 export const drawCompassLabels = (
@@ -33,7 +34,11 @@ export const drawCompassLabels = (
   configureGaugeTextLayout(context, {
     font: buildGaugeFont(Math.max(15, Math.round(radius * 0.16)), paint.fontFamily, 700)
   })
-  drawGaugeText(context, `${Math.round(heading)}°`, centerX, centerY + radius * 0.3)
+  const headingValue = normalizeCompassHeadingForScale(
+    Math.round(heading),
+    config.scale.degreeScaleHalf
+  )
+  drawGaugeText(context, `${headingValue}°`, centerX, centerY + radius * 0.3)
 
   if (config.text.unit) {
     configureGaugeTextLayout(context, {

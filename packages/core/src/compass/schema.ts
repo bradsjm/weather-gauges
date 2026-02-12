@@ -31,6 +31,12 @@ export const compassRoseSchema = z
   })
   .strict()
 
+export const compassScaleSchema = z
+  .object({
+    degreeScaleHalf: z.boolean().default(false)
+  })
+  .strict()
+
 export const compassFrameDesignSchema = z.enum([
   'blackMetal',
   'metal',
@@ -174,6 +180,9 @@ export const compassGaugeConfigSchema = z
       showDegreeLabels: false,
       showOrdinalMarkers: true
     })),
+    scale: compassScaleSchema.default(() => ({
+      degreeScaleHalf: false
+    })),
     style: compassStyleSchema.default({
       frameDesign: 'metal',
       backgroundColor: 'DARK_GRAY',
@@ -195,6 +204,7 @@ export const compassGaugeConfigSchema = z
 
 export type CompassHeading = z.infer<typeof compassHeadingSchema>
 export type CompassRose = z.infer<typeof compassRoseSchema>
+export type CompassScale = z.infer<typeof compassScaleSchema>
 export type CompassAlert = z.infer<typeof compassAlertSchema>
 export type CompassIndicators = z.infer<typeof compassIndicatorsSchema>
 export type CompassFrameDesign = z.infer<typeof compassFrameDesignSchema>
