@@ -22,7 +22,11 @@ import {
   createRadialGradientSafe
 } from '../render/gauge-canvas-primitives.js'
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
-import { drawRadialLcdBox, resolveRadialLcdPalette } from '../render/radial-lcd.js'
+import {
+  drawRadialLcdBox,
+  drawRadialLcdValueText,
+  resolveRadialLcdPalette
+} from '../render/radial-lcd.js'
 import {
   buildGaugeFont,
   configureGaugeTextLayout,
@@ -135,30 +139,6 @@ const drawLcdTitle = (
   context.restore()
 }
 
-const drawLcdValue = (
-  context: WindDirectionDrawContext,
-  value: number,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  textColor: string,
-  digitalFont: boolean
-): void => {
-  context.save()
-  configureGaugeTextLayout(context, {
-    color: textColor,
-    font: buildGaugeFont(width * 0.25, digitalFont ? 'monospace, sans-serif' : 'Arial, sans-serif'),
-    align: 'center',
-    baseline: 'middle'
-  })
-
-  const valueStr = value.toFixed(0).padStart(3, '0')
-  drawGaugeText(context, valueStr, x + width / 2, y + height / 2)
-
-  context.restore()
-}
-
 const drawLcds = (
   context: WindDirectionDrawContext,
   config: WindDirectionGaugeConfig,
@@ -196,16 +176,19 @@ const drawLcds = (
       latestTitleColor
     )
   }
-  drawLcdValue(
+  drawRadialLcdValueText({
     context,
-    latest,
-    lcdX,
-    lcdY1,
-    lcdWidth,
-    lcdHeight,
-    lcdPalette.text,
-    config.style.digitalFont
-  )
+    text: latest.toFixed(0).padStart(3, '0'),
+    x: lcdX,
+    y: lcdY1,
+    width: lcdWidth,
+    height: lcdHeight,
+    textColor: lcdPalette.text,
+    fontSize: lcdWidth * 0.25,
+    fontFamily: config.style.digitalFont ? 'monospace, sans-serif' : 'Arial, sans-serif',
+    align: 'center',
+    baseline: 'middle'
+  })
 
   // Average LCD (bottom)
   drawRadialLcdBox(context, lcdX, lcdY2, lcdWidth, lcdHeight, lcdPalette)
@@ -219,16 +202,19 @@ const drawLcds = (
       averageTitleColor
     )
   }
-  drawLcdValue(
+  drawRadialLcdValueText({
     context,
-    average,
-    lcdX,
-    lcdY2,
-    lcdWidth,
-    lcdHeight,
-    lcdPalette.text,
-    config.style.digitalFont
-  )
+    text: average.toFixed(0).padStart(3, '0'),
+    x: lcdX,
+    y: lcdY2,
+    width: lcdWidth,
+    height: lcdHeight,
+    textColor: lcdPalette.text,
+    fontSize: lcdWidth * 0.25,
+    fontFamily: config.style.digitalFont ? 'monospace, sans-serif' : 'Arial, sans-serif',
+    align: 'center',
+    baseline: 'middle'
+  })
 }
 
 const drawPointers = (

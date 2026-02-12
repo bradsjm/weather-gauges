@@ -159,6 +159,66 @@ export const drawRadialLcdBox = (
   context.fill()
 }
 
+type RadialLcdValueTextOptions = {
+  context: CanvasRenderingContext2D
+  text: string
+  x: number
+  y: number
+  width: number
+  height: number
+  textColor: string
+  fontSize: number
+  fontFamily: string
+  align?: CanvasTextAlign
+  baseline?: CanvasTextBaseline
+  maxWidth?: number
+  textX?: number
+  textY?: number
+  shadow?: {
+    color: string
+    offsetX: number
+    offsetY: number
+    blur: number
+  }
+}
+
+export const drawRadialLcdValueText = ({
+  context,
+  text,
+  x,
+  y,
+  width,
+  height,
+  textColor,
+  fontSize,
+  fontFamily,
+  align = 'right',
+  baseline = 'middle',
+  maxWidth = width * 0.9,
+  textX = align === 'right' ? x + width * 0.95 : x + width * 0.5,
+  textY = y + height * 0.5,
+  shadow
+}: RadialLcdValueTextOptions): void => {
+  configureGaugeTextLayout(context, {
+    color: textColor,
+    align,
+    baseline,
+    font: buildGaugeFont(fontSize, fontFamily)
+  })
+
+  if (shadow) {
+    context.shadowColor = shadow.color
+    context.shadowOffsetX = shadow.offsetX
+    context.shadowOffsetY = shadow.offsetY
+    context.shadowBlur = shadow.blur
+  }
+
+  drawGaugeText(context, text, textX, textY, maxWidth)
+
+  context.shadowColor = 'transparent'
+  context.shadowBlur = 0
+}
+
 export const drawRadialLcd = (
   context: CanvasRenderingContext2D,
   lcdColor: RadialBargraphLcdColorName,
@@ -176,30 +236,28 @@ export const drawRadialLcd = (
 
   drawRadialLcdBox(context, lcdX, lcdY, lcdWidth, lcdHeight, lcdPalette)
 
-  configureGaugeTextLayout(context, {
-    color: lcdPalette.text,
-    align: 'right',
-    baseline: 'alphabetic'
-  })
-  if (lcdColor === 'STANDARD' || lcdColor === 'STANDARD_GREEN') {
-    context.shadowColor = 'gray'
-    context.shadowOffsetX = size * 0.007
-    context.shadowOffsetY = size * 0.007
-    context.shadowBlur = size * 0.007
-  }
-  configureGaugeTextLayout(context, {
-    font: buildGaugeFont(
-      Math.max(15, Math.round(size * 0.075)),
-      digitalFont ? paint.fontFamilyLcd : paint.fontFamily
-    )
-  })
-  drawGaugeText(
+  const valueShadow =
+    lcdColor === 'STANDARD' || lcdColor === 'STANDARD_GREEN'
+      ? {
+          color: 'gray',
+          offsetX: size * 0.007,
+          offsetY: size * 0.007,
+          blur: size * 0.007
+        }
+      : null
+
+  drawRadialLcdValueText({
     context,
-    value.toFixed(lcdDecimals),
-    lcdX + lcdWidth * 0.95,
-    lcdY + lcdHeight * 0.5 + Math.floor(size / 10) * 0.38,
-    lcdWidth * 0.9
-  )
-  context.shadowColor = 'transparent'
-  context.shadowBlur = 0
+    text: value.toFixed(lcdDecimals),
+    x: lcdX,
+    y: lcdY,
+    width: lcdWidth,
+    height: lcdHeight,
+    textColor: lcdPalette.text,
+    fontSize: Math.max(15, Math.round(size * 0.075)),
+    fontFamily: digitalFont ? paint.fontFamilyLcd : paint.fontFamily,
+    align: 'right',
+    baseline: 'middle',
+    ...(valueShadow ? { shadow: valueShadow } : {})
+  })
 }
