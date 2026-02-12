@@ -4,7 +4,17 @@ import {
   drawGaugeRadialBackgroundByStyle,
   drawGaugeRadialFrameByDesign
 } from '../render/gauge-materials.js'
-import { resolveGaugePointerPalette } from '../render/gauge-color-palettes.js'
+import {
+  getGaugeBackgroundPalette,
+  resolveGaugePointerPalette,
+  type GaugeBackgroundPalette
+} from '../render/gauge-color-palettes.js'
+import {
+  addColorStops,
+  closePathSafe,
+  createLinearGradientSafe,
+  createRadialGradientSafe
+} from '../render/gauge-canvas-primitives.js'
 import { drawRadialLcdBox, resolveRadialLcdPalette } from '../render/radial-lcd.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
@@ -41,13 +51,6 @@ export type WindDirectionAnimationOptions = {
 }
 
 type Rgb = readonly [number, number, number]
-type BackgroundPalette = {
-  gradientStart: Rgb
-  gradientFraction: Rgb
-  gradientStop: Rgb
-  labelColor: Rgb
-  symbolColor: Rgb
-}
 
 const PI = Math.PI
 const TWO_PI = Math.PI * 2
@@ -56,189 +59,14 @@ const RAD_FACTOR = PI / 180
 
 const rgb = (value: Rgb): string => `rgb(${value[0]},${value[1]},${value[2]})`
 
-const closePathSafe = (context: WindDirectionDrawContext): void => {
-  if (typeof context.closePath === 'function') {
-    context.closePath()
-  }
-}
-
-const createLinearGradientSafe = (
-  context: WindDirectionDrawContext,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  fallback: string
-): CanvasGradient | string => {
-  if (typeof context.createLinearGradient !== 'function') {
-    return fallback
-  }
-  return context.createLinearGradient(x0, y0, x1, y1)
-}
-
-const createRadialGradientSafe = (
-  context: WindDirectionDrawContext,
-  x0: number,
-  y0: number,
-  r0: number,
-  x1: number,
-  y1: number,
-  r1: number,
-  fallback: string
-): CanvasGradient | string => {
-  if (typeof context.createRadialGradient !== 'function') {
-    return fallback
-  }
-  return context.createRadialGradient(x0, y0, r0, x1, y1, r1)
-}
-
-const addColorStops = (
-  gradient: CanvasGradient | string,
-  stops: Array<readonly [number, string]>
-): CanvasGradient | string => {
-  if (typeof gradient === 'string') {
-    return gradient
-  }
-  for (const [offset, color] of stops) {
-    gradient.addColorStop(offset, color)
-  }
-  return gradient
-}
-
 const normalizeAngle = (angle: number): number => {
   return ((angle % 360) + 360) % 360
 }
 
-const BACKGROUND_COLORS: Record<
-  WindDirectionGaugeConfig['style']['backgroundColor'],
-  BackgroundPalette
-> = {
-  DARK_GRAY: {
-    gradientStart: [0, 0, 0],
-    gradientFraction: [51, 51, 51],
-    gradientStop: [153, 153, 153],
-    labelColor: [255, 255, 255],
-    symbolColor: [180, 180, 180]
-  },
-  SATIN_GRAY: {
-    gradientStart: [45, 57, 57],
-    gradientFraction: [45, 57, 57],
-    gradientStop: [45, 57, 57],
-    labelColor: [167, 184, 180],
-    symbolColor: [137, 154, 150]
-  },
-  LIGHT_GRAY: {
-    gradientStart: [130, 130, 130],
-    gradientFraction: [181, 181, 181],
-    gradientStop: [253, 253, 253],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  WHITE: {
-    gradientStart: [255, 255, 255],
-    gradientFraction: [255, 255, 255],
-    gradientStop: [255, 255, 255],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  BLACK: {
-    gradientStart: [0, 0, 0],
-    gradientFraction: [0, 0, 0],
-    gradientStop: [0, 0, 0],
-    labelColor: [255, 255, 255],
-    symbolColor: [150, 150, 150]
-  },
-  BEIGE: {
-    gradientStart: [178, 172, 150],
-    gradientFraction: [204, 205, 184],
-    gradientStop: [231, 231, 214],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  BROWN: {
-    gradientStart: [245, 225, 193],
-    gradientFraction: [245, 225, 193],
-    gradientStop: [255, 250, 240],
-    labelColor: [109, 73, 47],
-    symbolColor: [89, 53, 27]
-  },
-  RED: {
-    gradientStart: [198, 93, 95],
-    gradientFraction: [212, 132, 134],
-    gradientStop: [242, 218, 218],
-    labelColor: [0, 0, 0],
-    symbolColor: [90, 0, 0]
-  },
-  GREEN: {
-    gradientStart: [65, 120, 40],
-    gradientFraction: [129, 171, 95],
-    gradientStop: [218, 237, 202],
-    labelColor: [0, 0, 0],
-    symbolColor: [0, 90, 0]
-  },
-  BLUE: {
-    gradientStart: [45, 83, 122],
-    gradientFraction: [115, 144, 170],
-    gradientStop: [227, 234, 238],
-    labelColor: [0, 0, 0],
-    symbolColor: [0, 0, 90]
-  },
-  ANTHRACITE: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [69, 69, 74],
-    labelColor: [250, 250, 250],
-    symbolColor: [180, 180, 180]
-  },
-  MUD: {
-    gradientStart: [80, 86, 82],
-    gradientFraction: [70, 76, 72],
-    gradientStop: [57, 62, 58],
-    labelColor: [255, 255, 240],
-    symbolColor: [225, 225, 210]
-  },
-  PUNCHED_SHEET: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [69, 69, 74],
-    labelColor: [255, 255, 255],
-    symbolColor: [180, 180, 180]
-  },
-  CARBON: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [69, 69, 74],
-    labelColor: [255, 255, 255],
-    symbolColor: [180, 180, 180]
-  },
-  STAINLESS: {
-    gradientStart: [130, 130, 130],
-    gradientFraction: [181, 181, 181],
-    gradientStop: [253, 253, 253],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  BRUSHED_METAL: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [69, 69, 74],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  BRUSHED_STAINLESS: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [110, 110, 112],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  TURNED: {
-    gradientStart: [130, 130, 130],
-    gradientFraction: [181, 181, 181],
-    gradientStop: [253, 253, 253],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  }
+const getWindBackgroundPalette = (
+  backgroundColor: WindDirectionGaugeConfig['style']['backgroundColor']
+): GaugeBackgroundPalette => {
+  return getGaugeBackgroundPalette(backgroundColor)
 }
 
 const drawPointSymbols = (
@@ -247,7 +75,7 @@ const drawPointSymbols = (
   centerX: number,
   centerY: number,
   imageWidth: number,
-  palette: BackgroundPalette
+  palette: GaugeBackgroundPalette
 ): void => {
   context.save()
   context.translate(centerX, centerY)
@@ -305,7 +133,7 @@ const drawDegreeScale = (
   imageWidth: number,
   imageHeight: number,
   degreeScaleHalf: boolean,
-  palette: BackgroundPalette
+  palette: GaugeBackgroundPalette
 ): void => {
   context.save()
   context.translate(centerX, centerY)
@@ -722,7 +550,7 @@ export const renderWindDirectionGauge = (
 
   const latest = normalizeAngle(options.latest ?? config.value.latest)
   const average = normalizeAngle(options.average ?? config.value.average)
-  const palette = BACKGROUND_COLORS[config.style.backgroundColor]
+  const palette = getWindBackgroundPalette(config.style.backgroundColor)
 
   context.clearRect(0, 0, width, height)
 
