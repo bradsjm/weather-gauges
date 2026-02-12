@@ -1,50 +1,17 @@
 import type { CompassGaugeConfig } from '../compass/schema.js'
 import type { RadialDrawContext } from '../radial/renderer.js'
-
-type Rgb = readonly [number, number, number]
+import type { Rgb } from './gauge-color-palettes.js'
+import { rgbTupleToCss } from './gauge-color-palettes.js'
+import {
+  addColorStops,
+  closePathSafe,
+  createLinearGradientSafe
+} from './gauge-canvas-primitives.js'
 
 const PI = Math.PI
 const HALF_PI = PI * 0.5
 const TWO_PI = PI * 2
 const RAD_FACTOR = PI / 180
-
-const rgb = (value: Rgb): string => `rgb(${value[0]}, ${value[1]}, ${value[2]})`
-
-const closePathSafe = (context: RadialDrawContext): void => {
-  if (typeof context.closePath === 'function') {
-    context.closePath()
-  }
-}
-
-const createLinearGradientSafe = (
-  context: RadialDrawContext,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  fallback: string
-): CanvasGradient | string => {
-  if (typeof context.createLinearGradient !== 'function') {
-    return fallback
-  }
-
-  return context.createLinearGradient(x0, y0, x1, y1)
-}
-
-const addColorStops = (
-  gradient: CanvasGradient | string,
-  stops: Array<readonly [number, string]>
-): CanvasGradient | string => {
-  if (typeof gradient === 'string') {
-    return gradient
-  }
-
-  for (const [offset, color] of stops) {
-    gradient.addColorStop(offset, color)
-  }
-
-  return gradient
-}
 
 export const drawCompassRose = (
   context: RadialDrawContext,
@@ -56,8 +23,8 @@ export const drawCompassRose = (
 ): void => {
   context.save()
   context.lineWidth = 1
-  context.strokeStyle = rgb(symbolColor)
-  context.fillStyle = rgb(symbolColor)
+  context.strokeStyle = rgbTupleToCss(symbolColor)
+  context.fillStyle = rgbTupleToCss(symbolColor)
   context.translate(centerX, centerY)
 
   let fill = true
@@ -93,7 +60,7 @@ export const drawCompassRose = (
     context.lineTo(0.640186 * imageWidth, 0.644859 * imageHeight)
     context.lineTo(0.584112 * imageWidth, 0.560747 * imageHeight)
     closePathSafe(context)
-    context.fillStyle = rgb(symbolColor)
+    context.fillStyle = rgbTupleToCss(symbolColor)
     context.fill()
     context.stroke()
 
@@ -109,13 +76,13 @@ export const drawCompassRose = (
         0,
         0.518691 * imageWidth,
         0,
-        rgb(symbolColor)
+        rgbTupleToCss(symbolColor)
       ),
       [
         [0, 'rgb(222, 223, 218)'],
         [0.48, 'rgb(222, 223, 218)'],
-        [0.49, rgb(symbolColor)],
-        [1, rgb(symbolColor)]
+        [0.49, rgbTupleToCss(symbolColor)],
+        [1, rgbTupleToCss(symbolColor)]
       ]
     )
     context.fill()
@@ -131,7 +98,7 @@ export const drawCompassRose = (
   context.arc(0, 0, 0.1 * imageWidth, 0, TWO_PI)
   closePathSafe(context)
   context.lineWidth = 0.022 * imageWidth
-  context.strokeStyle = rgb(symbolColor)
+  context.strokeStyle = rgbTupleToCss(symbolColor)
   context.stroke()
   context.restore()
 }
@@ -149,8 +116,8 @@ export const drawCompassTickmarks = (
 
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  context.strokeStyle = rgb(labelColor)
-  context.fillStyle = rgb(labelColor)
+  context.strokeStyle = rgbTupleToCss(labelColor)
+  context.fillStyle = rgbTupleToCss(labelColor)
   context.save()
   context.translate(imageWidth / 2, imageWidth / 2)
 
@@ -165,7 +132,7 @@ export const drawCompassTickmarks = (
         context.lineTo(0.36 * imageWidth, 0)
         closePathSafe(context)
         context.lineWidth = 1
-        context.strokeStyle = rgb(labelColor)
+        context.strokeStyle = rgbTupleToCss(labelColor)
         context.stroke()
       }
 
@@ -230,7 +197,7 @@ export const drawCompassTickmarks = (
         context.lineTo(0.1 * imageWidth, 0)
         closePathSafe(context)
         context.lineWidth = 1
-        context.strokeStyle = rgb(symbolColor)
+        context.strokeStyle = rgbTupleToCss(symbolColor)
         context.stroke()
       }
 

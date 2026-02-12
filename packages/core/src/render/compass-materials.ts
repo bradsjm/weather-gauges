@@ -1,210 +1,24 @@
 import { clamp } from '../math/range.js'
+import type { GaugeBackgroundPalette, Rgb } from './gauge-color-palettes.js'
+import { getGaugeBackgroundPalette, rgbTupleToCss } from './gauge-color-palettes.js'
+import {
+  addColorStops,
+  closePathSafe,
+  createLinearGradientSafe,
+  createRadialGradientSafe
+} from './gauge-canvas-primitives.js'
 import type { RadialDrawContext } from '../radial/renderer.js'
 import type { CompassBackgroundColorName, CompassFrameDesign } from '../compass/schema.js'
-
-type Rgb = readonly [number, number, number]
-
-type BackgroundPalette = {
-  gradientStart: Rgb
-  gradientFraction: Rgb
-  gradientStop: Rgb
-  labelColor: Rgb
-  symbolColor: Rgb
-}
 
 const PI = Math.PI
 const HALF_PI = PI * 0.5
 const TWO_PI = PI * 2
 const RAD_FACTOR = PI / 180
 
-const rgb = (value: Rgb): string => `rgb(${value[0]}, ${value[1]}, ${value[2]})`
-
-const closePathSafe = (context: RadialDrawContext): void => {
-  if (typeof context.closePath === 'function') {
-    context.closePath()
-  }
-}
-
-const createLinearGradientSafe = (
-  context: RadialDrawContext,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  fallback: string
-): CanvasGradient | string => {
-  if (typeof context.createLinearGradient !== 'function') {
-    return fallback
-  }
-
-  return context.createLinearGradient(x0, y0, x1, y1)
-}
-
-const createRadialGradientSafe = (
-  context: RadialDrawContext,
-  x0: number,
-  y0: number,
-  r0: number,
-  x1: number,
-  y1: number,
-  r1: number,
-  fallback: string
-): CanvasGradient | string => {
-  if (typeof context.createRadialGradient !== 'function') {
-    return fallback
-  }
-
-  return context.createRadialGradient(x0, y0, r0, x1, y1, r1)
-}
-
-const addColorStops = (
-  gradient: CanvasGradient | string,
-  stops: Array<readonly [number, string]>
-): CanvasGradient | string => {
-  if (typeof gradient === 'string') {
-    return gradient
-  }
-
-  for (const [offset, color] of stops) {
-    gradient.addColorStop(offset, color)
-  }
-
-  return gradient
-}
-
-const BACKGROUND_COLORS: Record<CompassBackgroundColorName, BackgroundPalette> = {
-  DARK_GRAY: {
-    gradientStart: [0, 0, 0],
-    gradientFraction: [51, 51, 51],
-    gradientStop: [153, 153, 153],
-    labelColor: [255, 255, 255],
-    symbolColor: [180, 180, 180]
-  },
-  SATIN_GRAY: {
-    gradientStart: [45, 57, 57],
-    gradientFraction: [45, 57, 57],
-    gradientStop: [45, 57, 57],
-    labelColor: [167, 184, 180],
-    symbolColor: [137, 154, 150]
-  },
-  LIGHT_GRAY: {
-    gradientStart: [130, 130, 130],
-    gradientFraction: [181, 181, 181],
-    gradientStop: [253, 253, 253],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  WHITE: {
-    gradientStart: [255, 255, 255],
-    gradientFraction: [255, 255, 255],
-    gradientStop: [255, 255, 255],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  BLACK: {
-    gradientStart: [0, 0, 0],
-    gradientFraction: [0, 0, 0],
-    gradientStop: [0, 0, 0],
-    labelColor: [255, 255, 255],
-    symbolColor: [150, 150, 150]
-  },
-  BEIGE: {
-    gradientStart: [178, 172, 150],
-    gradientFraction: [204, 205, 184],
-    gradientStop: [231, 231, 214],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  BROWN: {
-    gradientStart: [245, 225, 193],
-    gradientFraction: [245, 225, 193],
-    gradientStop: [255, 250, 240],
-    labelColor: [109, 73, 47],
-    symbolColor: [89, 53, 27]
-  },
-  RED: {
-    gradientStart: [198, 93, 95],
-    gradientFraction: [212, 132, 134],
-    gradientStop: [242, 218, 218],
-    labelColor: [0, 0, 0],
-    symbolColor: [90, 0, 0]
-  },
-  GREEN: {
-    gradientStart: [65, 120, 40],
-    gradientFraction: [129, 171, 95],
-    gradientStop: [218, 237, 202],
-    labelColor: [0, 0, 0],
-    symbolColor: [0, 90, 0]
-  },
-  BLUE: {
-    gradientStart: [45, 83, 122],
-    gradientFraction: [115, 144, 170],
-    gradientStop: [227, 234, 238],
-    labelColor: [0, 0, 0],
-    symbolColor: [0, 0, 90]
-  },
-  ANTHRACITE: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [69, 69, 74],
-    labelColor: [250, 250, 250],
-    symbolColor: [180, 180, 180]
-  },
-  MUD: {
-    gradientStart: [80, 86, 82],
-    gradientFraction: [70, 76, 72],
-    gradientStop: [57, 62, 58],
-    labelColor: [255, 255, 240],
-    symbolColor: [225, 225, 210]
-  },
-  PUNCHED_SHEET: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [69, 69, 74],
-    labelColor: [255, 255, 255],
-    symbolColor: [180, 180, 180]
-  },
-  CARBON: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [69, 69, 74],
-    labelColor: [255, 255, 255],
-    symbolColor: [180, 180, 180]
-  },
-  STAINLESS: {
-    gradientStart: [130, 130, 130],
-    gradientFraction: [181, 181, 181],
-    gradientStop: [253, 253, 253],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  BRUSHED_METAL: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [69, 69, 74],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  BRUSHED_STAINLESS: {
-    gradientStart: [50, 50, 54],
-    gradientFraction: [47, 47, 51],
-    gradientStop: [110, 110, 112],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  },
-  TURNED: {
-    gradientStart: [130, 130, 130],
-    gradientFraction: [181, 181, 181],
-    gradientStop: [253, 253, 253],
-    labelColor: [0, 0, 0],
-    symbolColor: [80, 80, 80]
-  }
-}
-
 export const getCompassBackgroundPalette = (
   name: CompassBackgroundColorName
-): BackgroundPalette => {
-  return BACKGROUND_COLORS[name]
+): GaugeBackgroundPalette => {
+  return getGaugeBackgroundPalette(name)
 }
 
 export const drawCompassFrame = (
@@ -693,7 +507,7 @@ export const drawCompassBackground = (
 
   if (backgroundColorName === 'CARBON') {
     const pattern = drawCarbonPattern(context)
-    context.fillStyle = pattern ?? rgb(color.gradientStop)
+    context.fillStyle = pattern ?? rgbTupleToCss(color.gradientStop)
     context.fill()
 
     context.beginPath()
@@ -717,7 +531,7 @@ export const drawCompassBackground = (
     context.fill()
   } else if (backgroundColorName === 'PUNCHED_SHEET') {
     const pattern = drawPunchedSheetPattern(context)
-    context.fillStyle = pattern ?? rgb(color.gradientStop)
+    context.fillStyle = pattern ?? rgbTupleToCss(color.gradientStop)
     context.fill()
 
     context.beginPath()
@@ -748,7 +562,7 @@ export const drawCompassBackground = (
       color.gradientStop,
       backgroundColorName === 'BRUSHED_METAL'
     )
-    context.fillStyle = pattern ?? rgb(color.gradientStop)
+    context.fillStyle = pattern ?? rgbTupleToCss(color.gradientStop)
     context.fill()
   } else if (backgroundColorName === 'STAINLESS' || backgroundColorName === 'TURNED') {
     if (typeof context.createConicGradient === 'function') {
@@ -778,7 +592,7 @@ export const drawCompassBackground = (
       }
       context.fillStyle = gradient
     } else {
-      context.fillStyle = rgb(color.gradientStop)
+      context.fillStyle = rgbTupleToCss(color.gradientStop)
     }
     context.fill()
 
@@ -825,12 +639,12 @@ export const drawCompassBackground = (
         0.084112 * imageWidth,
         0,
         backgroundOffsetX * 2,
-        rgb(color.gradientStop)
+        rgbTupleToCss(color.gradientStop)
       ),
       [
-        [0, rgb(color.gradientStart)],
-        [0.4, rgb(color.gradientFraction)],
-        [1, rgb(color.gradientStop)]
+        [0, rgbTupleToCss(color.gradientStart)],
+        [0.4, rgbTupleToCss(color.gradientFraction)],
+        [1, rgbTupleToCss(color.gradientStop)]
       ]
     )
     context.fillStyle = gradient
