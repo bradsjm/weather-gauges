@@ -1,4 +1,5 @@
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
+import { drawCompassRose as drawSharedCompassRose } from '../render/compass-scales.js'
 import type { ThemePaint } from '../theme/tokens.js'
 import type {
   WindDirectionGaugeConfig,
@@ -608,104 +609,6 @@ const drawBackground = (
   context.restore()
 }
 
-const drawCompassRose = (
-  context: WindDirectionDrawContext,
-  centerX: number,
-  centerY: number,
-  imageWidth: number,
-  imageHeight: number,
-  palette: BackgroundPalette
-): void => {
-  const symbolColor = palette.symbolColor
-  context.save()
-  context.lineWidth = 1
-  context.strokeStyle = rgb(symbolColor)
-  context.fillStyle = rgb(symbolColor)
-  context.translate(centerX, centerY)
-
-  // Broken ring - alternating filled/unfilled segments every 15 degrees
-  // Match v2 compass exactly using imageWidth like compass does
-  let fill = true
-  for (let i = 0; i < 360; i += 15) {
-    context.beginPath()
-    context.moveTo(
-      0.26 * imageWidth * Math.cos(i * RAD_FACTOR),
-      0.26 * imageWidth * Math.sin(i * RAD_FACTOR)
-    )
-    context.lineTo(
-      0.23 * imageWidth * Math.cos(i * RAD_FACTOR),
-      0.23 * imageWidth * Math.sin(i * RAD_FACTOR)
-    )
-    context.arc(0, 0, 0.23 * imageWidth, i * RAD_FACTOR, (i + 15) * RAD_FACTOR, false)
-    context.lineTo(
-      0.26 * imageWidth * Math.cos((i + 15) * RAD_FACTOR),
-      0.26 * imageWidth * Math.sin((i + 15) * RAD_FACTOR)
-    )
-    context.arc(0, 0, 0.26 * imageWidth, (i + 15) * RAD_FACTOR, i * RAD_FACTOR, true)
-    closePathSafe(context)
-    if (fill) {
-      context.fill()
-    }
-    context.stroke()
-    fill = !fill
-  }
-
-  context.translate(-centerX, -centerY)
-
-  // Draw pointers for cardinal directions (N, E, S, W)
-  for (let i = 0; i <= 360; i += 90) {
-    // Small pointers (triangles)
-    context.beginPath()
-    context.moveTo(0.560747 * imageWidth, 0.584112 * imageHeight)
-    context.lineTo(0.640186 * imageWidth, 0.644859 * imageHeight)
-    context.lineTo(0.584112 * imageWidth, 0.560747 * imageHeight)
-    closePathSafe(context)
-    context.fillStyle = rgb(symbolColor)
-    context.fill()
-    context.stroke()
-
-    // Large pointers with gradient
-    context.beginPath()
-    context.moveTo(0.523364 * imageWidth, 0.397196 * imageHeight)
-    context.lineTo(0.5 * imageWidth, 0.196261 * imageHeight)
-    context.lineTo(0.471962 * imageWidth, 0.397196 * imageHeight)
-    closePathSafe(context)
-    context.fillStyle = addColorStops(
-      createLinearGradientSafe(
-        context,
-        0.476635 * imageWidth,
-        0,
-        0.518691 * imageWidth,
-        0,
-        rgb(symbolColor)
-      ),
-      [
-        [0, 'rgb(222, 223, 218)'],
-        [0.48, 'rgb(222, 223, 218)'],
-        [0.49, rgb(symbolColor)],
-        [1, rgb(symbolColor)]
-      ]
-    )
-    context.fill()
-    context.stroke()
-
-    context.translate(centerX, centerY)
-    context.rotate(i * RAD_FACTOR)
-    context.translate(-centerX, -centerY)
-  }
-
-  // Central ring
-  context.translate(centerX, centerY)
-  context.beginPath()
-  context.arc(0, 0, 0.1 * imageWidth, 0, TWO_PI, false)
-  context.closePath()
-  context.lineWidth = 0.022 * imageWidth
-  context.strokeStyle = rgb(symbolColor)
-  context.stroke()
-
-  context.restore()
-}
-
 const drawPointSymbols = (
   context: WindDirectionDrawContext,
   pointSymbols: string[],
@@ -1253,7 +1156,7 @@ export const renderWindDirectionGauge = (
     }
 
     if (config.visibility.showRose) {
-      drawCompassRose(context, centerX, centerY, width, height, palette)
+      drawSharedCompassRose(context, centerX, centerY, width, height, palette.symbolColor)
     }
 
     if (config.visibility.showDegreeScale) {
