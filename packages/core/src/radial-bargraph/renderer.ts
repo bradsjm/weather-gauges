@@ -15,6 +15,11 @@ import {
   createRadialGradientSafe
 } from '../render/gauge-canvas-primitives.js'
 import { HALF_PI, RAD_FACTOR, drawRadialTextLabel } from '../render/gauge-ticks.js'
+import {
+  buildGaugeFont,
+  configureGaugeTextLayout,
+  drawGaugeText
+} from '../render/gauge-text-primitives.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   RadialBargraphAlert,
@@ -616,18 +621,24 @@ const drawTitleAndUnit = (
   centerX: number
 ): void => {
   const textColor = getGaugeBackgroundTextColor(config.style.backgroundColor)
-  context.fillStyle = textColor
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
+  configureGaugeTextLayout(context, {
+    color: textColor,
+    align: 'center',
+    baseline: 'middle'
+  })
 
   if (config.text.title) {
-    context.font = `${Math.max(12, Math.round(size * 0.046))}px ${STD_FONT_NAME}`
-    context.fillText(config.text.title, centerX, size * 0.3)
+    configureGaugeTextLayout(context, {
+      font: buildGaugeFont(Math.max(12, Math.round(size * 0.046)), STD_FONT_NAME)
+    })
+    drawGaugeText(context, config.text.title, centerX, size * 0.3)
   }
 
   if (config.text.unit) {
-    context.font = `${Math.max(10, Math.round(size * 0.035))}px ${STD_FONT_NAME}`
-    context.fillText(config.text.unit, centerX, size * 0.38)
+    configureGaugeTextLayout(context, {
+      font: buildGaugeFont(Math.max(10, Math.round(size * 0.035)), STD_FONT_NAME)
+    })
+    drawGaugeText(context, config.text.unit, centerX, size * 0.38)
   }
 }
 
@@ -713,19 +724,25 @@ const drawLcd = (
   roundedRect(innerX, innerY, innerWidth, innerHeight, innerRadius)
   context.fill()
 
-  context.fillStyle = lcdPalette.text
-  context.textAlign = 'right'
-  context.textBaseline = 'alphabetic'
+  configureGaugeTextLayout(context, {
+    color: lcdPalette.text,
+    align: 'right',
+    baseline: 'alphabetic'
+  })
   if (config.style.lcdColor === 'STANDARD' || config.style.lcdColor === 'STANDARD_GREEN') {
     context.shadowColor = 'gray'
     context.shadowOffsetX = size * 0.007
     context.shadowOffsetY = size * 0.007
     context.shadowBlur = size * 0.007
   }
-  context.font = config.style.digitalFont
-    ? `${Math.max(15, Math.round(size * 0.075))}px ${paint.fontFamilyLcd}`
-    : `${Math.max(15, Math.round(size * 0.075))}px ${paint.fontFamily}`
-  context.fillText(
+  configureGaugeTextLayout(context, {
+    font: buildGaugeFont(
+      Math.max(15, Math.round(size * 0.075)),
+      config.style.digitalFont ? paint.fontFamilyLcd : paint.fontFamily
+    )
+  })
+  drawGaugeText(
+    context,
     value.toFixed(config.lcdDecimals),
     lcdX + lcdWidth * 0.95,
     lcdY + lcdHeight * 0.5 + Math.floor(size / 10) * 0.38,
