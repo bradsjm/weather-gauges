@@ -9,7 +9,7 @@ import {
 
 const TWO_PI = Math.PI * 2
 
-const drawCompassCenterKnob = (
+export const drawCompassCenterKnob = (
   context: RadialDrawContext,
   imageWidth: number,
   knobType: CompassKnobType,

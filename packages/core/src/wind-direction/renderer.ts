@@ -4,6 +4,7 @@ import {
   drawGaugeRadialBackgroundByStyle,
   drawGaugeRadialFrameByDesign
 } from '../render/gauge-materials.js'
+import { drawCompassCenterKnob } from '../render/compass-foreground.js'
 import {
   getGaugeBackgroundPalette,
   resolveGaugePointerPalette,
@@ -417,88 +418,6 @@ const drawForeground = (
   context.restore()
 }
 
-const drawKnob = (
-  context: WindDirectionDrawContext,
-  knobType: WindDirectionGaugeConfig['style']['knobType'],
-  knobStyle: WindDirectionGaugeConfig['style']['knobStyle'],
-  centerX: number,
-  centerY: number,
-  imageWidth: number
-): void => {
-  const knobRadius = imageWidth * 0.04
-
-  context.save()
-
-  if (knobType === 'standardKnob') {
-    const gradient = addColorStops(
-      createRadialGradientSafe(
-        context,
-        centerX,
-        centerY,
-        0,
-        centerX,
-        centerY,
-        knobRadius,
-        '#888888'
-      ),
-      [
-        [0, '#e0e0e0'],
-        [0.7, '#808080'],
-        [1, '#404040']
-      ]
-    )
-    context.fillStyle = gradient
-  } else {
-    let centerColor: string, edgeColor: string
-
-    switch (knobStyle) {
-      case 'black':
-        centerColor = '#333333'
-        edgeColor = '#0a0a0a'
-        break
-      case 'brass':
-        centerColor = '#c9b037'
-        edgeColor = '#8b7355'
-        break
-      case 'silver':
-      default:
-        centerColor = '#c0c0c0'
-        edgeColor = '#808080'
-        break
-    }
-
-    const gradient = addColorStops(
-      createRadialGradientSafe(
-        context,
-        centerX,
-        centerY,
-        0,
-        centerX,
-        centerY,
-        knobRadius,
-        centerColor
-      ),
-      [
-        [0, centerColor],
-        [0.8, edgeColor],
-        [1, edgeColor]
-      ]
-    )
-    context.fillStyle = gradient
-  }
-
-  context.beginPath()
-  context.arc(centerX, centerY, knobRadius, 0, TWO_PI)
-  closePathSafe(context)
-  context.fill()
-
-  context.strokeStyle = 'rgba(0,0,0,0.3)'
-  context.lineWidth = 1
-  context.stroke()
-
-  context.restore()
-}
-
 const drawSectionsAndAreas = (
   context: WindDirectionDrawContext,
   sections: WindDirectionSection[],
@@ -638,7 +557,7 @@ export const renderWindDirectionGauge = (
 
     const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
     if (showKnob) {
-      drawKnob(context, config.style.knobType, config.style.knobStyle, centerX, centerY, width)
+      drawCompassCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
     }
   }
 
