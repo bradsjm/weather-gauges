@@ -1,31 +1,27 @@
 import {
   animateWindDirectionGauge,
-  gaugeContract,
   windDirectionGaugeConfigSchema,
   renderWindDirectionGauge,
-  resolveThemePaint,
-  createStyleTokenSource,
   toGaugeContractState,
-  type AnimationRunHandle,
   type WindDirectionDrawContext,
   type WindDirectionGaugeConfig,
-  type WindDirectionRenderResult,
-  type ThemePaint
+  type WindDirectionCustomLayer,
+  type WindDirectionSection,
+  type WindDirectionRenderResult
 } from '@bradsjm/steelseries-v3-core'
-import { LitElement, html } from 'lit'
+import { html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter } from '../shared/css-utils.js'
+import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
 
 @customElement('steelseries-wind-direction-v3')
-export class SteelseriesWindDirectionV3Element extends LitElement {
+export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
   @query('canvas')
   private canvasElement?: HTMLCanvasElement
 
   private currentLatest = 0
   private currentAverage = 0
-  private animationHandle: AnimationRunHandle | undefined
-
   static override styles = sharedStyles
 
   @property({ type: Number, attribute: 'value-latest' })
@@ -35,7 +31,7 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
   valueAverage = 0
 
   @property({ type: Number })
-  size = 200
+  size = 220
 
   @property({ type: String })
   override title = ''
@@ -175,6 +171,15 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
   @property({ type: String, attribute: 'lcd-title-average' })
   lcdTitleAverage = 'Average'
 
+  @property({ attribute: false })
+  sections: WindDirectionSection[] = []
+
+  @property({ attribute: false })
+  areas: WindDirectionSection[] = []
+
+  @property({ attribute: false })
+  customLayer: WindDirectionCustomLayer | null = null
+
   @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
   showFrame = true
 
@@ -231,12 +236,6 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
     this.renderGauge(false)
   }
 
-  override disconnectedCallback() {
-    this.animationHandle?.cancel()
-    this.animationHandle = undefined
-    super.disconnectedCallback()
-  }
-
   override updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.size === 0) {
       return
@@ -248,24 +247,8 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
     this.renderGauge(onlyValueChanged && this.animateValue)
   }
 
-  private getThemePaint(): ThemePaint {
-    const computedStyle = getComputedStyle(this)
-    return resolveThemePaint({
-      source: createStyleTokenSource(computedStyle)
-    })
-  }
-
   private getDrawContext(): WindDirectionDrawContext | undefined {
-    if (!this.canvasElement) {
-      return undefined
-    }
-
-    const drawContext = this.canvasElement.getContext('2d')
-    if (!drawContext) {
-      return undefined
-    }
-
-    return drawContext as WindDirectionDrawContext
+    return this.getCanvasContext<WindDirectionDrawContext>(this.canvasElement)
   }
 
   private buildConfig(): WindDirectionGaugeConfig {
@@ -334,6 +317,7 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
         lcdColor: this.lcdColor,
         digitalFont: this.digitalFont,
         useColorLabels: this.useColorLabels,
+        ...(this.customLayer ? { customLayer: this.customLayer } : {}),
         pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
       },
       lcdTitles: {
@@ -343,32 +327,17 @@ export class SteelseriesWindDirectionV3Element extends LitElement {
       indicators: {
         alerts
       },
-      sections: [],
-      areas: []
+      sections: this.sections,
+      areas: this.areas
     })
   }
 
   private emitValueChange(result: WindDirectionRenderResult): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.valueChangeEvent, {
-        detail: toGaugeContractState('wind-direction', result),
-        bubbles: true,
-        composed: true
-      })
-    )
+    this.emitGaugeValueChange(toGaugeContractState('wind-direction', result))
   }
 
   private emitError(error: unknown): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.errorEvent, {
-        detail: {
-          kind: 'wind-direction',
-          message: error instanceof Error ? error.message : 'Unknown wind direction rendering error'
-        },
-        bubbles: true,
-        composed: true
-      })
-    )
+    this.emitGaugeError('wind-direction', error, 'Unknown wind direction rendering error')
   }
 
   private renderGauge(animateValue: boolean): void {

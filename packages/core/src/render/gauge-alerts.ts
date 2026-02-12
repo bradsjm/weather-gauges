@@ -14,6 +14,19 @@ type ValueAlert = SeverityAlert & {
   value: number
 }
 
+const resolveGaugeAlerts = <TAlert>(
+  alerts: readonly TAlert[],
+  predicate: (alert: TAlert) => boolean,
+  sorter?: (left: TAlert, right: TAlert) => number
+): TAlert[] => {
+  const activeAlerts = alerts.filter(predicate)
+  if (!sorter) {
+    return activeAlerts
+  }
+
+  return activeAlerts.sort(sorter)
+}
+
 export const resolveGaugeToneFromAlerts = (
   alerts: readonly SeverityAlert[],
   thresholdBreached = false
@@ -34,14 +47,16 @@ export const resolveGaugeHeadingAlerts = <TAlert extends HeadingAlert>(
   alerts: readonly TAlert[],
   tolerance = 8
 ): TAlert[] => {
-  return alerts.filter((alert) => Math.abs(alert.heading - heading) <= tolerance)
+  return resolveGaugeAlerts(alerts, (alert) => Math.abs(alert.heading - heading) <= tolerance)
 }
 
 export const resolveGaugeValueAlerts = <TAlert extends ValueAlert>(
   value: number,
   alerts: readonly TAlert[]
 ): TAlert[] => {
-  return alerts
-    .filter((alert) => value >= alert.value)
-    .sort((left, right) => right.value - left.value)
+  return resolveGaugeAlerts(
+    alerts,
+    (alert) => value >= alert.value,
+    (left, right) => right.value - left.value
+  )
 }

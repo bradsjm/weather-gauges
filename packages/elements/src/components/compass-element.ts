@@ -1,30 +1,24 @@
 import {
   animateCompassGauge,
-  gaugeContract,
   compassGaugeConfigSchema,
   renderCompassGauge,
-  resolveThemePaint,
-  createStyleTokenSource,
   toGaugeContractState,
-  type AnimationRunHandle,
   type CompassDrawContext,
   type CompassGaugeConfig,
-  type CompassRenderResult,
-  type ThemePaint
+  type CompassRenderResult
 } from '@bradsjm/steelseries-v3-core'
-import { LitElement, html } from 'lit'
+import { html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter } from '../shared/css-utils.js'
+import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
 
 @customElement('steelseries-compass-v3')
-export class SteelseriesCompassV3Element extends LitElement {
+export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
   @query('canvas')
   private canvasElement?: HTMLCanvasElement
 
   private currentHeading = 0
-  private animationHandle: AnimationRunHandle | undefined
-
   static override styles = sharedStyles
 
   @property({ type: Number })
@@ -168,12 +162,6 @@ export class SteelseriesCompassV3Element extends LitElement {
     this.renderGauge(false)
   }
 
-  override disconnectedCallback() {
-    this.animationHandle?.cancel()
-    this.animationHandle = undefined
-    super.disconnectedCallback()
-  }
-
   override updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.size === 0) {
       return
@@ -184,24 +172,8 @@ export class SteelseriesCompassV3Element extends LitElement {
     this.renderGauge(onlyValueChanged && this.animateValue)
   }
 
-  private getThemePaint(): ThemePaint {
-    const computedStyle = getComputedStyle(this)
-    return resolveThemePaint({
-      source: createStyleTokenSource(computedStyle)
-    })
-  }
-
   private getDrawContext(): CompassDrawContext | undefined {
-    if (!this.canvasElement) {
-      return undefined
-    }
-
-    const drawContext = this.canvasElement.getContext('2d')
-    if (!drawContext) {
-      return undefined
-    }
-
-    return drawContext as CompassDrawContext
+    return this.getCanvasContext<CompassDrawContext>(this.canvasElement)
   }
 
   private buildConfig(current: number): CompassGaugeConfig {
@@ -279,26 +251,11 @@ export class SteelseriesCompassV3Element extends LitElement {
   }
 
   private emitValueChange(result: CompassRenderResult): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.valueChangeEvent, {
-        detail: toGaugeContractState('compass', result),
-        bubbles: true,
-        composed: true
-      })
-    )
+    this.emitGaugeValueChange(toGaugeContractState('compass', result))
   }
 
   private emitError(error: unknown): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.errorEvent, {
-        detail: {
-          kind: 'compass',
-          message: error instanceof Error ? error.message : 'Unknown compass rendering error'
-        },
-        bubbles: true,
-        composed: true
-      })
-    )
+    this.emitGaugeError('compass', error, 'Unknown compass rendering error')
   }
 
   private renderGauge(animateValue: boolean): void {

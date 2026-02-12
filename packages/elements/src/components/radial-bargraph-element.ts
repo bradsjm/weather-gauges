@@ -1,30 +1,26 @@
 import {
   animateRadialBargraphGauge,
-  gaugeContract,
   radialBargraphGaugeConfigSchema,
   renderRadialBargraphGauge,
-  resolveThemePaint,
-  createStyleTokenSource,
   toGaugeContractState,
-  type AnimationRunHandle,
   type RadialBargraphDrawContext,
   type RadialBargraphGaugeConfig,
-  type RadialBargraphRenderResult,
-  type ThemePaint
+  type RadialBargraphSection,
+  type RadialBargraphValueGradientStop,
+  type RadialBargraphRenderResult
 } from '@bradsjm/steelseries-v3-core'
-import { LitElement, html } from 'lit'
+import { html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter, readCssCustomPropertyColor } from '../shared/css-utils.js'
+import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
 
 @customElement('steelseries-radial-bargraph-v3')
-export class SteelseriesRadialBargraphV3Element extends LitElement {
+export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement {
   @query('canvas')
   private canvasElement?: HTMLCanvasElement
 
   private currentValue = 0
-  private animationHandle: AnimationRunHandle | undefined
-
   static override styles = sharedStyles
 
   @property({ type: Number })
@@ -138,6 +134,12 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
   @property({ type: Number, attribute: 'fractional-scale-decimals' })
   fractionalScaleDecimals = 1
 
+  @property({ attribute: false })
+  sections: RadialBargraphSection[] = []
+
+  @property({ attribute: false })
+  valueGradientStops: RadialBargraphValueGradientStop[] = []
+
   @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
   showFrame = true
 
@@ -191,12 +193,6 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
     this.renderGauge(false)
   }
 
-  override disconnectedCallback() {
-    this.animationHandle?.cancel()
-    this.animationHandle = undefined
-    super.disconnectedCallback()
-  }
-
   override updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.size === 0) {
       return
@@ -207,25 +203,8 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
     this.renderGauge(onlyValueChanged && this.animateValue)
   }
 
-  private getThemePaint(): ThemePaint {
-    const computedStyle = getComputedStyle(this)
-    return resolveThemePaint({
-      source: createStyleTokenSource(computedStyle)
-    })
-  }
-
   private getDrawContext(): RadialBargraphDrawContext | undefined {
-    const canvas = this.renderRoot.querySelector('canvas')
-    if (!(canvas instanceof HTMLCanvasElement)) {
-      return undefined
-    }
-
-    const drawContext = canvas.getContext('2d')
-    if (!drawContext) {
-      return undefined
-    }
-
-    return drawContext as RadialBargraphDrawContext
+    return this.getCanvasContext<RadialBargraphDrawContext>(this.canvasElement)
   }
 
   private buildConfig(current: number): RadialBargraphGaugeConfig {
@@ -233,7 +212,7 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
     const warningColor = readCssCustomPropertyColor(this, '--ss3-warning-color', '#c5162e')
     const dangerColor = readCssCustomPropertyColor(this, '--ss3-danger-color', '#ef4444')
 
-    const sections = this.useSectionColors
+    const fallbackSections = this.useSectionColors
       ? [
           {
             from: this.minValue,
@@ -248,13 +227,18 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
         ]
       : []
 
-    const valueGradientStops = this.useValueGradient
+    const sections = this.sections.length > 0 ? this.sections : fallbackSections
+
+    const fallbackValueGradientStops = this.useValueGradient
       ? [
           { fraction: 0, color: accentColor },
           { fraction: 0.75, color: warningColor },
           { fraction: 1, color: dangerColor }
         ]
       : []
+
+    const valueGradientStops =
+      this.valueGradientStops.length > 0 ? this.valueGradientStops : fallbackValueGradientStops
 
     const defaultTickLabelOrientation = this.gaugeType === 'type1' ? 'tangent' : 'normal'
     const rangeMin = Math.min(this.minValue, this.maxValue)
@@ -338,38 +322,21 @@ export class SteelseriesRadialBargraphV3Element extends LitElement {
   }
 
   private emitValueChange(result: RadialBargraphRenderResult): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.valueChangeEvent, {
-        detail: toGaugeContractState('radial-bargraph', result),
-        bubbles: true,
-        composed: true
-      })
-    )
+    this.emitGaugeValueChange(toGaugeContractState('radial-bargraph', result))
   }
 
   private emitError(error: unknown): void {
-    this.dispatchEvent(
-      new CustomEvent(gaugeContract.errorEvent, {
-        detail: {
-          kind: 'radial-bargraph',
-          message:
-            error instanceof Error ? error.message : 'Unknown radial bargraph rendering error'
-        },
-        bubbles: true,
-        composed: true
-      })
-    )
+    this.emitGaugeError('radial-bargraph', error, 'Unknown radial bargraph rendering error')
   }
 
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
-    const canvas = this.renderRoot.querySelector('canvas')
-    if (!drawContext || !(canvas instanceof HTMLCanvasElement)) {
+    if (!drawContext || !this.canvasElement) {
       return
     }
 
-    canvas.width = this.size
-    canvas.height = this.size
+    this.canvasElement.width = this.size
+    this.canvasElement.height = this.size
 
     const paint = this.getThemePaint()
     const nextValue = this.value
