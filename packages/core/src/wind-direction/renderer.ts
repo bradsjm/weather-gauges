@@ -39,6 +39,7 @@ import {
   configureGaugeTextLayout,
   drawGaugeText
 } from '../render/gauge-text-primitives.js'
+import { runGaugeRenderPipeline, type GaugeRenderContextContract } from '../render/pipeline.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   WindDirectionAlert,
@@ -72,6 +73,14 @@ export type WindDirectionAnimationOptions = {
   paint?: Partial<ThemePaint>
   onFrame?: (result: WindDirectionRenderResult) => void
   onComplete?: (result: WindDirectionRenderResult) => void
+}
+
+type WindDirectionPipelineContext = GaugeRenderContextContract & {
+  config: WindDirectionGaugeConfig
+  paint: ThemePaint
+  latest: number
+  average: number
+  palette: GaugeBackgroundPalette
 }
 
 const PI = Math.PI
@@ -352,85 +361,112 @@ export const renderWindDirectionGauge = (
 
   context.clearRect(0, 0, width, height)
 
-  if (config.visibility.showFrame) {
-    drawGaugeRadialFrameByDesign(
-      context,
-      config.style.frameDesign,
-      centerX,
-      centerY,
-      Math.min(width, height) / 2
-    )
+  const pipelineContext: WindDirectionPipelineContext = {
+    context,
+    config,
+    paint,
+    latest,
+    average,
+    palette,
+    width,
+    height,
+    centerX,
+    centerY,
+    radius
   }
 
-  if (config.visibility.showBackground) {
-    drawGaugeRadialBackgroundByStyle(
-      context,
-      config.style.backgroundColor,
-      width,
-      centerX,
-      centerY,
-      Math.min(width, height) / 2,
-      paint,
-      rgbTupleToCss(palette.labelColor)
-    )
+  runGaugeRenderPipeline(pipelineContext, {
+    drawFrame: () => {
+      if (!config.visibility.showFrame) {
+        return
+      }
 
-    if (config.style.customLayer?.image && config.style.customLayer.visible) {
-      context.drawImage(config.style.customLayer.image, 0, 0, width, height)
-    }
-
-    if (config.areas.length > 0) {
-      drawSectionsAndAreas(
+      drawGaugeRadialFrameByDesign(
         context,
-        config.areas,
+        config.style.frameDesign,
         centerX,
         centerY,
-        radius * 0.4,
-        radius * 0.75,
-        true
+        Math.min(width, height) / 2
       )
-    }
+    },
+    drawBackground: () => {
+      if (!config.visibility.showBackground) {
+        return
+      }
 
-    if (config.sections.length > 0) {
-      drawSectionsAndAreas(
+      drawGaugeRadialBackgroundByStyle(
         context,
-        config.sections,
+        config.style.backgroundColor,
+        width,
         centerX,
         centerY,
-        radius * 0.4,
-        radius * 0.75,
-        false
+        Math.min(width, height) / 2,
+        paint,
+        rgbTupleToCss(palette.labelColor)
       )
+
+      if (config.style.customLayer?.image && config.style.customLayer.visible) {
+        context.drawImage(config.style.customLayer.image, 0, 0, width, height)
+      }
+
+      if (config.areas.length > 0) {
+        drawSectionsAndAreas(
+          context,
+          config.areas,
+          centerX,
+          centerY,
+          radius * 0.4,
+          radius * 0.75,
+          true
+        )
+      }
+
+      if (config.sections.length > 0) {
+        drawSectionsAndAreas(
+          context,
+          config.sections,
+          centerX,
+          centerY,
+          radius * 0.4,
+          radius * 0.75,
+          false
+        )
+      }
+
+      if (config.visibility.showRose) {
+        drawSharedCompassRose(context, centerX, centerY, width, height, palette.symbolColor)
+      }
+
+      if (config.visibility.showDegreeScale || config.visibility.showPointSymbols) {
+        drawWindDirectionCompassTicks(context, config, width, palette)
+      }
+    },
+    drawContent: () => {
+      if (config.visibility.showLcd) {
+        drawLcds(context, config, centerX, centerY, width, latest, average)
+      }
+
+      drawPointers(context, config, centerX, centerY, width, latest, average)
+    },
+    drawForeground: () => {
+      if (!config.visibility.showForeground) {
+        return
+      }
+
+      drawGaugeRadialForegroundByType(
+        context,
+        config.style.foregroundType,
+        centerX,
+        centerY,
+        width / 2
+      )
+
+      const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
+      if (showKnob) {
+        drawCompassCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
+      }
     }
-
-    if (config.visibility.showRose) {
-      drawSharedCompassRose(context, centerX, centerY, width, height, palette.symbolColor)
-    }
-
-    if (config.visibility.showDegreeScale || config.visibility.showPointSymbols) {
-      drawWindDirectionCompassTicks(context, config, width, palette)
-    }
-  }
-
-  if (config.visibility.showLcd) {
-    drawLcds(context, config, centerX, centerY, width, latest, average)
-  }
-
-  drawPointers(context, config, centerX, centerY, width, latest, average)
-
-  if (config.visibility.showForeground) {
-    drawGaugeRadialForegroundByType(
-      context,
-      config.style.foregroundType,
-      centerX,
-      centerY,
-      width / 2
-    )
-
-    const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
-    if (showKnob) {
-      drawCompassCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
-    }
-  }
+  })
 
   const activeAlerts = resolveGaugeHeadingAlerts<WindDirectionAlert>(
     latest,

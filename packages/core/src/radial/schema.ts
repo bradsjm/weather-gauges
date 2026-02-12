@@ -90,6 +90,35 @@ export const radialIndicatorsSchema = z
     maxMeasuredValue: z.number().finite().optional()
   })
   .strict()
+  .superRefine((value, ctx) => {
+    if (value.minMeasuredValueVisible && typeof value.minMeasuredValue !== 'number') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['minMeasuredValue'],
+        message: 'minMeasuredValue is required when minMeasuredValueVisible is true'
+      })
+    }
+
+    if (value.maxMeasuredValueVisible && typeof value.maxMeasuredValue !== 'number') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['maxMeasuredValue'],
+        message: 'maxMeasuredValue is required when maxMeasuredValueVisible is true'
+      })
+    }
+
+    if (
+      typeof value.minMeasuredValue === 'number' &&
+      typeof value.maxMeasuredValue === 'number' &&
+      value.minMeasuredValue > value.maxMeasuredValue
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['maxMeasuredValue'],
+        message: 'maxMeasuredValue must be greater than or equal to minMeasuredValue'
+      })
+    }
+  })
   .default({
     alerts: [],
     ledVisible: false,

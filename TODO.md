@@ -10,18 +10,18 @@ This checklist focuses on improving re-use, reducing coupling, and making future
 - [x] Extract shared pointer-related schemas into `packages/core/src/schemas/pointer.ts` (pointer type/color/family constraints).
 - [x] Refactor gauge schemas to compose from shared schema modules instead of redefining similar fields.
 - [x] Normalize naming so equivalent concepts use one canonical field name across all gauges.
-- [ ] Add/expand `superRefine` cross-field validation rules where duplicated ad-hoc validation currently exists.
-- [ ] Add schema-focused unit tests that assert shared schema behavior is consistent for every gauge.
+- [x] Add/expand `superRefine` cross-field validation rules where duplicated ad-hoc validation currently exists.
+- [x] Add schema-focused unit tests that assert shared schema behavior is consistent for every gauge.
 - [x] Ensure all schema modules remain `.strict()` and preserve existing defaults/backward compatibility.
 
 ## 2) Render Function Coupling
 
 - [x] Map current renderer import graph and identify cross-gauge dependencies (especially `compass` -> `radial`).
-- [ ] Move truly shared rendering logic into neutral modules under `packages/core/src/render/`.
-- [ ] Introduce a common render pipeline helper (`drawFrame`, `drawBackground`, `drawContent`, `drawForeground`) to reduce repeated orchestration.
+- [x] Move truly shared rendering logic into neutral modules under `packages/core/src/render/`.
+- [x] Introduce a common render pipeline helper (`drawFrame`, `drawBackground`, `drawContent`, `drawForeground`) to reduce repeated orchestration.
 - [x] Remove gauge-to-gauge renderer imports; gauges should depend on shared utilities, not sibling gauge renderers.
-- [ ] Define clear renderer contracts for shared helpers (input context, config fragments, and return types).
-- [ ] Add tests around shared renderer helpers to prevent regressions during gauge-specific refactors.
+- [x] Define clear renderer contracts for shared helpers (input context, config fragments, and return types).
+- [x] Add tests around shared renderer helpers to prevent regressions during gauge-specific refactors.
 - [ ] Keep gauge renderers thin by delegating non-domain-specific drawing to shared render modules.
 - [x] Verify no circular dependencies exist after refactor.
 
@@ -39,7 +39,7 @@ This checklist focuses on improving re-use, reducing coupling, and making future
 ## 4) Execution Plan
 
 - [x] Phase 1: Extract shared schemas + migrate one gauge as a proving pass.
-- [ ] Phase 2: Decouple renderers and introduce shared render pipeline helpers.
+- [x] Phase 2: Decouple renderers and introduce shared render pipeline helpers.
 - [x] Phase 3: Extract and type constants; remove magic strings.
-- [ ] Phase 4: Run full validation: `pnpm typecheck && pnpm build && pnpm test`.
-- [ ] Phase 5: Update docs on gauge authoring guidelines for future additions.
+- [x] Phase 4: Run full validation: `pnpm typecheck && pnpm build && pnpm test`.
+- [x] Phase 5: Update docs on gauge authoring guidelines for future additions.

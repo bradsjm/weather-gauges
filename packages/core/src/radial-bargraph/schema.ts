@@ -135,6 +135,23 @@ export const radialBargraphGaugeConfigSchema = sharedGaugeConfigSchema
     lcdDecimals: z.number().int().min(0).max(6).default(2),
     indicators: radialBargraphIndicatorsSchema
   })
+  .superRefine((value, ctx) => {
+    if (value.style.useValueGradient && value.valueGradientStops.length === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['valueGradientStops'],
+        message: 'valueGradientStops are required when useValueGradient is true'
+      })
+    }
+
+    if (value.style.useSectionColors && value.sections.length === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['sections'],
+        message: 'sections are required when useSectionColors is true'
+      })
+    }
+  })
   .strict()
 
 export type RadialBargraphLabelNumberFormat = z.infer<typeof radialBargraphLabelNumberFormatSchema>
