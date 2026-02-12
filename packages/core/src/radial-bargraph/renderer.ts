@@ -19,6 +19,7 @@ import {
   configureGaugeTextLayout,
   drawGaugeText
 } from '../render/gauge-text-primitives.js'
+import { drawRadialTextLabel } from '../render/gauge-ticks.js'
 import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
@@ -558,16 +559,12 @@ const drawTickMarks = (
   ) {
     majorTickCounter += 1
     if (majorTickCounter === maxMinorTicks) {
-      context.save()
-      context.translate(textTranslateX, 0)
-
       let textRotationAngle = HALF_PI
       if (config.style.tickLabelOrientation === 'horizontal') {
         textRotationAngle = -alpha
       } else if (config.style.tickLabelOrientation === 'tangent') {
         textRotationAngle = alpha <= HALF_PI + PI ? PI : 0
       }
-      context.rotate(textRotationAngle)
 
       let text = valueCounter.toFixed(0)
       if (config.style.labelNumberFormat === 'fractional') {
@@ -576,8 +573,7 @@ const drawTickMarks = (
         text = valueCounter.toPrecision(2)
       }
 
-      context.fillText(text, 0, 0, textWidth)
-      context.restore()
+      drawRadialTextLabel(context, textTranslateX, textRotationAngle, text, textWidth)
 
       valueCounter += scale.majorTickSpacing
       majorTickCounter = 0
