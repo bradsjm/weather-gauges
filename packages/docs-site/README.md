@@ -1,3 +1,3 @@
-# @bradsjm/steelseries-v3-docs
+# @bradsjm/weather-gauges-docs
 
-Documentation and playground package for SteelSeries v3.
+Documentation and playground package for Weather Gauges.

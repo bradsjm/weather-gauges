@@ -9,12 +9,12 @@ import {
   type WindRosePetal,
   type WindRoseRenderResult,
   type WindRoseValue
-} from '@bradsjm/steelseries-v3-core'
+} from '@bradsjm/weather-gauges-core'
 import { html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 
 import { booleanAttributeConverter } from '../shared/css-utils.js'
-import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
+import { WeatherGaugeElement } from '../shared/gauge-base-element.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 
 const buildDefaultPetals = (binCount: 8 | 16 | 32 = 16): WindRosePetal[] => {
@@ -25,8 +25,8 @@ const buildDefaultPetals = (binCount: 8 | 16 | 32 = 16): WindRosePetal[] => {
   }))
 }
 
-@customElement('steelseries-wind-rose-v3')
-export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
+@customElement('wx-wind-rose')
+export class WxWindRoseElement extends WeatherGaugeElement {
   @query('canvas')
   private canvasElement?: HTMLCanvasElement
 
@@ -40,14 +40,14 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
   @property({ attribute: false })
   petals: WindRosePetal[] = buildDefaultPetals()
 
-  @property({ type: Number, attribute: 'max-value' })
+  @property({ type: Number, attribute: 'gauge-max' })
   maxValue = 100
 
   @property({ type: Number })
   size = 220
 
-  @property({ type: String })
-  override title = 'Wind Rose'
+  @property({ type: String, attribute: 'label' })
+  label = 'Wind Rose'
 
   @property({ type: String })
   unit = ''
@@ -139,8 +139,11 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
   @property({ type: Boolean, attribute: 'show-tickmarks', converter: booleanAttributeConverter })
   showTickmarks = true
 
-  @property({ type: Boolean, attribute: 'animate-value', converter: booleanAttributeConverter })
-  animateValue = true
+  @property({ type: Boolean, attribute: 'animated', converter: booleanAttributeConverter })
+  animated = true
+
+  @property({ type: Number })
+  duration = 500
 
   override firstUpdated(): void {
     this.currentValue = this.buildConfig().value
@@ -154,7 +157,7 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
 
     const valueChanged = changedProperties.has('petals') || changedProperties.has('maxValue')
     const onlyValueChanged = valueChanged && changedProperties.size <= 2
-    this.renderGauge(onlyValueChanged && this.animateValue)
+    this.renderGauge(onlyValueChanged && this.animated)
   }
 
   private getDrawContext(): WindRoseDrawContext | undefined {
@@ -224,8 +227,12 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
         height: this.size
       },
       text: {
-        ...(this.title.trim() ? { title: this.title } : {}),
+        ...(this.label.trim() ? { title: this.label } : {}),
         ...(this.unit.trim() ? { unit: this.unit } : {})
+      },
+      animation: {
+        enabled: this.animated,
+        durationMs: this.normalizeNonNegative(this.duration, 500)
       },
       visibility: {
         showFrame: this.showFrame,
@@ -340,7 +347,7 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
         width=${this.size}
         height=${this.size}
         role="img"
-        aria-label="${this.title || 'Wind Rose Gauge'}"
+        aria-label="${this.label || 'Wind Rose Gauge'}"
       ></canvas>
       <span class="sr-only"
         ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot

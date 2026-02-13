@@ -282,8 +282,8 @@ export const renderWindPage = (root: HTMLElement): void => {
   renderPlaygroundPage(
     root,
     'Wind Direction Playground',
-    'Tune the dual-pointer wind-direction gauge live. Preset precedence: property > child > preset > default. Example: <code>&lt;steelseries-wind-direction-v3 preset="wind-direction" unit="deg"&gt;&lt;/steelseries-wind-direction-v3&gt;</code>.',
-    'steelseries-wind-direction-v3',
+    'Tune the dual-pointer wind-direction gauge live. Preset precedence: property > child > preset > default. Example: <code>&lt;wx-wind-direction preset="wind-direction" unit="deg"&gt;&lt;/wx-wind-direction&gt;</code>.',
+    'wx-wind-direction',
     controls,
     defaults,
     (state) => {

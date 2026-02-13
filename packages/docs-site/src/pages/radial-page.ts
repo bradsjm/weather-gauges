@@ -440,8 +440,8 @@ export const renderRadialPage = (root: HTMLElement): void => {
   renderPlaygroundPage(
     root,
     'Radial Gauge Playground',
-    'Adjust radial-gauge settings live. Preset precedence: property > child > preset > default. Example: <code>&lt;steelseries-radial-v3 preset="temperature" min-value="-30"&gt;&lt;/steelseries-radial-v3&gt;</code>.',
-    'steelseries-radial-v3',
+    'Adjust radial-gauge settings live. Preset precedence: property > child > preset > default. Example: <code>&lt;wx-gauge preset="temperature" gauge-min="-30"&gt;&lt;/wx-gauge&gt;</code>.',
+    'wx-gauge',
     controls,
     defaults,
     (state, controlDefs) => {

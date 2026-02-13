@@ -5,7 +5,7 @@ import {
   type GaugeContractKind,
   type AnimationRunHandle,
   type ThemePaint
-} from '@bradsjm/steelseries-v3-core'
+} from '@bradsjm/weather-gauges-core'
 import { LitElement } from 'lit'
 import { property } from 'lit/decorators.js'
 
@@ -48,7 +48,7 @@ const hasIssues = (value: unknown): value is ErrorWithIssues => {
   return Array.isArray(issues)
 }
 
-export abstract class SteelseriesGaugeElement extends LitElement {
+export abstract class WeatherGaugeElement extends LitElement {
   @property({ type: String })
   validation: GaugeValidationMode = 'clamp'
 

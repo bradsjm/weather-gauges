@@ -6,15 +6,15 @@ import {
   type CompassDrawContext,
   type CompassGaugeConfig,
   type CompassRenderResult
-} from '@bradsjm/steelseries-v3-core'
+} from '@bradsjm/weather-gauges-core'
 import { html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter } from '../shared/css-utils.js'
-import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
+import { WeatherGaugeElement } from '../shared/gauge-base-element.js'
 
-@customElement('steelseries-compass-v3')
-export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
+@customElement('wx-compass')
+export class WxCompassElement extends WeatherGaugeElement {
   @query('canvas')
   private canvasElement?: HTMLCanvasElement
 
@@ -22,13 +22,13 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
   static override styles = sharedStyles
 
   @property({ type: Number })
-  heading = 0
+  value = 0
 
   @property({ type: Number })
   size = 220
 
-  @property({ type: String })
-  override title = 'Compass'
+  @property({ type: String, attribute: 'label' })
+  label = 'Compass'
 
   @property({ type: String })
   unit = 'deg'
@@ -96,7 +96,7 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
   @property({ type: String, attribute: 'foreground-type' })
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
-  @property({ type: Boolean, attribute: 'degree-scale' })
+  @property({ type: Boolean, attribute: 'show-degrees' })
   degreeScale = false
 
   @property({ type: Boolean, attribute: 'degree-scale-half' })
@@ -105,10 +105,10 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
   @property({ type: Boolean, attribute: 'rose-visible' })
   roseVisible = true
 
-  @property({ type: Boolean, attribute: 'rotate-face' })
+  @property({ type: Boolean, attribute: 'face-rotates' })
   rotateFace = false
 
-  @property({ type: Boolean, attribute: 'point-symbols-visible' })
+  @property({ type: Boolean, attribute: 'show-labels' })
   pointSymbolsVisible = true
 
   @property({ type: Boolean, attribute: 'show-tickmarks', converter: booleanAttributeConverter })
@@ -155,13 +155,16 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
 
   @property({
     type: Boolean,
-    attribute: 'animate-value',
+    attribute: 'animated',
     converter: booleanAttributeConverter
   })
-  animateValue = true
+  animated = true
+
+  @property({ type: Number })
+  duration = 500
 
   override firstUpdated() {
-    this.currentHeading = this.heading
+    this.currentHeading = this.value
     this.renderGauge(false)
   }
 
@@ -170,9 +173,9 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
       return
     }
 
-    const valueChanged = changedProperties.has('heading')
+    const valueChanged = changedProperties.has('value')
     const onlyValueChanged = valueChanged && changedProperties.size === 1
-    this.renderGauge(onlyValueChanged && this.animateValue)
+    this.renderGauge(onlyValueChanged && this.animated)
   }
 
   private getDrawContext(): CompassDrawContext | undefined {
@@ -180,7 +183,7 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
   }
 
   private buildConfig(current: number): CompassGaugeConfig {
-    const title = this.title.trim()
+    const title = this.label.trim()
     const unit = this.unit.trim()
     const heading = this.normalizeInRange(current, 0, 360, 0)
     const warningHeading = this.normalizeInRange(this.warningAlertHeading, 0, 360, 90)
@@ -222,6 +225,10 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
       },
       scale: {
         degreeScaleHalf: this.degreeScaleHalf
+      },
+      animation: {
+        enabled: this.animated,
+        durationMs: this.normalizeNonNegative(this.duration, 500)
       },
       style: {
         frameDesign: this.frameDesign,
@@ -294,7 +301,7 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
     this.canvasElement.height = this.size
 
     const paint = this.getThemePaint()
-    const nextHeading = this.heading
+    const nextHeading = this.value
     this.animationHandle?.cancel()
 
     try {
@@ -341,7 +348,7 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
         width=${this.size}
         height=${this.size}
         role="img"
-        aria-label="${this.title || 'Compass Gauge'}"
+        aria-label="${this.label || 'Compass Gauge'}"
       ></canvas>
       <span class="sr-only"
         ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot

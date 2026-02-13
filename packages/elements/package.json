@@ -1,8 +1,8 @@
 {
-  "name": "@bradsjm/steelseries-v3-elements",
+  "name": "@bradsjm/weather-gauges-elements",
   "version": "0.0.0",
   "type": "module",
-  "description": "Lit Web Components for SteelSeries v3 gauges",
+  "description": "Lit Web Components for Weather Gauges",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@bradsjm/steelseries-v3-core": "workspace:*",
+    "@bradsjm/weather-gauges-core": "workspace:*",
     "lit": "^3.3.2"
   }
 }

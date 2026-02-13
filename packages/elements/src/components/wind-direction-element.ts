@@ -8,19 +8,19 @@ import {
   type WindDirectionCustomLayer,
   type WindDirectionSection,
   type WindDirectionRenderResult
-} from '@bradsjm/steelseries-v3-core'
+} from '@bradsjm/weather-gauges-core'
 import { html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter } from '../shared/css-utils.js'
-import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
+import { WeatherGaugeElement } from '../shared/gauge-base-element.js'
 import {
   resolveWindDirectionTextDefaults,
   type WindDirectionPreset
 } from '../shared/wind-direction-presets.js'
 
-@customElement('steelseries-wind-direction-v3')
-export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
+@customElement('wx-wind-direction')
+export class WxWindDirectionElement extends WeatherGaugeElement {
   @query('canvas')
   private canvasElement?: HTMLCanvasElement
 
@@ -28,17 +28,17 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
   private currentAverage = 0
   static override styles = sharedStyles
 
-  @property({ type: Number, attribute: 'value-latest' })
-  valueLatest = 0
+  @property({ type: Number })
+  value = 0
 
-  @property({ type: Number, attribute: 'value-average' })
-  valueAverage = 0
+  @property({ type: Number, attribute: 'average' })
+  average = 0
 
   @property({ type: Number })
   size = 220
 
-  @property({ type: String })
-  override title = ''
+  @property({ type: String, attribute: 'label' })
+  label = ''
 
   @property({ type: String })
   unit = '°'
@@ -235,14 +235,17 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
 
   @property({
     type: Boolean,
-    attribute: 'animate-value',
+    attribute: 'animated',
     converter: booleanAttributeConverter
   })
-  animateValue = true
+  animated = true
+
+  @property({ type: Number })
+  duration = 500
 
   override firstUpdated() {
-    this.currentLatest = this.valueLatest
-    this.currentAverage = this.valueAverage
+    this.currentLatest = this.value
+    this.currentAverage = this.average
     this.renderGauge(false)
   }
 
@@ -251,10 +254,9 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
       return
     }
 
-    const valueChanged =
-      changedProperties.has('valueLatest') || changedProperties.has('valueAverage')
+    const valueChanged = changedProperties.has('value') || changedProperties.has('average')
     const onlyValueChanged = valueChanged && changedProperties.size <= 2
-    this.renderGauge(onlyValueChanged && this.animateValue)
+    this.renderGauge(onlyValueChanged && this.animated)
   }
 
   private getDrawContext(): WindDirectionDrawContext | undefined {
@@ -316,8 +318,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
   }
 
   private buildConfig(): WindDirectionGaugeConfig {
-    const latest = this.normalizeInRange(this.valueLatest, 0, 360, this.currentLatest)
-    const average = this.normalizeInRange(this.valueAverage, 0, 360, this.currentAverage)
+    const latest = this.normalizeInRange(this.value, 0, 360, this.currentLatest)
+    const average = this.normalizeInRange(this.average, 0, 360, this.currentAverage)
     const warningHeading = this.normalizeInRange(this.warningAlertHeading, 0, 360, 90)
     const criticalHeading = this.normalizeInRange(this.criticalAlertHeading, 0, 360, 180)
     const childAlerts = this.parseAlertChildren()
@@ -342,11 +344,11 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
     const areas = this.areas.length > 0 ? this.areas : []
     const textDefaults = resolveWindDirectionTextDefaults({
       preset: this.preset,
-      title: this.title,
+      title: this.label,
       unit: this.unit,
       lcdTitleLatest: this.lcdTitleLatest,
       lcdTitleAverage: this.lcdTitleAverage,
-      hasTitleAttr: this.hasAttribute('title'),
+      hasTitleAttr: this.hasAttribute('label'),
       hasUnitAttr: this.hasAttribute('unit'),
       hasLcdTitleLatestAttr: this.hasAttribute('lcd-title-latest'),
       hasLcdTitleAverageAttr: this.hasAttribute('lcd-title-average')
@@ -380,6 +382,10 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
         niceScale: true,
         maxNoOfMajorTicks: 12,
         maxNoOfMinorTicks: 10
+      },
+      animation: {
+        enabled: this.animated,
+        durationMs: this.normalizeNonNegative(this.duration, 500)
       },
       style: {
         frameDesign: this.frameDesign,
@@ -459,8 +465,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
     this.canvasElement.height = this.size
 
     const paint = this.getThemePaint()
-    const nextLatest = this.normalizeInRange(this.valueLatest, 0, 360, this.currentLatest)
-    const nextAverage = this.normalizeInRange(this.valueAverage, 0, 360, this.currentAverage)
+    const nextLatest = this.normalizeInRange(this.value, 0, 360, this.currentLatest)
+    const nextAverage = this.normalizeInRange(this.average, 0, 360, this.currentAverage)
 
     this.animationHandle?.cancel()
 
@@ -515,7 +521,7 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
         width=${this.size}
         height=${this.size}
         role="img"
-        aria-label="${this.title || 'Wind Direction Gauge'}"
+        aria-label="${this.label || 'Wind Direction Gauge'}"
       ></canvas>
       <span class="sr-only"
         ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot

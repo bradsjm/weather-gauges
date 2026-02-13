@@ -152,7 +152,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/radial',
       kind: 'value',
       create: () => {
-        const node = document.createElement('steelseries-radial-v3')
+        const node = document.createElement('wx-gauge')
         applyGaugeProps(node, {
           title: 'Temperature',
           unit: '°F',
@@ -184,7 +184,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/radial',
       kind: 'value',
       create: () => {
-        const node = document.createElement('steelseries-radial-v3')
+        const node = document.createElement('wx-gauge')
         applyGaugeProps(node, {
           title: 'Boiler',
           unit: 'bar',
@@ -205,7 +205,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/radial',
       kind: 'value',
       create: () => {
-        const node = document.createElement('steelseries-radial-v3')
+        const node = document.createElement('wx-gauge')
         applyGaugeProps(node, {
           title: 'Vacuum',
           unit: 'kPa',
@@ -232,7 +232,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/radial-bargraph',
       kind: 'value',
       create: () => {
-        const node = document.createElement('steelseries-radial-bargraph-v3')
+        const node = document.createElement('wx-bargraph')
         applyGaugeProps(node, {
           title: 'Pressure',
           unit: 'psi',
@@ -250,7 +250,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/radial-bargraph',
       kind: 'value',
       create: () => {
-        const node = document.createElement('steelseries-radial-bargraph-v3')
+        const node = document.createElement('wx-bargraph')
         applyGaugeProps(node, {
           title: 'Temp',
           unit: '°C',
@@ -277,7 +277,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/compass',
       kind: 'heading',
       create: () => {
-        const node = document.createElement('steelseries-compass-v3')
+        const node = document.createElement('wx-compass')
         applyGaugeProps(node, {
           title: 'Heading',
           unit: 'deg',
@@ -293,7 +293,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/compass',
       kind: 'heading',
       create: () => {
-        const node = document.createElement('steelseries-compass-v3')
+        const node = document.createElement('wx-compass')
         applyGaugeProps(node, {
           title: 'Marine',
           unit: 'deg',
@@ -316,7 +316,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/wind-direction',
       kind: 'wind',
       create: () => {
-        const node = document.createElement('steelseries-wind-direction-v3')
+        const node = document.createElement('wx-wind-direction')
         applyGaugeProps(node, {
           title: 'Wind',
           unit: 'deg',
@@ -342,7 +342,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/wind-direction',
       kind: 'wind',
       create: () => {
-        const node = document.createElement('steelseries-wind-direction-v3')
+        const node = document.createElement('wx-wind-direction')
         applyGaugeProps(node, {
           title: 'Marine Wind',
           unit: '',
@@ -370,7 +370,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/wind-rose',
       kind: 'wind-rose',
       create: () => {
-        const node = document.createElement('steelseries-wind-rose-v3')
+        const node = document.createElement('wx-wind-rose')
         applyGaugeProps(node, {
           title: 'Wind Rose',
           unit: 'miles',
@@ -398,7 +398,7 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
       link: '/wind-rose',
       kind: 'wind-rose',
       create: () => {
-        const node = document.createElement('steelseries-wind-rose-v3')
+        const node = document.createElement('wx-wind-rose')
         applyGaugeProps(node, {
           title: 'Marine Rose',
           unit: 'kts',

@@ -4,8 +4,16 @@ export const applyGaugeProps = (element: Element | null, props: Record<string, u
   }
 
   const target = element as unknown as Record<string, unknown>
+  const aliases: Record<string, string> = {
+    title: 'label',
+    animateValue: 'animated',
+    heading: 'value',
+    valueLatest: 'value',
+    valueAverage: 'average'
+  }
+
   for (const [key, value] of Object.entries(props)) {
-    target[key] = value
+    target[aliases[key] ?? key] = value
   }
 }
 

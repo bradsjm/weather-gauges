@@ -1,4 +1,4 @@
-import '@bradsjm/steelseries-v3-elements'
+import '@bradsjm/weather-gauges-elements'
 
 import { renderCompassPage } from './pages/compass-page'
 import { renderIndexPage } from './pages/index-page'

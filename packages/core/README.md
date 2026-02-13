@@ -1,6 +1,6 @@
-# @bradsjm/steelseries-v3-core
+# @bradsjm/weather-gauges-core
 
-Framework-agnostic typed rendering core for SteelSeries v3 gauges.
+Framework-agnostic typed rendering core for Weather Gauges.
 
 ## Gauge Authoring Guidelines
 

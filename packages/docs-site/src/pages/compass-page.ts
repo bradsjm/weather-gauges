@@ -231,7 +231,7 @@ export const renderCompassPage = (root: HTMLElement): void => {
     root,
     'Compass Playground',
     'Live tune compass styling and behavior. Use pointer, rose, and foreground controls to compare variants.',
-    'steelseries-compass-v3',
+    'wx-compass',
     controls,
     defaults,
     (state) => {

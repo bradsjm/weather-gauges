@@ -11,8 +11,8 @@ import { type WindRoseRenderResult } from '../wind-rose/index.js'
 import { formatZodError, type ValidationResult } from '../schemas/validation.js'
 
 export const gaugeContract = {
-  valueChangeEvent: 'ss3-value-change',
-  errorEvent: 'ss3-error',
+  valueChangeEvent: 'wx-state-change',
+  errorEvent: 'wx-error',
   defaultAnimationDurationMs: 500,
   tones: ['accent', 'warning', 'danger'] as const
 } as const
@@ -37,6 +37,7 @@ export type GaugeContractState = {
   reading: number
   tone: GaugeTone
   alerts: GaugeContractAlert[]
+  timestampMs: number
 }
 
 export type GaugeContractErrorCode = 'invalid_config' | 'invalid_value' | 'render_error'
@@ -93,6 +94,7 @@ export const toGaugeContractState = (
     kind,
     reading: result.reading,
     tone: result.tone,
+    timestampMs: Date.now(),
     alerts: result.activeAlerts.map(
       (alert: { id: string; message: string; severity: 'info' | 'warning' | 'critical' }) => ({
         id: alert.id,

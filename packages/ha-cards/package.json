@@ -1,8 +1,8 @@
 {
-  "name": "@bradsjm/steelseries-v3-ha-cards",
+  "name": "@bradsjm/weather-gauges-ha-cards",
   "version": "0.0.0",
   "type": "module",
-  "description": "Home Assistant cards for SteelSeries v3 gauges",
+  "description": "Home Assistant cards for Weather Gauges",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -25,7 +25,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@bradsjm/steelseries-v3-elements": "workspace:*",
+    "@bradsjm/weather-gauges-elements": "workspace:*",
     "lit": "^3.3.2"
   }
 }

@@ -294,7 +294,7 @@ export const renderWindRosePage = (root: HTMLElement): void => {
     root,
     'Wind Rose Playground',
     'Wind Rose reuses the wind-direction base while plotting pre-binned directional petals with a center-outward gradient. Each petal object may include an optional color field.',
-    'steelseries-wind-rose-v3',
+    'wx-wind-rose',
     controls,
     defaults,
     (state) => {

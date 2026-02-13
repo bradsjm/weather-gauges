@@ -8,11 +8,11 @@ import {
   type RadialGaugeConfig,
   type RadialSegment,
   type RadialRenderResult
-} from '@bradsjm/steelseries-v3-core'
+} from '@bradsjm/weather-gauges-core'
 import { html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 import { booleanAttributeConverter } from '../shared/css-utils.js'
-import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
+import { WeatherGaugeElement } from '../shared/gauge-base-element.js'
 import {
   isPresetTrendEnabled,
   resolveEffectivePresetUnit,
@@ -23,8 +23,8 @@ import {
 } from '../shared/measurement-presets.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 
-@customElement('steelseries-radial-v3')
-export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
+@customElement('wx-gauge')
+export class WxGaugeElement extends WeatherGaugeElement {
   @query('canvas')
   private canvasElement?: HTMLCanvasElement
 
@@ -34,17 +34,17 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
   @property({ type: Number })
   value = 0
 
-  @property({ type: Number, attribute: 'min-value' })
+  @property({ type: Number, attribute: 'gauge-min' })
   minValue = 0
 
-  @property({ type: Number, attribute: 'max-value' })
+  @property({ type: Number, attribute: 'gauge-max' })
   maxValue = 100
 
   @property({ type: Number })
   size = 220
 
-  @property({ type: String })
-  override title = 'Radial'
+  @property({ type: String, attribute: 'label' })
+  label = 'Radial'
 
   @property({ type: String })
   unit = ''
@@ -210,10 +210,13 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
 
   @property({
     type: Boolean,
-    attribute: 'animate-value',
+    attribute: 'animated',
     converter: booleanAttributeConverter
   })
-  animateValue = true
+  animated = true
+
+  @property({ type: Number })
+  duration = 500
 
   override firstUpdated() {
     this.currentValue = this.value
@@ -227,7 +230,7 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
 
     const valueChanged = changedProperties.has('value')
     const onlyValueChanged = valueChanged && changedProperties.size === 1
-    this.renderGauge(onlyValueChanged && this.animateValue)
+    this.renderGauge(onlyValueChanged && this.animated)
   }
 
   private getDrawContext(): RadialDrawContext | undefined {
@@ -293,8 +296,8 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
     const normalizedCurrent = this.normalizeNonNegative(current, 1000)
     const effectiveUnit = resolveEffectivePresetUnit(preset, unit, normalizedCurrent)
     const presetRange = resolvePresetRange(preset, effectiveUnit)
-    const hasExplicitMin = this.hasAttribute('min-value') || this.minValue !== 0
-    const hasExplicitMax = this.hasAttribute('max-value') || this.maxValue !== 100
+    const hasExplicitMin = this.hasAttribute('gauge-min') || this.minValue !== 0
+    const hasExplicitMax = this.hasAttribute('gauge-max') || this.maxValue !== 100
     const minValue = hasExplicitMin ? this.minValue : (presetRange?.min ?? this.minValue)
     const maxValue = hasExplicitMax ? this.maxValue : (presetRange?.max ?? this.maxValue)
     const range = this.normalizedRange(minValue, maxValue)
@@ -355,8 +358,8 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
       ? this.trendVisible
       : isPresetTrendEnabled(preset)
     const title =
-      this.hasAttribute('title') || this.title !== 'Radial'
-        ? this.title
+      this.hasAttribute('label') || this.label !== 'Radial'
+        ? this.label
         : resolvePresetTitle(preset)
 
     return radialGaugeConfigSchema.parse({
@@ -384,6 +387,10 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
         endAngle: this.endAngle,
         majorTickCount: this.majorTickCount,
         minorTicksPerMajor: this.minorTicksPerMajor
+      },
+      animation: {
+        enabled: this.animated,
+        durationMs: this.normalizeNonNegative(this.duration, 500)
       },
       style: {
         frameDesign: this.frameDesign,
@@ -463,8 +470,8 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
       this.normalizeNonNegative(this.value, 1000)
     )
     const presetRange = resolvePresetRange(preset, effectiveUnit)
-    const hasExplicitMin = this.hasAttribute('min-value') || this.minValue !== 0
-    const hasExplicitMax = this.hasAttribute('max-value') || this.maxValue !== 100
+    const hasExplicitMin = this.hasAttribute('gauge-min') || this.minValue !== 0
+    const hasExplicitMax = this.hasAttribute('gauge-max') || this.maxValue !== 100
     const minValue = hasExplicitMin ? this.minValue : (presetRange?.min ?? this.minValue)
     const maxValue = hasExplicitMax ? this.maxValue : (presetRange?.max ?? this.maxValue)
     const range = this.normalizedRange(minValue, maxValue)
@@ -513,7 +520,7 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
         width=${this.size}
         height=${this.size}
         role="img"
-        aria-label="${this.title || 'Radial Gauge'}"
+        aria-label="${this.label || 'Radial Gauge'}"
       ></canvas>
       <span class="sr-only"
         ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot

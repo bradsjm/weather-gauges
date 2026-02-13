@@ -8,12 +8,12 @@ import {
   type RadialBargraphSection,
   type RadialBargraphValueGradientStop,
   type RadialBargraphRenderResult
-} from '@bradsjm/steelseries-v3-core'
+} from '@bradsjm/weather-gauges-core'
 import { html } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter, readCssCustomPropertyColor } from '../shared/css-utils.js'
-import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
+import { WeatherGaugeElement } from '../shared/gauge-base-element.js'
 import {
   isPresetTrendEnabled,
   resolveEffectivePresetUnit,
@@ -23,8 +23,8 @@ import {
   type MeasurementPreset
 } from '../shared/measurement-presets.js'
 
-@customElement('steelseries-radial-bargraph-v3')
-export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement {
+@customElement('wx-bargraph')
+export class WxBargraphElement extends WeatherGaugeElement {
   @query('canvas')
   private canvasElement?: HTMLCanvasElement
 
@@ -34,17 +34,17 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
   @property({ type: Number })
   value = 0
 
-  @property({ type: Number, attribute: 'min-value' })
+  @property({ type: Number, attribute: 'gauge-min' })
   minValue = 0
 
-  @property({ type: Number, attribute: 'max-value' })
+  @property({ type: Number, attribute: 'gauge-max' })
   maxValue = 100
 
   @property({ type: Number })
   size = 220
 
-  @property({ type: String })
-  override title = 'Radial Bargraph'
+  @property({ type: String, attribute: 'label' })
+  label = 'Radial Bargraph'
 
   @property({ type: String })
   unit = ''
@@ -197,10 +197,13 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
 
   @property({
     type: Boolean,
-    attribute: 'animate-value',
+    attribute: 'animated',
     converter: booleanAttributeConverter
   })
-  animateValue = true
+  animated = true
+
+  @property({ type: Number })
+  duration = 500
 
   override firstUpdated() {
     this.currentValue = this.value
@@ -214,7 +217,7 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
 
     const valueChanged = changedProperties.has('value')
     const onlyValueChanged = valueChanged && changedProperties.size === 1
-    this.renderGauge(onlyValueChanged && this.animateValue)
+    this.renderGauge(onlyValueChanged && this.animated)
   }
 
   private getDrawContext(): RadialBargraphDrawContext | undefined {
@@ -280,15 +283,15 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
     const normalizedCurrent = this.normalizeNonNegative(current, 1000)
     const effectiveUnit = resolveEffectivePresetUnit(preset, unit, normalizedCurrent)
     const presetRange = resolvePresetRange(preset, effectiveUnit)
-    const hasExplicitMin = this.hasAttribute('min-value') || this.minValue !== 0
-    const hasExplicitMax = this.hasAttribute('max-value') || this.maxValue !== 100
+    const hasExplicitMin = this.hasAttribute('gauge-min') || this.minValue !== 0
+    const hasExplicitMax = this.hasAttribute('gauge-max') || this.maxValue !== 100
     const minValue = hasExplicitMin ? this.minValue : (presetRange?.min ?? this.minValue)
     const maxValue = hasExplicitMax ? this.maxValue : (presetRange?.max ?? this.maxValue)
     const range = this.normalizedRange(minValue, maxValue)
     const thresholdValue = this.normalizeInRange(this.threshold, range.min, range.max, range.max)
-    const accentColor = readCssCustomPropertyColor(this, '--ss3-accent-color', '#d97706')
-    const warningColor = readCssCustomPropertyColor(this, '--ss3-warning-color', '#c5162e')
-    const dangerColor = readCssCustomPropertyColor(this, '--ss3-danger-color', '#ef4444')
+    const accentColor = readCssCustomPropertyColor(this, '--wx-accent-color', '#d97706')
+    const warningColor = readCssCustomPropertyColor(this, '--wx-warning-color', '#c5162e')
+    const dangerColor = readCssCustomPropertyColor(this, '--wx-danger-color', '#ef4444')
 
     const fallbackSections = this.useSectionColors
       ? [
@@ -363,8 +366,8 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       ? this.trendVisible
       : isPresetTrendEnabled(preset)
     const title =
-      this.hasAttribute('title') || this.title !== 'Radial Bargraph'
-        ? this.title
+      this.hasAttribute('label') || this.label !== 'Radial Bargraph'
+        ? this.label
         : resolvePresetTitle(preset)
 
     return radialBargraphGaugeConfigSchema.parse({
@@ -392,6 +395,10 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
         maxNoOfMajorTicks: 10,
         maxNoOfMinorTicks: 10,
         fractionalScaleDecimals: this.fractionalScaleDecimals
+      },
+      animation: {
+        enabled: this.animated,
+        durationMs: this.normalizeNonNegative(this.duration, 500)
       },
       style: {
         frameDesign: this.frameDesign,
@@ -472,8 +479,8 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       this.normalizeNonNegative(this.value, 1000)
     )
     const presetRange = resolvePresetRange(preset, effectiveUnit)
-    const hasExplicitMin = this.hasAttribute('min-value') || this.minValue !== 0
-    const hasExplicitMax = this.hasAttribute('max-value') || this.maxValue !== 100
+    const hasExplicitMin = this.hasAttribute('gauge-min') || this.minValue !== 0
+    const hasExplicitMax = this.hasAttribute('gauge-max') || this.maxValue !== 100
     const minValue = hasExplicitMin ? this.minValue : (presetRange?.min ?? this.minValue)
     const maxValue = hasExplicitMax ? this.maxValue : (presetRange?.max ?? this.maxValue)
     const range = this.normalizedRange(minValue, maxValue)
@@ -522,7 +529,7 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
         width=${this.size}
         height=${this.size}
         role="img"
-        aria-label="${this.title || 'Radial Bargraph Gauge'}"
+        aria-label="${this.label || 'Radial Bargraph Gauge'}"
       ></canvas>
       <span class="sr-only"
         ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot

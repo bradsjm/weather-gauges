@@ -8,10 +8,10 @@ Guidance for agentic coding tools working in this repository.
 - TypeScript strict mode, ESM modules, browser-first targets
 - Legacy SteelSeries v2 reference repository at `https://github.com/nicolas-van/steelseries/`
 - Packages:
-  - `@bradsjm/steelseries-v3-core`
-  - `@bradsjm/steelseries-v3-elements`
-  - `@bradsjm/steelseries-v3-ha-cards`
-  - `@bradsjm/steelseries-v3-docs` (private)
+  - `@bradsjm/weather-gauges-core`
+  - `@bradsjm/weather-gauges-elements`
+  - `@bradsjm/weather-gauges-ha-cards`
+  - `@bradsjm/weather-gauges-docs` (private)
 
 ## 2) Environment
 
@@ -38,10 +38,10 @@ Guidance for agentic coding tools working in this repository.
 
 Use `pnpm --filter <package-name> <script>`.
 
-- Core build: `pnpm --filter @bradsjm/steelseries-v3-core build`
-- Elements typecheck: `pnpm --filter @bradsjm/steelseries-v3-elements typecheck`
-- HA cards lint: `pnpm --filter @bradsjm/steelseries-v3-ha-cards lint`
-- Docs dev server: `pnpm --filter @bradsjm/steelseries-v3-docs dev`
+- Core build: `pnpm --filter @bradsjm/weather-gauges-core build`
+- Elements typecheck: `pnpm --filter @bradsjm/weather-gauges-elements typecheck`
+- HA cards lint: `pnpm --filter @bradsjm/weather-gauges-ha-cards lint`
+- Docs dev server: `pnpm --filter @bradsjm/weather-gauges-docs dev`
 
 ## 6) Running a Single Test (Important)
 
@@ -50,19 +50,19 @@ For single tests, call Vitest directly via `pnpm exec`.
 
 ### Single test file
 
-- `pnpm --filter @bradsjm/steelseries-v3-core exec vitest run src/foo.test.ts`
+- `pnpm --filter @bradsjm/weather-gauges-core exec vitest run src/foo.test.ts`
 
 ### Single named test case
 
-- `pnpm --filter @bradsjm/steelseries-v3-core exec vitest run src/foo.test.ts -t "clamps max value"`
+- `pnpm --filter @bradsjm/weather-gauges-core exec vitest run src/foo.test.ts -t "clamps max value"`
 
 ### Pattern match
 
-- `pnpm --filter @bradsjm/steelseries-v3-elements exec vitest run --include "src/**/*.test.ts"`
+- `pnpm --filter @bradsjm/weather-gauges-elements exec vitest run --include "src/**/*.test.ts"`
 
 ### Watch mode for one file
 
-- `pnpm --filter @bradsjm/steelseries-v3-core exec vitest src/foo.test.ts`
+- `pnpm --filter @bradsjm/weather-gauges-core exec vitest src/foo.test.ts`
 
 ## 7) Turbo Behavior
 
@@ -118,7 +118,7 @@ ESLint highlights (from `eslint.config.mjs`):
 
 - Types/interfaces/classes: `PascalCase`
 - Variables/functions/properties: `camelCase`
-- Element tags: kebab-case (for v3 use `*-v3` suffix)
+- Element tags: kebab-case with `wx-` prefix
 - Prefer positive booleans (`showFrame`) over negative forms (`noFrame`)
 - Keep public API names explicit and domain-oriented
 
@@ -133,7 +133,7 @@ ESLint highlights (from `eslint.config.mjs`):
 ## 13) Web Component / Lit Guidance
 
 - Keep components thin; move heavy logic to `core`
-- Use CSS custom properties for theming contract (`--ss3-*`)
+- Use CSS custom properties for theming contract (`--wx-*`)
 - Guard custom element registration if definition may run more than once
 - Prefer DOM APIs over unsafe HTML string assembly when practical
 

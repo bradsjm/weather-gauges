@@ -1,4 +1,4 @@
-import '@bradsjm/steelseries-v3-elements'
+import '@bradsjm/weather-gauges-elements'
 
 export type SteelseriesCardConfig = {
   type: string

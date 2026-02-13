@@ -1,13 +1,13 @@
 {
-  "name": "@bradsjm/steelseries-v3-docs",
+  "name": "@bradsjm/weather-gauges-docs",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Documentation and playground site for SteelSeries v3",
+  "description": "Documentation and playground site for Weather Gauges",
   "scripts": {
-    "predev": "pnpm --filter @bradsjm/steelseries-v3-core build && pnpm --filter @bradsjm/steelseries-v3-elements build",
+    "predev": "pnpm --filter @bradsjm/weather-gauges-core build && pnpm --filter @bradsjm/weather-gauges-elements build",
     "build": "vite build",
-    "prebuild": "pnpm --filter @bradsjm/steelseries-v3-core build && pnpm --filter @bradsjm/steelseries-v3-elements build",
+    "prebuild": "pnpm --filter @bradsjm/weather-gauges-core build && pnpm --filter @bradsjm/weather-gauges-elements build",
     "dev": "vite",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -16,6 +16,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@bradsjm/steelseries-v3-elements": "workspace:*"
+    "@bradsjm/weather-gauges-elements": "workspace:*"
   }
 }

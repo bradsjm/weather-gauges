@@ -1,3 +1,3 @@
-# @bradsjm/steelseries-v3-ha-cards
+# @bradsjm/weather-gauges-ha-cards
 
-Home Assistant Lovelace card wrappers for SteelSeries v3 elements.
+Home Assistant Lovelace card wrappers for Weather Gauges elements.

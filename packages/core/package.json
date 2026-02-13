@@ -1,8 +1,8 @@
 {
-  "name": "@bradsjm/steelseries-v3-core",
+  "name": "@bradsjm/weather-gauges-core",
   "version": "0.0.0",
   "type": "module",
-  "description": "Framework-agnostic core rendering engine for SteelSeries v3 gauges",
+  "description": "Framework-agnostic core rendering engine for Weather Gauges",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

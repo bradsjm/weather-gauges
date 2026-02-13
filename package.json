@@ -1,8 +1,8 @@
 {
-  "name": "steelseries-v3-monorepo",
+  "name": "weather-gauges-monorepo",
   "private": true,
   "version": "0.0.0",
-  "description": "Monorepo for @bradsjm steelseries v3 packages",
+  "description": "Monorepo for @bradsjm weather gauges packages",
   "packageManager": "pnpm@10.29.3",
   "engines": {
     "node": ">=20.0.0"
