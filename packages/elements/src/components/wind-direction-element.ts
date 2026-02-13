@@ -254,11 +254,66 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
     return this.getCanvasContext<WindDirectionDrawContext>(this.canvasElement)
   }
 
+  private parseSectionChildren(): WindDirectionSection[] {
+    return this.getChildElements('wx-section')
+      .map((element) => {
+        const startInput = this.readNumericAttribute(element, ['start', 'from'])
+        const stopInput = this.readNumericAttribute(element, ['stop', 'end', 'to'])
+        const color = this.readStringAttribute(element, ['color'])
+        if (startInput === undefined || stopInput === undefined || !color) {
+          return undefined
+        }
+
+        const start = this.normalizeInRange(startInput, 0, 360, 0)
+        const stop = this.normalizeInRange(stopInput, 0, 360, 360)
+        if (stop <= start) {
+          return undefined
+        }
+
+        return { start, stop, color }
+      })
+      .filter((section): section is WindDirectionSection => section !== undefined)
+  }
+
+  private parseAlertChildren() {
+    return this.getChildElements('wx-alert')
+      .map((element, index) => {
+        const headingInput = this.readNumericAttribute(element, ['threshold', 'heading'])
+        if (headingInput === undefined) {
+          return undefined
+        }
+
+        const heading = this.normalizeInRange(headingInput, 0, 360, 0)
+        const severityRaw = this.readStringAttribute(element, ['severity'])
+        const severity =
+          severityRaw === 'info' || severityRaw === 'warning' || severityRaw === 'critical'
+            ? severityRaw
+            : 'warning'
+        const message =
+          this.readStringAttribute(element, ['message']) ??
+          `${severity} at ${heading.toFixed(0)} deg`
+        const id = this.readStringAttribute(element, ['id']) ?? `child-alert-${index}`
+
+        return { id, heading, severity, message }
+      })
+      .filter(
+        (
+          alert
+        ): alert is {
+          id: string
+          heading: number
+          severity: 'info' | 'warning' | 'critical'
+          message: string
+        } => alert !== undefined
+      )
+  }
+
   private buildConfig(): WindDirectionGaugeConfig {
     const latest = this.normalizeInRange(this.valueLatest, 0, 360, this.currentLatest)
     const average = this.normalizeInRange(this.valueAverage, 0, 360, this.currentAverage)
     const warningHeading = this.normalizeInRange(this.warningAlertHeading, 0, 360, 90)
     const criticalHeading = this.normalizeInRange(this.criticalAlertHeading, 0, 360, 180)
+    const childAlerts = this.parseAlertChildren()
     const alerts = this.alertsEnabled
       ? [
           {
@@ -274,7 +329,10 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
             message: `critical at ${criticalHeading} deg`
           }
         ]
-      : []
+      : childAlerts
+    const childSections = this.parseSectionChildren()
+    const sections = this.sections.length > 0 ? this.sections : childSections
+    const areas = this.areas.length > 0 ? this.areas : []
 
     return windDirectionGaugeConfigSchema.parse({
       value: {
@@ -332,8 +390,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
       indicators: {
         alerts
       },
-      sections: this.sections,
-      areas: this.areas
+      sections,
+      areas
     })
   }
 

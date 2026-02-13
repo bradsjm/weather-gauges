@@ -223,6 +223,59 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
     return this.getCanvasContext<RadialDrawContext>(this.canvasElement)
   }
 
+  private parseSectionChildren(range: { min: number; max: number }): RadialSegment[] {
+    return this.getChildElements('wx-section')
+      .map((element) => {
+        const fromInput = this.readNumericAttribute(element, ['start', 'from'])
+        const toInput = this.readNumericAttribute(element, ['end', 'to'])
+        const color = this.readStringAttribute(element, ['color'])
+        if (fromInput === undefined || toInput === undefined || !color) {
+          return undefined
+        }
+
+        const from = this.normalizeInRange(fromInput, range.min, range.max, range.min)
+        const to = this.normalizeInRange(toInput, range.min, range.max, range.max)
+        if (to <= from) {
+          return undefined
+        }
+
+        return { from, to, color }
+      })
+      .filter((segment): segment is RadialSegment => segment !== undefined)
+  }
+
+  private parseAlertChildren(range: { min: number; max: number }) {
+    return this.getChildElements('wx-alert')
+      .map((element, index) => {
+        const thresholdInput = this.readNumericAttribute(element, ['threshold', 'value'])
+        if (thresholdInput === undefined) {
+          return undefined
+        }
+
+        const value = this.normalizeInRange(thresholdInput, range.min, range.max, range.max)
+        const severityRaw = this.readStringAttribute(element, ['severity'])
+        const severity =
+          severityRaw === 'info' || severityRaw === 'warning' || severityRaw === 'critical'
+            ? severityRaw
+            : 'warning'
+        const message =
+          this.readStringAttribute(element, ['message']) ?? `${severity} at ${value.toFixed(0)}`
+        const id = this.readStringAttribute(element, ['id']) ?? `child-alert-${index}`
+
+        return { id, value, message, severity }
+      })
+      .filter(
+        (
+          alert
+        ): alert is {
+          id: string
+          value: number
+          message: string
+          severity: 'info' | 'warning' | 'critical'
+        } => alert !== undefined
+      )
+  }
+
   private buildConfig(current: number): RadialGaugeConfig {
     const range = this.normalizedRange(this.minValue, this.maxValue)
     const warningAlertValue = this.normalizeInRange(
@@ -252,6 +305,7 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
       range.max
     )
     const thresholdValue = this.normalizeInRange(this.threshold, range.min, range.max, range.max)
+    const childAlerts = this.parseAlertChildren(range)
     const alerts = this.alertsEnabled
       ? [
           {
@@ -267,7 +321,10 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
             severity: 'critical' as const
           }
         ]
-      : []
+      : childAlerts
+    const childSections = this.parseSectionChildren(range)
+    const segments = this.segments.length > 0 ? this.segments : childSections
+    const areas = this.areas.length > 0 ? this.areas : []
 
     return radialGaugeConfigSchema.parse({
       value: {
@@ -304,8 +361,8 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
         orientation: this.orientation,
         pointerColor: this.pointerColor
       },
-      segments: this.segments,
-      areas: this.areas,
+      segments,
+      areas,
       indicators: {
         threshold: {
           value: thresholdValue,

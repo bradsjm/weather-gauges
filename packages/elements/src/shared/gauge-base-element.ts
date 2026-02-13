@@ -132,6 +132,51 @@ export abstract class SteelseriesGaugeElement extends LitElement {
     return { min: max, max: min }
   }
 
+  protected getChildElements(...tagNames: string[]): Element[] {
+    const tags = new Set(tagNames.map((tagName) => tagName.toLowerCase()))
+    return Array.from(this.children).filter((child) => tags.has(child.tagName.toLowerCase()))
+  }
+
+  protected readNumericAttribute(element: Element, names: string[]): number | undefined {
+    for (const name of names) {
+      const raw = element.getAttribute(name)
+      if (raw === null) {
+        continue
+      }
+
+      const parsed = Number(raw)
+      if (Number.isFinite(parsed)) {
+        return parsed
+      }
+
+      if (this.validation === 'coerce') {
+        const trimmed = raw.trim()
+        const coerced = Number(trimmed)
+        if (Number.isFinite(coerced)) {
+          return coerced
+        }
+      }
+    }
+
+    return undefined
+  }
+
+  protected readStringAttribute(element: Element, names: string[]): string | undefined {
+    for (const name of names) {
+      const raw = element.getAttribute(name)
+      if (raw === null) {
+        continue
+      }
+
+      const trimmed = raw.trim()
+      if (trimmed.length > 0) {
+        return trimmed
+      }
+    }
+
+    return undefined
+  }
+
   private extractIssues(error: unknown): GaugeErrorIssue[] | undefined {
     if (!hasIssues(error)) {
       return undefined

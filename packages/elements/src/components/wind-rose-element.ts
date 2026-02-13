@@ -161,9 +161,49 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
     return this.getCanvasContext<WindRoseDrawContext>(this.canvasElement)
   }
 
+  private isDefaultPetals(petals: WindRosePetal[]): boolean {
+    if (petals.length !== 16) {
+      return false
+    }
+
+    const expectedStep = 360 / 16
+    return petals.every((petal, index) => {
+      const expectedDirection = index * expectedStep
+      const directionDelta = Math.abs(petal.direction - expectedDirection)
+      return directionDelta < 0.0001 && petal.value === 0 && petal.color === undefined
+    })
+  }
+
+  private parsePetalChildren(): WindRosePetal[] {
+    const petals: WindRosePetal[] = []
+    this.getChildElements('wx-petal').forEach((element, index) => {
+      const directionInput = this.readNumericAttribute(element, ['direction'])
+      const valueInput = this.readNumericAttribute(element, ['value'])
+      if (directionInput === undefined || valueInput === undefined) {
+        return
+      }
+
+      const fallbackDirection = index * (360 / Math.max(this.children.length, 1))
+      const direction = this.normalizeInRange(directionInput, 0, 360, fallbackDirection)
+      const value = this.normalizeNonNegative(valueInput, 0)
+      const color = this.readStringAttribute(element, ['color'])
+
+      petals.push({
+        direction,
+        value,
+        ...(color ? { color } : {})
+      })
+    })
+
+    return petals
+  }
+
   private buildConfig(): WindRoseGaugeConfig {
-    const petals = this.petals.map((petal, index) => {
-      const fallbackDirection = index * (360 / Math.max(this.petals.length, 1))
+    const childPetals = this.parsePetalChildren()
+    const sourcePetals =
+      childPetals.length > 0 && this.isDefaultPetals(this.petals) ? childPetals : this.petals
+    const petals = sourcePetals.map((petal, index) => {
+      const fallbackDirection = index * (360 / Math.max(sourcePetals.length, 1))
       return {
         ...petal,
         direction: this.normalizeInRange(petal.direction, 0, 360, fallbackDirection),
