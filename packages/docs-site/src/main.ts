@@ -5,6 +5,7 @@ import { renderIndexPage } from './pages/index-page'
 import { renderRadialBargraphPage } from './pages/radial-bargraph-page'
 import { renderRadialPage } from './pages/radial-page'
 import { renderWindPage } from './pages/wind-direction-page'
+import { renderWindRosePage } from './pages/wind-rose-page'
 import { currentRoute, renderShell } from './shell'
 
 const app = document.querySelector<HTMLDivElement>('#app')
@@ -31,6 +32,8 @@ const renderPage = (): void => {
     renderCompassPage(root)
   } else if (route === '/wind-direction') {
     renderWindPage(root)
+  } else if (route === '/wind-rose') {
+    renderWindRosePage(root)
   } else {
     disposePageEffects = renderIndexPage(root)
   }

@@ -7,6 +7,7 @@ import {
 } from '../radial-bargraph/index.js'
 import { type RadialRenderResult } from '../radial/index.js'
 import { type WindDirectionRenderResult } from '../wind-direction/index.js'
+import { type WindRoseRenderResult } from '../wind-rose/index.js'
 import {
   formatZodError,
   type ValidationIssue,
@@ -20,7 +21,12 @@ export const gaugeContract = {
   tones: ['accent', 'warning', 'danger'] as const
 } as const
 
-export type GaugeContractKind = 'compass' | 'radial' | 'radial-bargraph' | 'wind-direction'
+export type GaugeContractKind =
+  | 'compass'
+  | 'radial'
+  | 'radial-bargraph'
+  | 'wind-direction'
+  | 'wind-rose'
 
 export type GaugeTone = (typeof gaugeContract.tones)[number]
 
@@ -76,6 +82,7 @@ export const toGaugeContractState = (
     | RadialRenderResult
     | RadialBargraphRenderResult
     | WindDirectionRenderResult
+    | WindRoseRenderResult
 ): GaugeContractState => {
   let reading: number
   if ('heading' in result) {

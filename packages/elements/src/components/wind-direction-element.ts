@@ -199,6 +199,9 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
   })
   showPointSymbols = true
 
+  @property({ type: Boolean, attribute: 'show-tickmarks', converter: booleanAttributeConverter })
+  showTickmarks = true
+
   @property({ type: Boolean, attribute: 'show-degree-scale', converter: booleanAttributeConverter })
   showDegreeScale = false
 
@@ -291,6 +294,7 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
         showForeground: this.showForeground,
         showLcd: this.showLcd,
         showPointSymbols: this.showPointSymbols,
+        showTickmarks: this.showTickmarks,
         showDegreeScale: this.showDegreeScale,
         showRose: this.showRose
       },

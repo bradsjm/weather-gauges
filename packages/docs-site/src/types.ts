@@ -1,4 +1,10 @@
-export type Route = '/' | '/radial' | '/radial-bargraph' | '/compass' | '/wind-direction'
+export type Route =
+  | '/'
+  | '/radial'
+  | '/radial-bargraph'
+  | '/compass'
+  | '/wind-direction'
+  | '/wind-rose'
 
 export type SelectOption = { value: string; label: string }
 

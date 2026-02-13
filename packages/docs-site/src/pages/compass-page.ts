@@ -29,6 +29,7 @@ export const renderCompassPage = (root: HTMLElement): void => {
     rotateFace: false,
     animateValue: true,
     pointSymbolsVisible: true,
+    showTickmarks: true,
     showHeadingReadout: true,
     alertsEnabled: false,
     warningAlertHeading: 90,
@@ -144,6 +145,12 @@ export const renderCompassPage = (root: HTMLElement): void => {
       key: 'pointSymbolsVisible',
       label: 'Show Point Symbols',
       description: 'Show N/NE/E... labels.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showTickmarks',
+      label: 'Show Tick Marks',
+      description: 'Toggle compass tick mark lines while keeping labels.',
       type: 'checkbox'
     },
     {

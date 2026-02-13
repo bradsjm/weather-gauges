@@ -128,7 +128,10 @@ const drawWindDirectionCompassTicks = (
     asCompassPointSymbols(config.style.pointSymbols),
     palette.labelColor,
     palette.symbolColor,
-    { degreeScaleHalf: config.scale.degreeScaleHalf }
+    {
+      degreeScaleHalf: config.scale.degreeScaleHalf,
+      showTickmarks: config.visibility.showTickmarks
+    }
   )
 }
 

@@ -182,7 +182,8 @@ export const currentRoute = (): Route => {
     path === '/radial' ||
     path === '/radial-bargraph' ||
     path === '/compass' ||
-    path === '/wind-direction'
+    path === '/wind-direction' ||
+    path === '/wind-rose'
   ) {
     return path
   }
@@ -196,7 +197,8 @@ export const renderShell = (route: Route): string => {
     { path: '/radial', label: 'Radial' },
     { path: '/radial-bargraph', label: 'Radial Bargraph' },
     { path: '/compass', label: 'Compass' },
-    { path: '/wind-direction', label: 'Wind Direction' }
+    { path: '/wind-direction', label: 'Wind Direction' },
+    { path: '/wind-rose', label: 'Wind Rose' }
   ]
 
   return `

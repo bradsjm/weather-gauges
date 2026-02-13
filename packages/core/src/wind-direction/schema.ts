@@ -112,6 +112,7 @@ export const windDirectionVisibilitySchema = z
     showForeground: z.boolean().default(true),
     showLcd: z.boolean().default(true),
     showPointSymbols: z.boolean().default(true),
+    showTickmarks: z.boolean().default(true),
     showDegreeScale: z.boolean().default(false),
     showRose: z.boolean().default(false)
   })
@@ -145,6 +146,7 @@ export const windDirectionGaugeConfigSchema = sharedGaugeConfigSchema
       showForeground: true,
       showLcd: true,
       showPointSymbols: true,
+      showTickmarks: true,
       showDegreeScale: false,
       showRose: false
     }),

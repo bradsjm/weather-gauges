@@ -685,69 +685,6 @@ export const drawCompassBackground = (
   context.restore()
 }
 
-const LEGACY_CHROME_FRACTIONS = [
-  0, 0.09, 0.12, 0.16, 0.25, 0.29, 0.33, 0.38, 0.48, 0.52, 0.63, 0.68, 0.8, 0.83, 0.87, 0.97, 1
-]
-
-const LEGACY_CHROME_COLORS = [
-  '#ffffff',
-  '#ffffff',
-  '#707070',
-  '#ffffff',
-  '#9f9f9f',
-  '#ffffff',
-  '#5e5e5e',
-  '#d2d2d2',
-  '#747474',
-  '#a8a8a8',
-  '#7a7a7a',
-  '#d0d0d0',
-  '#8f8f8f',
-  '#bdbdbd',
-  '#7a7a7a',
-  '#e0e0e0',
-  '#ffffff'
-]
-
-const createGradientFromStops = (
-  context: CanvasRenderingContext2D,
-  centerX: number,
-  centerY: number,
-  fractions: number[],
-  colors: string[],
-  fallbackColor: string
-): CanvasGradient | string => {
-  if (typeof context.createConicGradient === 'function') {
-    const gradient = context.createConicGradient(-Math.PI / 2, centerX, centerY)
-    for (let index = 0; index < fractions.length; index += 1) {
-      const fraction = fractions[index]
-      const color = colors[index]
-      if (fraction !== undefined && color !== undefined) {
-        gradient.addColorStop(fraction, color)
-      }
-    }
-
-    return gradient
-  }
-
-  const fallback = createLinearGradientSafe(
-    context,
-    centerX,
-    0,
-    centerX,
-    centerY * 2,
-    fallbackColor
-  )
-  for (let index = 0; index < fractions.length; index += 1) {
-    const fraction = fractions[index]
-    const color = colors[index]
-    if (fraction !== undefined && color !== undefined && typeof fallback !== 'string') {
-      fallback.addColorStop(fraction, color)
-    }
-  }
-  return fallback
-}
-
 const drawCircle = (
   context: CanvasRenderingContext2D,
   centerX: number,
@@ -757,78 +694,6 @@ const drawCircle = (
   context.beginPath()
   context.arc(centerX, centerY, radius, 0, Math.PI * 2)
   closePathSafe(context)
-}
-
-const drawLegacyRadialFrame = (
-  context: CanvasRenderingContext2D,
-  centerX: number,
-  centerY: number,
-  radius: number
-): void => {
-  const frameGradient = createGradientFromStops(
-    context,
-    centerX,
-    centerY,
-    LEGACY_CHROME_FRACTIONS,
-    LEGACY_CHROME_COLORS,
-    '#b5b5b5'
-  )
-
-  drawCircle(context, centerX, centerY, radius)
-  context.fillStyle = frameGradient
-  context.fill()
-
-  context.save()
-  context.globalCompositeOperation = 'destination-out'
-  drawCircle(context, centerX, centerY, radius * 0.83)
-  context.fillStyle = '#000'
-  context.fill()
-  context.restore()
-
-  drawCircle(context, centerX, centerY, radius)
-  context.lineWidth = Math.max(1, (radius * 2) / 90)
-  context.strokeStyle = 'rgba(132,132,132,0.8)'
-  context.stroke()
-}
-
-const drawLegacyRadialFrameMetal = (
-  context: CanvasRenderingContext2D,
-  centerX: number,
-  centerY: number,
-  radius: number
-): void => {
-  const frameGradient = addColorStops(
-    createLinearGradientSafe(
-      context,
-      centerX,
-      centerY - radius,
-      centerX,
-      centerY + radius,
-      '#bdbdbd'
-    ),
-    [
-      [0, '#fefefe'],
-      [0.07, '#d2d2d2'],
-      [0.12, '#b3b3b3'],
-      [1, '#d5d5d5']
-    ]
-  )
-
-  drawCircle(context, centerX, centerY, radius)
-  context.fillStyle = frameGradient
-  context.fill()
-
-  context.save()
-  context.globalCompositeOperation = 'destination-out'
-  drawCircle(context, centerX, centerY, radius * 0.83)
-  context.fillStyle = '#000'
-  context.fill()
-  context.restore()
-
-  drawCircle(context, centerX, centerY, radius)
-  context.lineWidth = Math.max(1, (radius * 2) / 90)
-  context.strokeStyle = 'rgba(132,132,132,0.8)'
-  context.stroke()
 }
 
 const drawRadialInnerShadow = (
@@ -1393,10 +1258,6 @@ const drawLegacyRadialForegroundTyped = (
   context.restore()
 }
 
-const isChromeLikeFrame = (design: RadialFrameDesign): boolean => {
-  return design === 'chrome' || design === 'blackMetal' || design === 'shinyMetal'
-}
-
 export const drawGaugeRadialFrameByDesign = (
   context: CanvasRenderingContext2D,
   frameDesign: RadialFrameDesign,
@@ -1404,12 +1265,8 @@ export const drawGaugeRadialFrameByDesign = (
   centerY: number,
   radius: number
 ): void => {
-  if (isChromeLikeFrame(frameDesign)) {
-    drawLegacyRadialFrame(context, centerX, centerY, radius)
-    return
-  }
-
-  drawLegacyRadialFrameMetal(context, centerX, centerY, radius)
+  const diameter = radius * 2
+  drawCompassFrame(context, frameDesign as CompassFrameDesign, centerX, centerY, diameter, diameter)
 }
 
 export const drawRadialBackground = (

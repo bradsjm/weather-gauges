@@ -20,10 +20,13 @@ export * from './radial-bargraph/schema.js'
 export * from './radial-bargraph/renderer.js'
 export * from './wind-direction/schema.js'
 export * from './wind-direction/renderer.js'
+export * from './wind-rose/schema.js'
+export * from './wind-rose/renderer.js'
 
 export type { CompassGaugeConfig } from './compass/schema.js'
 export type { RadialGaugeConfig } from './radial/schema.js'
 export type { RadialBargraphGaugeConfig } from './radial-bargraph/schema.js'
 export type { WindDirectionGaugeConfig } from './wind-direction/schema.js'
+export type { WindRoseGaugeConfig } from './wind-rose/schema.js'
 
 export const version = '0.0.0'

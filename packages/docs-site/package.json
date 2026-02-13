@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Documentation and playground site for SteelSeries v3",
   "scripts": {
+    "predev": "pnpm --filter @bradsjm/steelseries-v3-core build && pnpm --filter @bradsjm/steelseries-v3-elements build",
     "build": "vite build",
+    "prebuild": "pnpm --filter @bradsjm/steelseries-v3-core build && pnpm --filter @bradsjm/steelseries-v3-elements build",
     "dev": "vite",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",

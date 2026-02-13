@@ -38,6 +38,7 @@ const formatCompassDegreeLabel = (heading: number, degreeScaleHalf: boolean): st
 
 type CompassTickmarkOptions = {
   degreeScaleHalf?: boolean
+  showTickmarks?: boolean
 }
 
 export type CompassTickmarkConfig = {
@@ -50,6 +51,11 @@ export type CompassTickmarkConfig = {
     showDegreeLabels: boolean
     showOrdinalMarkers: boolean
   }
+}
+
+const isCardinalHeading = (heading: number): boolean => {
+  const normalized = normalizeAngle360(heading)
+  return normalized % 90 === 0
 }
 
 export const drawCompassRose = (
@@ -154,6 +160,7 @@ export const drawCompassTickmarks = (
   const degreeScale = config.style.degreeScale || config.rose.showDegreeLabels
   const pointSymbolsVisible = config.style.pointSymbolsVisible && config.rose.showOrdinalMarkers
   const degreeScaleHalf = options.degreeScaleHalf ?? false
+  const showTickmarks = options.showTickmarks ?? true
 
   context.textAlign = 'center'
   context.textBaseline = 'middle'
@@ -167,7 +174,9 @@ export const drawCompassTickmarks = (
     const smlFont = `${Math.floor(0.06 * imageWidth)}px serif`
 
     for (let i = 0; i < 360; i += 2.5) {
-      if (i % 5 === 0) {
+      const skipCardinalTick = pointSymbolsVisible && isCardinalHeading(i)
+
+      if (showTickmarks && i % 5 === 0 && !skipCardinalTick) {
         context.beginPath()
         context.moveTo(0.38 * imageWidth, 0)
         context.lineTo(0.36 * imageWidth, 0)
@@ -214,7 +223,12 @@ export const drawCompassTickmarks = (
         }
       }
 
-      if (config.style.roseVisible && (i === 360 || i % 22.5 === 0)) {
+      if (
+        showTickmarks &&
+        config.style.roseVisible &&
+        (i === 360 || i % 22.5 === 0) &&
+        !skipCardinalTick
+      ) {
         context.beginPath()
         context.moveTo(i % 45 === 0 ? 0.38 * imageWidth : 0.29 * imageWidth, 0)
         context.lineTo(0.1 * imageWidth, 0)

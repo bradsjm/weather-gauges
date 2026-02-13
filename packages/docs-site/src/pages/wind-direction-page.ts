@@ -39,6 +39,7 @@ export const renderWindPage = (root: HTMLElement): void => {
     showLcd: true,
     animateValue: true,
     showPointSymbols: true,
+    showTickmarks: true,
     showDegreeScale: true,
     showRose: true,
     degreeScaleHalf: false,
@@ -202,6 +203,12 @@ export const renderWindPage = (root: HTMLElement): void => {
       key: 'showPointSymbols',
       label: 'Show Point Symbols',
       description: 'Show N/NE/E labels.',
+      type: 'checkbox'
+    },
+    {
+      key: 'showTickmarks',
+      label: 'Show Tick Marks',
+      description: 'Toggle compass tick mark lines while keeping labels.',
       type: 'checkbox'
     },
     {

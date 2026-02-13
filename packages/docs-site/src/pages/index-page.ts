@@ -2,7 +2,51 @@ import { applyGaugeProps } from '../gauge-utils'
 import { minMaxAreaColor, temperatureSections } from '../options'
 import type { Route } from '../types'
 
-type IndexGaugeKind = 'value' | 'heading' | 'wind'
+type IndexGaugeKind = 'value' | 'heading' | 'wind' | 'wind-rose'
+
+type RosePetal = {
+  direction: number
+  value: number
+  color?: string
+}
+
+const circularDistance = (left: number, right: number): number => {
+  const delta = Math.abs(left - right)
+  return Math.min(delta, 360 - delta)
+}
+
+const buildWindRosePetals = (
+  binCount: 8 | 16 | 32,
+  maxValue: number,
+  primaryDirection: number,
+  secondaryDirection: number
+): RosePetal[] => {
+  const binStep = 360 / binCount
+  const petals: RosePetal[] = []
+
+  for (let index = 0; index < binCount; index += 1) {
+    const direction = index * binStep
+    const primaryDistance = circularDistance(direction, primaryDirection)
+    const secondaryDistance = circularDistance(direction, secondaryDirection)
+    const primaryContribution = 68 * Math.exp(-(primaryDistance * primaryDistance) / (2 * 34 * 34))
+    const secondaryContribution =
+      24 * Math.exp(-(secondaryDistance * secondaryDistance) / (2 * 48 * 48))
+    const value = Math.min(maxValue, 5 + primaryContribution + secondaryContribution)
+
+    petals.push({
+      direction,
+      value: Number(value.toFixed(1))
+    })
+  }
+
+  const westIndex = Math.round(270 / binStep) % binCount
+  const westPetal = petals[westIndex]
+  if (westPetal) {
+    westPetal.color = '#4f8cff'
+  }
+
+  return petals
+}
 
 type IndexGaugeEntry = {
   element: HTMLElement
@@ -38,6 +82,16 @@ const setupIndexGaugeAnimation = (gauges: IndexGaugeEntry[]): (() => void) => {
     const headingValue = Math.round(normalizedValue * 359)
     const latestWindValue = headingValue
     const averageWindValue = Math.round(Math.random() * 359)
+    const rosePrimaryDirection = Math.round(Math.random() * 359)
+    const roseSecondaryDirection =
+      (rosePrimaryDirection + 50 + Math.round(Math.random() * 70)) % 360
+    const roseMaxValue = 100
+    const rosePetals = buildWindRosePetals(
+      16,
+      roseMaxValue,
+      rosePrimaryDirection,
+      roseSecondaryDirection
+    )
 
     gauges.forEach((gauge) => {
       if (!visibleGauges.has(gauge.element)) {
@@ -51,6 +105,14 @@ const setupIndexGaugeAnimation = (gauges: IndexGaugeEntry[]): (() => void) => {
 
       if (gauge.kind === 'heading') {
         applyGaugeProps(gauge.element, { heading: headingValue })
+        return
+      }
+
+      if (gauge.kind === 'wind-rose') {
+        applyGaugeProps(gauge.element, {
+          petals: rosePetals,
+          maxValue: roseMaxValue
+        })
         return
       }
 
@@ -74,7 +136,7 @@ const setupIndexGaugeAnimation = (gauges: IndexGaugeEntry[]): (() => void) => {
 export const renderIndexPage = (root: HTMLElement): (() => void) => {
   root.innerHTML = `
     <h1 class="page-title">SteelSeries v3 Showcase</h1>
-    <p class="page-subtitle">Every preview uses a consistent 220px gauge size. Each card highlights significant visual variations across radial, radial-bargraph, compass, and wind-direction gauges. Open a gauge page to tweak settings live with documented controls.</p>
+    <p class="page-subtitle">Every preview uses a consistent 220px gauge size. Each card highlights significant visual variations across radial, radial-bargraph, compass, wind-direction, and wind-rose gauges. Open a gauge page to tweak settings live with documented controls.</p>
     <div class="index-grid" id="index-grid"></div>
   `
 
@@ -298,6 +360,62 @@ export const renderIndexPage = (root: HTMLElement): (() => void) => {
           digitalFont: true,
           showDegreeScale: true,
           showRose: true,
+          animateValue: true
+        })
+        return node
+      }
+    },
+    {
+      title: 'Wind Rose Default',
+      link: '/wind-rose',
+      kind: 'wind-rose',
+      create: () => {
+        const node = document.createElement('steelseries-wind-rose-v3')
+        applyGaugeProps(node, {
+          title: 'Wind Rose',
+          unit: 'miles',
+          size: 220,
+          maxValue: 100,
+          petals: buildWindRosePetals(16, 100, 250, 302),
+          frameDesign: 'metal',
+          backgroundColor: 'BEIGE',
+          foregroundType: 'type1',
+          roseCenterColor: '#f5a68a',
+          roseEdgeColor: '#d6452f',
+          roseLineColor: '#8d2f1f',
+          roseCenterAlpha: 0.25,
+          roseEdgeAlpha: 0.7,
+          showPointSymbols: true,
+          showTickmarks: true,
+          showDegreeScale: false,
+          animateValue: true
+        })
+        return node
+      }
+    },
+    {
+      title: 'Wind Rose Marine',
+      link: '/wind-rose',
+      kind: 'wind-rose',
+      create: () => {
+        const node = document.createElement('steelseries-wind-rose-v3')
+        applyGaugeProps(node, {
+          title: 'Marine Rose',
+          unit: 'kts',
+          size: 220,
+          maxValue: 120,
+          petals: buildWindRosePetals(32, 120, 278, 328),
+          frameDesign: 'brass',
+          backgroundColor: 'BEIGE',
+          foregroundType: 'type3',
+          roseCenterColor: '#9ec5ff',
+          roseEdgeColor: '#2b5ebf',
+          roseLineColor: '#1d438a',
+          roseCenterAlpha: 0.2,
+          roseEdgeAlpha: 0.72,
+          showPointSymbols: true,
+          showTickmarks: true,
+          showDegreeScale: false,
           animateValue: true
         })
         return node

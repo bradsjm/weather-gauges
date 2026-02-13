@@ -8,12 +8,14 @@ import type { SteelseriesRadialBargraphV3Element as RadialBargraphElement } from
 import type { SteelseriesRadialV3Element as RadialElement } from './components/radial-element.js'
 import type { SteelseriesCompassV3Element as CompassElement } from './components/compass-element.js'
 import type { SteelseriesWindDirectionV3Element as WindDirectionElement } from './components/wind-direction-element.js'
+import type { SteelseriesWindRoseV3Element as WindRoseElement } from './components/wind-rose-element.js'
 
 // Export individual element classes
 export { SteelseriesRadialBargraphV3Element } from './components/radial-bargraph-element.js'
 export { SteelseriesRadialV3Element } from './components/radial-element.js'
 export { SteelseriesCompassV3Element } from './components/compass-element.js'
 export { SteelseriesWindDirectionV3Element } from './components/wind-direction-element.js'
+export { SteelseriesWindRoseV3Element } from './components/wind-rose-element.js'
 
 // Export shared utilities (useful for extending elements)
 export { booleanAttributeConverter, readCssCustomPropertyColor } from './shared/css-utils.js'
@@ -27,5 +29,6 @@ declare global {
     'steelseries-radial-v3': RadialElement
     'steelseries-compass-v3': CompassElement
     'steelseries-wind-direction-v3': WindDirectionElement
+    'steelseries-wind-rose-v3': WindRoseElement
   }
 }

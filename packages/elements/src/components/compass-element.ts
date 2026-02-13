@@ -111,6 +111,9 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
   @property({ type: Boolean, attribute: 'point-symbols-visible' })
   pointSymbolsVisible = true
 
+  @property({ type: Boolean, attribute: 'show-tickmarks', converter: booleanAttributeConverter })
+  showTickmarks = true
+
   @property({ type: String, attribute: 'point-symbol-n' })
   pointSymbolN = 'N'
 
@@ -239,6 +242,7 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
           this.pointSymbolNW
         ],
         pointSymbolsVisible: this.pointSymbolsVisible,
+        showTickmarks: this.showTickmarks,
         degreeScale: this.degreeScale,
         roseVisible: this.roseVisible,
         rotateFace: this.rotateFace,

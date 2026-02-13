@@ -156,7 +156,10 @@ export const renderCompassGauge = (
             config.style.pointSymbols,
             backgroundPalette.labelColor,
             backgroundPalette.symbolColor,
-            { degreeScaleHalf: config.scale.degreeScaleHalf }
+            {
+              degreeScaleHalf: config.scale.degreeScaleHalf,
+              showTickmarks: config.style.showTickmarks
+            }
           )
 
           context.restore()
@@ -179,7 +182,10 @@ export const renderCompassGauge = (
             config.style.pointSymbols,
             backgroundPalette.labelColor,
             backgroundPalette.symbolColor,
-            { degreeScaleHalf: config.scale.degreeScaleHalf }
+            {
+              degreeScaleHalf: config.scale.degreeScaleHalf,
+              showTickmarks: config.style.showTickmarks
+            }
           )
         }
       }
