@@ -39,6 +39,9 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
   @property({ type: String })
   unit = '°'
 
+  @property({ type: String })
+  preset: '' | 'wind-direction' = ''
+
   @property({ type: String, attribute: 'frame-design' })
   frameDesign:
     | 'blackMetal'
@@ -333,6 +336,30 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
     const childSections = this.parseSectionChildren()
     const sections = this.sections.length > 0 ? this.sections : childSections
     const areas = this.areas.length > 0 ? this.areas : []
+    const title =
+      this.hasAttribute('title') || this.title.length > 0
+        ? this.title
+        : this.preset === 'wind-direction'
+          ? 'Wind Direction'
+          : ''
+    const unit =
+      this.hasAttribute('unit') || this.unit.length > 0
+        ? this.unit
+        : this.preset === 'wind-direction'
+          ? '°'
+          : ''
+    const lcdTitleLatest =
+      this.hasAttribute('lcd-title-latest') || this.lcdTitleLatest.length > 0
+        ? this.lcdTitleLatest
+        : this.preset === 'wind-direction'
+          ? 'Latest'
+          : ''
+    const lcdTitleAverage =
+      this.hasAttribute('lcd-title-average') || this.lcdTitleAverage.length > 0
+        ? this.lcdTitleAverage
+        : this.preset === 'wind-direction'
+          ? 'Average'
+          : ''
 
     return windDirectionGaugeConfigSchema.parse({
       value: {
@@ -344,8 +371,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
         height: this.size
       },
       text: {
-        ...(this.title ? { title: this.title } : {}),
-        ...(this.unit ? { unit: this.unit } : {})
+        ...(title ? { title } : {}),
+        ...(unit ? { unit } : {})
       },
       visibility: {
         showFrame: this.showFrame,
@@ -384,8 +411,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
         pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
       },
       lcdTitles: {
-        latest: this.lcdTitleLatest,
-        average: this.lcdTitleAverage
+        latest: lcdTitleLatest,
+        average: lcdTitleAverage
       },
       indicators: {
         alerts

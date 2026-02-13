@@ -127,6 +127,11 @@ export const measurementPresetOptions: SelectOption[] = [
   { value: 'pressure', label: 'pressure' }
 ]
 
+export const windDirectionPresetOptions: SelectOption[] = [
+  { value: '', label: 'none' },
+  { value: 'wind-direction', label: 'wind-direction' }
+]
+
 export const temperatureSections = [
   { from: -200, to: -30, color: 'rgba(195, 92, 211, 0.4)' },
   { from: -30, to: -25, color: 'rgba(139, 74, 197, 0.4)' },

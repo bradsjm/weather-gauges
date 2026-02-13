@@ -6,6 +6,7 @@ import {
   knobStyleOptions,
   knobTypeOptions,
   lcdColorOptions,
+  windDirectionPresetOptions,
   pointerColorOptions,
   pointerTypeOptions
 } from '../options'
@@ -16,6 +17,7 @@ export const renderWindPage = (root: HTMLElement): void => {
   const defaults: PlaygroundState = {
     valueLatest: 48,
     valueAverage: 63,
+    preset: '',
     alertsEnabled: false,
     warningAlertHeading: 90,
     criticalAlertHeading: 180,
@@ -48,6 +50,13 @@ export const renderWindPage = (root: HTMLElement): void => {
   }
 
   const controls: ControlDef[] = [
+    {
+      key: 'preset',
+      label: 'Measurement Preset',
+      description: 'Apply wind-direction defaults for title/unit and LCD labels.',
+      type: 'select',
+      options: windDirectionPresetOptions
+    },
     {
       key: 'valueLatest',
       label: 'Latest Value',
