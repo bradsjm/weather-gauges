@@ -71,6 +71,36 @@ export const gaugeTextSchema = z
   })
   .strict()
 
+const imageConstructor =
+  typeof globalThis === 'object' && 'Image' in globalThis
+    ? (globalThis.Image as typeof Image)
+    : undefined
+
+export const gaugeOverlayImageSchema = imageConstructor
+  ? z.instanceof(imageConstructor)
+  : z.custom<CanvasImageSource>((value) => typeof value === 'object' && value !== null, {
+      message: 'Expected an image-like object'
+    })
+
+export const gaugeOverlayPositionSchema = z.enum([
+  'center',
+  'top-left',
+  'top-right',
+  'bottom-left',
+  'bottom-right'
+])
+
+export const gaugeOverlaySchema = z
+  .object({
+    image: gaugeOverlayImageSchema.optional(),
+    visible: z.boolean().default(true),
+    opacity: z.number().finite().min(0).max(1).default(0.3),
+    position: gaugeOverlayPositionSchema.default('center'),
+    scale: z.number().finite().positive().default(0.5)
+  })
+  .strict()
+  .optional()
+
 export const sharedGaugeConfigSchema = z
   .object({
     value: gaugeValueSchema,
@@ -96,4 +126,5 @@ export type GaugeSize = z.infer<typeof gaugeSizeSchema>
 export type GaugeAnimation = z.infer<typeof gaugeAnimationSchema>
 export type GaugeVisibility = z.infer<typeof gaugeVisibilitySchema>
 export type GaugeText = z.infer<typeof gaugeTextSchema>
+export type GaugeOverlay = z.infer<typeof gaugeOverlaySchema>
 export type SharedGaugeConfig = z.infer<typeof sharedGaugeConfigSchema>

@@ -184,6 +184,9 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
   @property({ attribute: false })
   customLayer: WindDirectionCustomLayer | null = null
 
+  @property({ attribute: false })
+  overlay: WindDirectionCustomLayer | null = null
+
   @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
   showFrame = true
 
@@ -339,6 +342,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     const childSections = this.parseSectionChildren()
     const sections = this.sections.length > 0 ? this.sections : childSections
     const areas = this.areas.length > 0 ? this.areas : []
+    const overlayLayer = this.overlay ?? this.customLayer
     const textDefaults = resolveWindDirectionTextDefaults({
       preset: this.preset,
       title: this.label,
@@ -399,7 +403,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
         lcdColor: this.lcdColor,
         digitalFont: this.digitalFont,
         useColorLabels: this.useColorLabels,
-        ...(this.customLayer ? { customLayer: this.customLayer } : {}),
+        ...(overlayLayer ? { customLayer: overlayLayer } : {}),
         pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
       },
       lcdTitles: {

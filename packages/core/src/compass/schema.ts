@@ -8,7 +8,8 @@ import {
   sharedGaugeConfigSchema,
   gaugeAnimationSchema,
   gaugeVisibilitySchema,
-  gaugeTextSchema
+  gaugeTextSchema,
+  gaugeOverlaySchema
 } from '../schemas/shared.js'
 
 export const compassHeadingSchema = z
@@ -91,7 +92,7 @@ export const compassStyleSchema = z
     degreeScale: z.boolean().default(false),
     roseVisible: z.boolean().default(true),
     rotateFace: z.boolean().default(false),
-    customLayer: z.unknown().optional()
+    customLayer: gaugeOverlaySchema
   })
   .strict()
 

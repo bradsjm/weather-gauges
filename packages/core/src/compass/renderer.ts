@@ -2,7 +2,6 @@ import { createAnimationScheduler, type AnimationRunHandle } from '../animation/
 import { clamp } from '../math/range.js'
 import {
   drawCompassBackground,
-  drawCompassCustomImage,
   drawCompassFrame,
   getCompassBackgroundPalette
 } from '../render/gauge-materials.js'
@@ -17,6 +16,7 @@ import {
   resizeStaticLayerCache,
   type StaticLayerCache
 } from '../render/static-layer-cache.js'
+import { drawOverlayLayer, resolveOverlayLayerSignature } from '../render/overlay-layer.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { CompassAlert, CompassGaugeConfig } from './schema.js'
 import {
@@ -90,28 +90,6 @@ const getCompassStaticLayerCache = (
   return created
 }
 
-const resolveCustomLayerSignature = (
-  customLayer: CompassGaugeConfig['style']['customLayer']
-): {
-  visible: boolean
-  hasImage: boolean
-  imageWidth: number | null
-  imageHeight: number | null
-} => {
-  const layer = customLayer as
-    | { visible?: boolean; image?: CanvasImageSource | null }
-    | null
-    | undefined
-  const image = layer?.image as { width?: number; height?: number } | null | undefined
-
-  return {
-    visible: layer?.visible ?? false,
-    hasImage: image !== null && image !== undefined,
-    imageWidth: image?.width ?? null,
-    imageHeight: image?.height ?? null
-  }
-}
-
 const resolveCompassStaticLayerSignature = (
   config: CompassGaugeConfig,
   paint: ThemePaint
@@ -128,7 +106,7 @@ const resolveCompassStaticLayerSignature = (
       rotateFace: config.style.rotateFace,
       roseVisible: config.style.roseVisible,
       showTickmarks: config.style.showTickmarks,
-      customLayer: resolveCustomLayerSignature(config.style.customLayer)
+      customLayer: resolveOverlayLayerSignature(config.style.customLayer)
     },
     scale: config.scale,
     visibility: config.visibility,
@@ -155,18 +133,15 @@ const drawCompassStaticLayer = (
     drawCompassBackground(context, config.style.backgroundColor, centerX, centerY, imageWidth)
   }
 
-  const customLayer = config.style.customLayer as
-    | { image?: CanvasImageSource | null }
-    | null
-    | undefined
-  drawCompassCustomImage(
-    context,
-    customLayer?.image ?? null,
-    centerX,
-    centerY,
-    imageWidth,
-    imageWidth
-  )
+  drawOverlayLayer(context, config.style.customLayer, {
+    canvasWidth: imageWidth,
+    canvasHeight: imageWidth,
+    clipCircle: {
+      centerX,
+      centerY,
+      radius: (0.831775 * imageWidth) / 2
+    }
+  })
 
   if (!config.style.rotateFace) {
     if (config.style.roseVisible && config.visibility.showBackground) {

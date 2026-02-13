@@ -4,18 +4,7 @@ import { gaugeForegroundTypeSchema, gaugeFrameDesignSchema } from '../schemas/fr
 import { gaugeKnobStyleSchema, gaugeKnobTypeSchema } from '../schemas/knob.js'
 import { gaugePointerColorSchema, gaugePointerTypeSchema } from '../schemas/pointer.js'
 import { gaugeAngleSectionSchema } from '../schemas/sections.js'
-import { sharedGaugeConfigSchema } from '../schemas/shared.js'
-
-const imageConstructor =
-  typeof globalThis === 'object' && 'Image' in globalThis
-    ? (globalThis.Image as typeof Image)
-    : undefined
-
-const windDirectionCustomLayerImageSchema = imageConstructor
-  ? z.instanceof(imageConstructor)
-  : z.custom<HTMLImageElement>((value) => typeof value === 'object' && value !== null, {
-      message: 'Expected an image-like object'
-    })
+import { gaugeOverlaySchema, sharedGaugeConfigSchema } from '../schemas/shared.js'
 
 export const windDirectionPointerSchema = z
   .object({
@@ -56,13 +45,7 @@ export const windDirectionIndicatorsSchema = z
   .strict()
   .default({ alerts: [] })
 
-export const windDirectionCustomLayerSchema = z
-  .object({
-    image: windDirectionCustomLayerImageSchema.optional(),
-    visible: z.boolean().default(true)
-  })
-  .strict()
-  .optional()
+export const windDirectionCustomLayerSchema = gaugeOverlaySchema
 
 export const windDirectionScaleSchema = z
   .object({

@@ -3,18 +3,7 @@ import { z } from 'zod'
 import { gaugeBackgroundColorSchema } from '../schemas/background.js'
 import { gaugeForegroundTypeSchema, gaugeFrameDesignSchema } from '../schemas/frame.js'
 import { gaugeKnobStyleSchema, gaugeKnobTypeSchema } from '../schemas/knob.js'
-import { sharedGaugeConfigSchema } from '../schemas/shared.js'
-
-const imageConstructor =
-  typeof globalThis === 'object' && 'Image' in globalThis
-    ? (globalThis.Image as typeof Image)
-    : undefined
-
-const windRoseCustomLayerImageSchema = imageConstructor
-  ? z.instanceof(imageConstructor)
-  : z.custom<HTMLImageElement>((value) => typeof value === 'object' && value !== null, {
-      message: 'Expected an image-like object'
-    })
+import { gaugeOverlaySchema, sharedGaugeConfigSchema } from '../schemas/shared.js'
 
 export const windRoseBinSizes = [8, 16, 32] as const
 
@@ -114,13 +103,7 @@ export const windRoseGradientSchema = z
   })
   .strict()
 
-export const windRoseCustomLayerSchema = z
-  .object({
-    image: windRoseCustomLayerImageSchema.optional(),
-    visible: z.boolean().default(true)
-  })
-  .strict()
-  .optional()
+export const windRoseCustomLayerSchema = gaugeOverlaySchema
 
 export const windRoseStyleSchema = z
   .object({

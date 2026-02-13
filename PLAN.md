@@ -258,7 +258,7 @@ This section is a gap-aware implementation plan based on the current repository 
 - `threshold-label` and `average-label` attribute alignment has been implemented; migration notes should be kept visible in docs/release notes.
 - Wind rose scale auto-derivation is already present in `wx-wind-rose`; this item is now verification/docs alignment instead of net-new behavior.
 - `TrendCalculator` helper has been implemented in `core`; docs/examples should reference the exported helper API.
-- `overlay` (logo/watermark) contract is not implemented as described (no `element.overlay` property and no renderer support).
+- `overlay` (logo/watermark) contract has been implemented for compass, wind-direction, and wind-rose; radial-family integration remains for future enhancement if needed.
 
 ### 7.3 Phased Work Plan
 
@@ -269,7 +269,7 @@ Progress tracker:
 - [x] 3. Rename Attributes To Match PLAN (breaking)
 - [x] 4. Wind Rose Auto-Scale (PLAN behavior)
 - [x] 5. Add `TrendCalculator` to `core`
-- [ ] 6. Add `overlay` Support End-to-End
+- [x] 6. Add `overlay` Support End-to-End
 - [ ] 7. Reduce Public Surface To 8-10 Attributes (breaking)
 
 1. Contract + Docs Hardening (no behavior change)
@@ -301,6 +301,7 @@ Progress tracker:
 6. Add `overlay` Support End-to-End
    - Core: extend relevant gauge configs + renderers to optionally draw an overlay image (opacity/position/scale).
    - Elements: add `overlay` JS property (and optionally declarative child form) that feeds the core renderer.
+   - Status: Completed for compass/wind-direction/wind-rose. Added shared overlay schema defaults (`visible`, `opacity`, `position`, `scale`), renderer support with placement/opacity handling, and new `overlay` JS properties in elements with backward-compatible `customLayer` fallback.
 
 7. Reduce Public Surface To 8-10 Attributes (breaking)
    - Define the supported attribute surface as the set in Section 4 (+ gauge-specific attributes in Section 5).

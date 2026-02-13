@@ -117,6 +117,9 @@ export class WxWindRoseElement extends WeatherGaugeElement {
   @property({ attribute: false })
   customLayer: WindRoseCustomLayer | null = null
 
+  @property({ attribute: false })
+  overlay: WindRoseCustomLayer | null = null
+
   @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
   showFrame = true
 
@@ -216,6 +219,7 @@ export class WxWindRoseElement extends WeatherGaugeElement {
     const maxFromPetals = petals.reduce((max, petal) => Math.max(max, petal.value), 0)
     const normalizedMaxValue = this.normalizeNonNegative(this.maxValue, maxFromPetals)
     const maxValue = normalizedMaxValue > 0 ? normalizedMaxValue : Math.max(1, maxFromPetals)
+    const overlayLayer = this.overlay ?? this.customLayer
 
     return windRoseGaugeConfigSchema.parse({
       value: {
@@ -257,7 +261,7 @@ export class WxWindRoseElement extends WeatherGaugeElement {
         },
         showOutline: this.showOutline,
         roseLineColor: this.roseLineColor,
-        ...(this.customLayer ? { customLayer: this.customLayer } : {})
+        ...(overlayLayer ? { customLayer: overlayLayer } : {})
       }
     })
   }

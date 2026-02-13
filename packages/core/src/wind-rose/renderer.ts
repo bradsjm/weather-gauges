@@ -26,6 +26,7 @@ import {
   resizeStaticLayerCache,
   type StaticLayerCache
 } from '../render/static-layer-cache.js'
+import { drawOverlayLayer, resolveOverlayLayerSignature } from '../render/overlay-layer.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { WindRoseGaugeConfig, WindRosePetal, WindRoseValue } from './schema.js'
 
@@ -160,28 +161,6 @@ const getWindRoseStaticLayerCache = (
   return created
 }
 
-const resolveCustomLayerSignature = (
-  customLayer: WindRoseGaugeConfig['style']['customLayer']
-): {
-  visible: boolean
-  hasImage: boolean
-  imageWidth: number | null
-  imageHeight: number | null
-} => {
-  const layer = customLayer as
-    | { visible?: boolean; image?: CanvasImageSource | null }
-    | null
-    | undefined
-  const image = layer?.image as { width?: number; height?: number } | null | undefined
-
-  return {
-    visible: layer?.visible ?? false,
-    hasImage: image !== null && image !== undefined,
-    imageWidth: image?.width ?? null,
-    imageHeight: image?.height ?? null
-  }
-}
-
 const resolveWindRoseStaticLayerSignature = (
   config: WindRoseGaugeConfig,
   paint: ThemePaint,
@@ -197,7 +176,7 @@ const resolveWindRoseStaticLayerSignature = (
       roseGradient: config.style.roseGradient,
       roseLineColor: config.style.roseLineColor,
       showOutline: config.style.showOutline,
-      customLayer: resolveCustomLayerSignature(config.style.customLayer)
+      customLayer: resolveOverlayLayerSignature(config.style.customLayer)
     },
     visibility: config.visibility,
     text: config.text,
@@ -242,12 +221,10 @@ const drawWindRoseStaticLayer = (
       rgbTupleToCss(palette.labelColor)
     )
 
-    const customLayer = config.style.customLayer as
-      | { visible?: boolean; image?: CanvasImageSource }
-      | undefined
-    if (customLayer?.image && customLayer.visible) {
-      context.drawImage(customLayer.image, 0, 0, width, height)
-    }
+    drawOverlayLayer(context, config.style.customLayer, {
+      canvasWidth: width,
+      canvasHeight: height
+    })
 
     drawRoseGrid(
       context,

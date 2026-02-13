@@ -39,6 +39,7 @@ import {
   resizeStaticLayerCache,
   type StaticLayerCache
 } from '../render/static-layer-cache.js'
+import { drawOverlayLayer, resolveOverlayLayerSignature } from '../render/overlay-layer.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { WindDirectionAlert, WindDirectionGaugeConfig } from './schema.js'
 
@@ -128,28 +129,6 @@ const getWindDirectionStaticLayerCache = (
   return created
 }
 
-const resolveCustomLayerSignature = (
-  customLayer: WindDirectionGaugeConfig['style']['customLayer']
-): {
-  visible: boolean
-  hasImage: boolean
-  imageWidth: number | null
-  imageHeight: number | null
-} => {
-  const layer = customLayer as
-    | { visible?: boolean; image?: CanvasImageSource | null }
-    | null
-    | undefined
-  const image = layer?.image as { width?: number; height?: number } | null | undefined
-
-  return {
-    visible: layer?.visible ?? false,
-    hasImage: image !== null && image !== undefined,
-    imageWidth: image?.width ?? null,
-    imageHeight: image?.height ?? null
-  }
-}
-
 const resolveWindDirectionStaticLayerSignature = (
   config: WindDirectionGaugeConfig,
   paint: ThemePaint
@@ -163,7 +142,7 @@ const resolveWindDirectionStaticLayerSignature = (
       knobStyle: config.style.knobStyle,
       backgroundColor: config.style.backgroundColor,
       pointSymbols: config.style.pointSymbols,
-      customLayer: resolveCustomLayerSignature(config.style.customLayer),
+      customLayer: resolveOverlayLayerSignature(config.style.customLayer),
       pointerLatest: config.style.pointerLatest
     },
     visibility: config.visibility,
@@ -209,12 +188,10 @@ const drawWindDirectionStaticLayer = (
       rgbTupleToCss(palette.labelColor)
     )
 
-    const customLayer = config.style.customLayer as
-      | { visible?: boolean; image?: CanvasImageSource }
-      | undefined
-    if (customLayer?.image && customLayer.visible) {
-      context.drawImage(customLayer.image, 0, 0, width, height)
-    }
+    drawOverlayLayer(context, config.style.customLayer, {
+      canvasWidth: width,
+      canvasHeight: height
+    })
 
     if (config.areas.length > 0) {
       drawGaugeSectionArcs(

@@ -13,6 +13,8 @@ import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter } from '../shared/css-utils.js'
 import { WeatherGaugeElement } from '../shared/gauge-base-element.js'
 
+type CompassOverlay = Exclude<CompassGaugeConfig['style']['customLayer'], undefined>
+
 @customElement('wx-compass')
 export class WxCompassElement extends WeatherGaugeElement {
   @query('canvas')
@@ -141,6 +143,9 @@ export class WxCompassElement extends WeatherGaugeElement {
   @property({ attribute: false })
   customLayer: CanvasImageSource | null = null
 
+  @property({ attribute: false })
+  overlay: CompassOverlay | null = null
+
   @property({ type: Boolean, attribute: 'show-heading-readout' })
   showHeadingReadout = false
 
@@ -188,6 +193,17 @@ export class WxCompassElement extends WeatherGaugeElement {
     const heading = this.normalizeInRange(current, 0, 360, 0)
     const warningHeading = this.normalizeInRange(this.warningAlertHeading, 0, 360, 90)
     const criticalHeading = this.normalizeInRange(this.criticalAlertHeading, 0, 360, 180)
+    const overlayLayer =
+      this.overlay ??
+      (this.customLayer
+        ? {
+            image: this.customLayer,
+            visible: true,
+            opacity: 1,
+            position: 'center' as const,
+            scale: 1
+          }
+        : null)
     const alerts = this.alertsEnabled
       ? [
           {
@@ -253,7 +269,7 @@ export class WxCompassElement extends WeatherGaugeElement {
         degreeScale: this.degreeScale,
         roseVisible: this.roseVisible,
         rotateFace: this.rotateFace,
-        customLayer: this.customLayer
+        ...(overlayLayer ? { customLayer: overlayLayer } : {})
       },
       indicators: {
         alerts
