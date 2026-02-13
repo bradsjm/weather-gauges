@@ -52,6 +52,9 @@ export abstract class SteelseriesGaugeElement extends LitElement {
   @property({ type: String })
   validation: GaugeValidationMode = 'clamp'
 
+  @property({ attribute: false })
+  readingText = ''
+
   protected animationHandle: AnimationRunHandle | undefined
 
   protected getThemePaint(): ThemePaint {
@@ -175,6 +178,48 @@ export abstract class SteelseriesGaugeElement extends LitElement {
     }
 
     return undefined
+  }
+
+  protected resolveReadingText(fallbackText: string): string {
+    const slot = this.renderRoot.querySelector('slot[name="sr-content"]')
+    let customText = ''
+
+    if (slot instanceof HTMLSlotElement) {
+      customText = slot
+        .assignedNodes({ flatten: true })
+        .map((node) => node.textContent ?? '')
+        .join(' ')
+        .trim()
+    }
+
+    const readingText = customText.length > 0 ? customText : fallbackText
+    this.readingText = readingText
+    return readingText
+  }
+
+  protected setCanvasAccessibility(
+    canvasElement: HTMLCanvasElement,
+    options: {
+      label: string
+      valueNow?: number
+      valueMin?: number
+      valueMax?: number
+    }
+  ): void {
+    const label = this.resolveReadingText(options.label)
+    canvasElement.setAttribute('aria-label', label)
+
+    const setOrRemove = (name: string, value: number | undefined): void => {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        canvasElement.setAttribute(name, String(value))
+      } else {
+        canvasElement.removeAttribute(name)
+      }
+    }
+
+    setOrRemove('aria-valuenow', options.valueNow)
+    setOrRemove('aria-valuemin', options.valueMin)
+    setOrRemove('aria-valuemax', options.valueMax)
   }
 
   private extractIssues(error: unknown): GaugeErrorIssue[] | undefined {

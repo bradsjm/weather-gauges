@@ -431,6 +431,29 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
     this.emitGaugeError('radial-bargraph', error, 'Unknown radial bargraph rendering error')
   }
 
+  private updateAccessibility(config: RadialBargraphGaugeConfig, value: number): void {
+    if (!this.canvasElement) {
+      return
+    }
+
+    const title = config.text.title ?? 'Radial Bargraph Gauge'
+    const unit = config.text.unit ?? ''
+    const label = `${title}: ${value}${unit ? ` ${unit}` : ''}`
+    this.setCanvasAccessibility(this.canvasElement, {
+      label,
+      valueNow: value,
+      valueMin: config.value.min,
+      valueMax: config.value.max
+    })
+  }
+
+  private readonly onSrContentSlotChange = (): void => {
+    const range = this.normalizedRange(this.minValue, this.maxValue)
+    const value = this.normalizeInRange(this.currentValue, range.min, range.max, this.currentValue)
+    const config = this.buildConfig(value)
+    this.updateAccessibility(config, value)
+  }
+
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
     if (!drawContext || !this.canvasElement) {
@@ -469,10 +492,12 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
           onFrame: (frame) => {
             this.currentValue = frame.value
             this.emitValueChange(frame)
+            this.updateAccessibility(animationConfig, frame.value)
           },
           onComplete: (frame) => {
             this.currentValue = frame.value
             this.emitValueChange(frame)
+            this.updateAccessibility(animationConfig, frame.value)
           }
         })
         return
@@ -485,6 +510,7 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       })
       this.currentValue = nextValue
       this.emitValueChange(result)
+      this.updateAccessibility(renderConfig, result.value)
     } catch (error) {
       this.emitError(error)
     }
@@ -498,6 +524,9 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
         role="img"
         aria-label="${this.title || 'Radial Bargraph Gauge'}"
       ></canvas>
+      <span class="sr-only"
+        ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot
+      ></span>
     `
   }
 }

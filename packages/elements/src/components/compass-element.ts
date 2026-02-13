@@ -262,6 +262,28 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
     this.emitGaugeError('compass', error, 'Unknown compass rendering error')
   }
 
+  private updateAccessibility(config: CompassGaugeConfig, heading: number): void {
+    if (!this.canvasElement) {
+      return
+    }
+
+    const title = config.text.title ?? 'Compass Gauge'
+    const unit = config.text.unit ?? ''
+    const label = `${title}: ${heading}${unit ? ` ${unit}` : ''}`
+    this.setCanvasAccessibility(this.canvasElement, {
+      label,
+      valueNow: heading,
+      valueMin: config.heading.min,
+      valueMax: config.heading.max
+    })
+  }
+
+  private readonly onSrContentSlotChange = (): void => {
+    const heading = this.normalizeInRange(this.currentHeading, 0, 360, this.currentHeading)
+    const config = this.buildConfig(heading)
+    this.updateAccessibility(config, heading)
+  }
+
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
     if (!drawContext || !this.canvasElement) {
@@ -288,10 +310,12 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
           onFrame: (frame) => {
             this.currentHeading = frame.heading
             this.emitValueChange(frame)
+            this.updateAccessibility(animationConfig, frame.heading)
           },
           onComplete: (frame) => {
             this.currentHeading = frame.heading
             this.emitValueChange(frame)
+            this.updateAccessibility(animationConfig, frame.heading)
           }
         })
         return
@@ -305,6 +329,7 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
       })
       this.currentHeading = nextHeading
       this.emitValueChange(result)
+      this.updateAccessibility(renderConfig, result.heading)
     } catch (error) {
       this.emitError(error)
     }
@@ -318,6 +343,9 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
         role="img"
         aria-label="${this.title || 'Compass Gauge'}"
       ></canvas>
+      <span class="sr-only"
+        ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot
+      ></span>
     `
   }
 }

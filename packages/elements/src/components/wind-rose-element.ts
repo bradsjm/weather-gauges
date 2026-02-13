@@ -263,6 +263,28 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
     this.emitGaugeError('wind-rose', error, 'Unknown wind rose rendering error')
   }
 
+  private updateAccessibility(config: WindRoseGaugeConfig, value: number): void {
+    if (!this.canvasElement) {
+      return
+    }
+
+    const title = config.text.title ?? 'Wind Rose Gauge'
+    const unit = config.text.unit ?? ''
+    const label = `${title}: ${value}${unit ? ` ${unit}` : ''}`
+    this.setCanvasAccessibility(this.canvasElement, {
+      label,
+      valueNow: value,
+      valueMin: 0,
+      valueMax: config.value.maxValue
+    })
+  }
+
+  private readonly onSrContentSlotChange = (): void => {
+    const config = this.buildConfig()
+    const value = this.normalizeNonNegative(this.currentValue.maxValue, config.value.maxValue)
+    this.updateAccessibility(config, value)
+  }
+
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
     if (!drawContext || !this.canvasElement) {
@@ -289,10 +311,12 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
           onFrame: (frame) => {
             this.currentValue = frame.valueData
             this.emitValueChange(frame)
+            this.updateAccessibility(config, frame.value)
           },
           onComplete: (frame) => {
             this.currentValue = frame.valueData
             this.emitValueChange(frame)
+            this.updateAccessibility(config, frame.value)
           }
         })
         return
@@ -304,6 +328,7 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
       })
       this.currentValue = result.valueData
       this.emitValueChange(result)
+      this.updateAccessibility(config, result.value)
     } catch (error) {
       this.emitError(error)
     }
@@ -317,6 +342,9 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
         role="img"
         aria-label="${this.title || 'Wind Rose Gauge'}"
       ></canvas>
+      <span class="sr-only"
+        ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot
+      ></span>
     `
   }
 }

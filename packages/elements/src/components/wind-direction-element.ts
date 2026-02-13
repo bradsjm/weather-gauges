@@ -421,6 +421,34 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
     this.emitGaugeError('wind-direction', error, 'Unknown wind direction rendering error')
   }
 
+  private updateAccessibility(
+    config: WindDirectionGaugeConfig,
+    latest: number,
+    average: number
+  ): void {
+    if (!this.canvasElement) {
+      return
+    }
+
+    const title = config.text.title ?? 'Wind Direction Gauge'
+    const unit = config.text.unit ?? ''
+    const reading = Number.isFinite(average) ? average : latest
+    const label = `${title}: ${reading}${unit ? ` ${unit}` : ''}`
+    this.setCanvasAccessibility(this.canvasElement, {
+      label,
+      valueNow: reading,
+      valueMin: 0,
+      valueMax: 360
+    })
+  }
+
+  private readonly onSrContentSlotChange = (): void => {
+    const latest = this.normalizeInRange(this.currentLatest, 0, 360, this.currentLatest)
+    const average = this.normalizeInRange(this.currentAverage, 0, 360, this.currentAverage)
+    const config = this.buildConfig()
+    this.updateAccessibility(config, latest, average)
+  }
+
   private renderGauge(animateValue: boolean): void {
     const drawContext = this.getDrawContext()
     if (!drawContext || !this.canvasElement) {
@@ -454,11 +482,13 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
             this.currentLatest = frame.latest
             this.currentAverage = frame.average
             this.emitValueChange(frame)
+            this.updateAccessibility(config, frame.latest, frame.average)
           },
           onComplete: (frame) => {
             this.currentLatest = frame.latest
             this.currentAverage = frame.average
             this.emitValueChange(frame)
+            this.updateAccessibility(config, frame.latest, frame.average)
           }
         })
         return
@@ -473,6 +503,7 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
       this.currentLatest = result.latest
       this.currentAverage = result.average
       this.emitValueChange(result)
+      this.updateAccessibility(config, result.latest, result.average)
     } catch (error) {
       this.emitError(error)
     }
@@ -486,6 +517,9 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
         role="img"
         aria-label="${this.title || 'Wind Direction Gauge'}"
       ></canvas>
+      <span class="sr-only"
+        ><slot name="sr-content" @slotchange=${this.onSrContentSlotChange}></slot
+      ></span>
     `
   }
 }

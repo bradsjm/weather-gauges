@@ -752,8 +752,8 @@ gauge.readingText: string  // Current accessible text representation
 - [x] Parse `wx-section`/`wx-alert`/`wx-petal` child elements
 - [x] Implement precedence: properties > children > presets > defaults
 - [x] CSS variable resolution via `getComputedStyle`
-- [ ] ARIA attributes on canvas elements
-- [ ] Screen reader slot support
+- [x] ARIA attributes on canvas elements
+- [x] Screen reader slot support
 - [x] Measurement presets implementation:
   - [x] `temperature` preset with auto unit detection
   - [x] `humidity` preset with comfort zones
