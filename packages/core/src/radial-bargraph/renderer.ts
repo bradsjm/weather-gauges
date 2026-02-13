@@ -117,7 +117,7 @@ const colorToString = (rgb: { r: number; g: number; b: number }): string => {
   return `rgb(${clampChannel(rgb.r)}, ${clampChannel(rgb.g)}, ${clampChannel(rgb.b)})`
 }
 
-const resolveLegacyPointerColor = (
+const resolvePointerColorFromName = (
   colorName: RadialBargraphGaugeConfig['style']['valueColor']
 ): PointerColor => {
   const palette = resolveGaugePointerPalette(colorName)
@@ -578,7 +578,7 @@ const drawActiveLeds = (
     activeLedBuffer.height = Math.ceil(ledH)
   }
   const activeLedContext = activeLedBuffer?.getContext('2d')
-  let activeColor = resolveLegacyPointerColor(config.style.valueColor)
+  let activeColor = resolvePointerColorFromName(config.style.valueColor)
   let activeColorKey = `${activeColor.light}|${activeColor.medium}|${activeColor.dark}`
 
   const drawActiveLedRect = (color: PointerColor): void => {
@@ -607,7 +607,7 @@ const drawActiveLeds = (
   drawActiveLedRect(activeColor)
 
   for (let angle = 0; angle <= activeLedAngle + 0.001; angle += 5) {
-    let currentColor = resolveLegacyPointerColor(config.style.valueColor)
+    let currentColor = resolvePointerColorFromName(config.style.valueColor)
 
     if (config.style.useValueGradient && gradientSampler) {
       const fraction = angle / Math.max(geometry.degAngleRange, 1e-9)

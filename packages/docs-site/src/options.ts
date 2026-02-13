@@ -87,7 +87,7 @@ export const gaugeTypeOptions: SelectOption[] = [
 
 export const radialGaugeTypeOptions: SelectOption[] = [
   ...gaugeTypeOptions,
-  { value: 'type5', label: 'type5 - Radial vertical (legacy style)' }
+  { value: 'type5', label: 'type5 - Radial vertical style' }
 ]
 
 export const orientationOptions: SelectOption[] = [

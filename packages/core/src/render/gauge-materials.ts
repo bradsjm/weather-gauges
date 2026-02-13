@@ -915,7 +915,7 @@ const drawRadialTextureBackground = (
   return false
 }
 
-const drawLegacyRadialForegroundTyped = (
+const drawRadialForegroundTyped = (
   context: CanvasRenderingContext2D,
   centerX: number,
   centerY: number,
@@ -1320,5 +1320,5 @@ export const drawGaugeRadialForegroundByType = (
   centerY: number,
   radius: number
 ): void => {
-  drawLegacyRadialForegroundTyped(context, centerX, centerY, radius, foregroundType)
+  drawRadialForegroundTyped(context, centerX, centerY, radius, foregroundType)
 }
