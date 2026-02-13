@@ -224,13 +224,34 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
   }
 
   private buildConfig(current: number): RadialGaugeConfig {
-    const rangeMin = Math.min(this.minValue, this.maxValue)
-    const rangeMax = Math.max(this.minValue, this.maxValue)
-    const clampInRange = (value: number): number => Math.min(rangeMax, Math.max(rangeMin, value))
-    const warningAlertValue = clampInRange(this.warningAlertValue)
-    const criticalAlertValue = clampInRange(this.criticalAlertValue)
+    const range = this.normalizedRange(this.minValue, this.maxValue)
+    const warningAlertValue = this.normalizeInRange(
+      this.warningAlertValue,
+      range.min,
+      range.max,
+      range.max
+    )
+    const criticalAlertValue = this.normalizeInRange(
+      this.criticalAlertValue,
+      range.min,
+      range.max,
+      range.max
+    )
     const warningValue = Math.min(warningAlertValue, criticalAlertValue)
     const criticalValue = Math.max(warningAlertValue, criticalAlertValue)
+    const minMeasuredValue = this.normalizeInRange(
+      this.minMeasuredValue,
+      range.min,
+      range.max,
+      range.min
+    )
+    const maxMeasuredValue = this.normalizeInRange(
+      this.maxMeasuredValue,
+      range.min,
+      range.max,
+      range.max
+    )
+    const thresholdValue = this.normalizeInRange(this.threshold, range.min, range.max, range.max)
     const alerts = this.alertsEnabled
       ? [
           {
@@ -250,8 +271,8 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
 
     return radialGaugeConfigSchema.parse({
       value: {
-        min: this.minValue,
-        max: this.maxValue,
+        min: range.min,
+        max: range.max,
         current
       },
       size: {
@@ -287,7 +308,7 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
       areas: this.areas,
       indicators: {
         threshold: {
-          value: this.threshold,
+          value: thresholdValue,
           show: this.showThreshold
         },
         alerts,
@@ -297,8 +318,8 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
         trendState: this.trendState,
         minMeasuredValueVisible: this.minMeasuredValueVisible,
         maxMeasuredValueVisible: this.maxMeasuredValueVisible,
-        minMeasuredValue: this.minMeasuredValue,
-        maxMeasuredValue: this.maxMeasuredValue
+        minMeasuredValue,
+        maxMeasuredValue
       }
     })
   }
@@ -321,7 +342,8 @@ export class SteelseriesRadialV3Element extends SteelseriesGaugeElement {
     this.canvasElement.height = this.size
 
     const paint = this.getThemePaint()
-    const nextValue = this.value
+    const range = this.normalizedRange(this.minValue, this.maxValue)
+    const nextValue = this.normalizeInRange(this.value, range.min, range.max, this.currentValue)
     this.animationHandle?.cancel()
 
     try {

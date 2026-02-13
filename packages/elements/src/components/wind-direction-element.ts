@@ -255,9 +255,10 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
   }
 
   private buildConfig(): WindDirectionGaugeConfig {
-    const clampHeading = (value: number): number => Math.min(360, Math.max(0, value))
-    const warningHeading = clampHeading(this.warningAlertHeading)
-    const criticalHeading = clampHeading(this.criticalAlertHeading)
+    const latest = this.normalizeInRange(this.valueLatest, 0, 360, this.currentLatest)
+    const average = this.normalizeInRange(this.valueAverage, 0, 360, this.currentAverage)
+    const warningHeading = this.normalizeInRange(this.warningAlertHeading, 0, 360, 90)
+    const criticalHeading = this.normalizeInRange(this.criticalAlertHeading, 0, 360, 180)
     const alerts = this.alertsEnabled
       ? [
           {
@@ -277,8 +278,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
 
     return windDirectionGaugeConfigSchema.parse({
       value: {
-        latest: this.valueLatest,
-        average: this.valueAverage
+        latest,
+        average
       },
       size: {
         width: this.size,
@@ -354,8 +355,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
     this.canvasElement.height = this.size
 
     const paint = this.getThemePaint()
-    const nextLatest = this.valueLatest
-    const nextAverage = this.valueAverage
+    const nextLatest = this.normalizeInRange(this.valueLatest, 0, 360, this.currentLatest)
+    const nextAverage = this.normalizeInRange(this.valueAverage, 0, 360, this.currentAverage)
 
     this.animationHandle?.cancel()
 

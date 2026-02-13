@@ -182,9 +182,9 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
   private buildConfig(current: number): CompassGaugeConfig {
     const title = this.title.trim()
     const unit = this.unit.trim()
-    const clampHeading = (value: number): number => Math.min(360, Math.max(0, value))
-    const warningHeading = clampHeading(this.warningAlertHeading)
-    const criticalHeading = clampHeading(this.criticalAlertHeading)
+    const heading = this.normalizeInRange(current, 0, 360, 0)
+    const warningHeading = this.normalizeInRange(this.warningAlertHeading, 0, 360, 90)
+    const criticalHeading = this.normalizeInRange(this.criticalAlertHeading, 0, 360, 180)
     const alerts = this.alertsEnabled
       ? [
           {
@@ -206,7 +206,7 @@ export class SteelseriesCompassV3Element extends SteelseriesGaugeElement {
       heading: {
         min: 0,
         max: 360,
-        current
+        current: heading
       },
       size: {
         width: this.size,

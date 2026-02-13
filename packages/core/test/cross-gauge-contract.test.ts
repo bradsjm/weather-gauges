@@ -5,6 +5,7 @@ import {
   gaugeContract,
   radialBargraphGaugeConfigSchema,
   toGaugeContractState,
+  windDirectionGaugeConfigSchema,
   validateCompassConfig,
   validateRadialBargraphConfig
 } from '../src/index.js'
@@ -75,5 +76,27 @@ describe('cross-gauge contracts', () => {
 
     expect(radialBargraph.animation.durationMs).toBe(gaugeContract.defaultAnimationDurationMs)
     expect(compass.animation.durationMs).toBe(gaugeContract.defaultAnimationDurationMs)
+  })
+
+  it('enforces fixed heading domain for wind-direction configs', () => {
+    expect(() =>
+      windDirectionGaugeConfigSchema.parse({
+        value: {
+          latest: 361,
+          average: 180
+        },
+        size: { width: 220, height: 220 }
+      })
+    ).toThrowError()
+
+    expect(() =>
+      windDirectionGaugeConfigSchema.parse({
+        value: {
+          latest: 90,
+          average: 180
+        },
+        size: { width: 220, height: 220 }
+      })
+    ).not.toThrowError()
   })
 })

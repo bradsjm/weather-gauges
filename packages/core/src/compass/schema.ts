@@ -26,6 +26,14 @@ export const compassHeadingSchema = z
         message: 'max must be greater than min'
       })
     }
+
+    if (value.current < value.min || value.current > value.max) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['current'],
+        message: 'current must be within min and max range'
+      })
+    }
   })
 
 export const compassRoseSchema = z
@@ -90,7 +98,7 @@ export const compassStyleSchema = z
 export const compassAlertSchema = z
   .object({
     id: z.string().trim().min(1),
-    heading: z.number().finite(),
+    heading: z.number().finite().min(0).max(360),
     message: z.string().trim().min(1),
     severity: z.enum(['info', 'warning', 'critical']).default('warning')
   })
@@ -104,13 +112,13 @@ export const compassIndicatorsSchema = z
   .default({ alerts: [] })
 
 export const compassGaugeConfigSchema = sharedGaugeConfigSchema
+  .omit({ value: true })
   .extend({
-    value: compassHeadingSchema.default({
+    heading: compassHeadingSchema.default({
       current: 0,
       min: 0,
       max: 360
     }),
-    heading: compassHeadingSchema,
     animation: gaugeAnimationSchema.default(() => ({
       enabled: true,
       durationMs: 500,

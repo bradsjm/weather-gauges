@@ -211,6 +211,8 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
   }
 
   private buildConfig(current: number): RadialBargraphGaugeConfig {
+    const range = this.normalizedRange(this.minValue, this.maxValue)
+    const thresholdValue = this.normalizeInRange(this.threshold, range.min, range.max, range.max)
     const accentColor = readCssCustomPropertyColor(this, '--ss3-accent-color', '#d97706')
     const warningColor = readCssCustomPropertyColor(this, '--ss3-warning-color', '#c5162e')
     const dangerColor = readCssCustomPropertyColor(this, '--ss3-danger-color', '#ef4444')
@@ -218,13 +220,13 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
     const fallbackSections = this.useSectionColors
       ? [
           {
-            from: this.minValue,
-            to: this.threshold,
+            from: range.min,
+            to: thresholdValue,
             color: accentColor
           },
           {
-            from: this.threshold,
-            to: this.maxValue,
+            from: thresholdValue,
+            to: range.max,
             color: warningColor
           }
         ]
@@ -244,11 +246,18 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       this.valueGradientStops.length > 0 ? this.valueGradientStops : fallbackValueGradientStops
 
     const defaultTickLabelOrientation = this.gaugeType === 'type1' ? 'tangent' : 'normal'
-    const rangeMin = Math.min(this.minValue, this.maxValue)
-    const rangeMax = Math.max(this.minValue, this.maxValue)
-    const clampInRange = (value: number): number => Math.min(rangeMax, Math.max(rangeMin, value))
-    const warningAlertValue = clampInRange(this.warningAlertValue)
-    const criticalAlertValue = clampInRange(this.criticalAlertValue)
+    const warningAlertValue = this.normalizeInRange(
+      this.warningAlertValue,
+      range.min,
+      range.max,
+      range.max
+    )
+    const criticalAlertValue = this.normalizeInRange(
+      this.criticalAlertValue,
+      range.min,
+      range.max,
+      range.max
+    )
     const warningValue = Math.min(warningAlertValue, criticalAlertValue)
     const criticalValue = Math.max(warningAlertValue, criticalAlertValue)
     const alerts = this.alertsEnabled
@@ -270,8 +279,8 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
 
     return radialBargraphGaugeConfigSchema.parse({
       value: {
-        min: this.minValue,
-        max: this.maxValue,
+        min: range.min,
+        max: range.max,
         current
       },
       size: {
@@ -312,7 +321,7 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       lcdDecimals: this.lcdDecimals,
       indicators: {
         threshold: {
-          value: this.threshold,
+          value: thresholdValue,
           show: this.showThreshold
         },
         alerts,
@@ -342,7 +351,8 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
     this.canvasElement.height = this.size
 
     const paint = this.getThemePaint()
-    const nextValue = this.value
+    const range = this.normalizedRange(this.minValue, this.maxValue)
+    const nextValue = this.normalizeInRange(this.value, range.min, range.max, this.currentValue)
     this.animationHandle?.cancel()
 
     try {

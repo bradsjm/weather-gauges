@@ -162,12 +162,21 @@ export class SteelseriesWindRoseV3Element extends SteelseriesGaugeElement {
   }
 
   private buildConfig(): WindRoseGaugeConfig {
-    const maxFromPetals = this.petals.reduce((max, petal) => Math.max(max, petal.value), 0)
-    const maxValue = this.maxValue > 0 ? this.maxValue : Math.max(1, maxFromPetals)
+    const petals = this.petals.map((petal, index) => {
+      const fallbackDirection = index * (360 / Math.max(this.petals.length, 1))
+      return {
+        ...petal,
+        direction: this.normalizeInRange(petal.direction, 0, 360, fallbackDirection),
+        value: this.normalizeNonNegative(petal.value, 0)
+      }
+    })
+    const maxFromPetals = petals.reduce((max, petal) => Math.max(max, petal.value), 0)
+    const normalizedMaxValue = this.normalizeNonNegative(this.maxValue, maxFromPetals)
+    const maxValue = normalizedMaxValue > 0 ? normalizedMaxValue : Math.max(1, maxFromPetals)
 
     return windRoseGaugeConfigSchema.parse({
       value: {
-        petals: this.petals,
+        petals,
         maxValue
       },
       size: {

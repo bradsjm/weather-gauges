@@ -26,8 +26,8 @@ export const windDirectionPointerSchema = z
 
 export const windDirectionValueSchema = z
   .object({
-    latest: z.number().finite().default(0),
-    average: z.number().finite().default(0)
+    latest: z.number().finite().min(0).max(360).default(0),
+    average: z.number().finite().min(0).max(360).default(0)
   })
   .strict()
 
@@ -43,7 +43,7 @@ export const windDirectionSectionSchema = gaugeAngleSectionSchema
 export const windDirectionAlertSchema = z
   .object({
     id: z.string().min(1),
-    heading: z.number().finite(),
+    heading: z.number().finite().min(0).max(360),
     severity: z.enum(['info', 'warning', 'critical']).default('warning'),
     message: z.string().min(1)
   })

@@ -84,14 +84,12 @@ export const toGaugeContractState = (
     | WindDirectionRenderResult
     | WindRoseRenderResult
 ): GaugeContractState => {
-  let reading: number
-  if ('heading' in result) {
-    reading = result.heading
-  } else if ('average' in result) {
-    reading = result.average
-  } else {
-    reading = result.value
-  }
+  const reading =
+    kind === 'compass'
+      ? (result as CompassRenderResult).heading
+      : kind === 'wind-direction'
+        ? (result as WindDirectionRenderResult).average
+        : (result as RadialRenderResult | RadialBargraphRenderResult | WindRoseRenderResult).value
 
   return {
     kind,
