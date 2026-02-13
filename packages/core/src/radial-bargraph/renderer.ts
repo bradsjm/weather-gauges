@@ -27,6 +27,11 @@ import { resolveRadialTrendPalette } from '../render/trend-palette.js'
 import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
 import { drawGaugeRadialThreshold } from '../render/gauge-threshold.js'
 import { resolveGaugeValueSectionArcs, type GaugeSectionArc } from '../render/gauge-sections.js'
+import {
+  createStaticLayerCache,
+  resizeStaticLayerCache,
+  type StaticLayerCache
+} from '../render/static-layer-cache.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   RadialBargraphAlert,
@@ -554,6 +559,154 @@ const drawForeground = (
   drawGaugeRadialForegroundByType(context, config.style.foregroundType, centerX, centerY, radius)
 }
 
+const radialBargraphStaticLayerCaches = new WeakMap<RadialBargraphDrawContext, StaticLayerCache>()
+const radialBargraphStaticLayerUnavailable = new WeakSet<RadialBargraphDrawContext>()
+
+const getRadialBargraphStaticLayerCache = (
+  context: RadialBargraphDrawContext,
+  width: number,
+  height: number
+): StaticLayerCache | null => {
+  if (radialBargraphStaticLayerUnavailable.has(context)) {
+    return null
+  }
+
+  const existing = radialBargraphStaticLayerCaches.get(context)
+  if (existing !== undefined) {
+    resizeStaticLayerCache(existing, width, height)
+    return existing
+  }
+
+  const created = createStaticLayerCache(width, height)
+  if (created === null) {
+    radialBargraphStaticLayerUnavailable.add(context)
+    return null
+  }
+
+  radialBargraphStaticLayerCaches.set(context, created)
+  return created
+}
+
+const resolveRadialBargraphStaticLayerSignature = (
+  config: RadialBargraphGaugeConfig,
+  paint: ThemePaint,
+  scale: {
+    minValue: number
+    maxValue: number
+    range: number
+    majorTickSpacing: number
+    minorTickSpacing: number
+  }
+): string => {
+  return JSON.stringify({
+    config,
+    paint,
+    scale
+  })
+}
+
+const drawStaticLayer = (
+  context: RadialBargraphDrawContext,
+  config: RadialBargraphGaugeConfig,
+  size: number,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  geometry: GaugeGeometry,
+  resolvedScale: {
+    minValue: number
+    maxValue: number
+    range: number
+    majorTickSpacing: number
+    minorTickSpacing: number
+  },
+  paint: ThemePaint
+): void => {
+  context.clearRect(0, 0, config.size.width, config.size.height)
+  drawFrameBackground(context, config, size, centerX, centerY, radius, paint)
+  drawTrackAndInactiveLeds(context, size, geometry, centerX, centerY)
+  drawTickMarks(context, config, geometry, resolvedScale, size, centerX, centerY)
+  drawTitleAndUnit(context, config, size, centerX)
+  drawThresholdIndicator(
+    context,
+    config.indicators.threshold,
+    geometry,
+    resolvedScale,
+    size,
+    centerX,
+    centerY
+  )
+  drawForeground(context, config, centerX, centerY, radius)
+}
+
+const drawDynamicLayer = (
+  context: RadialBargraphDrawContext,
+  config: RadialBargraphGaugeConfig,
+  clampedValue: number,
+  size: number,
+  geometry: GaugeGeometry,
+  resolvedScale: { minValue: number; maxValue: number; range: number },
+  sectionAngles: GaugeSectionArc[],
+  gradientSampler: ((fraction: number) => string) | undefined,
+  paint: ThemePaint,
+  trendPalette: ReturnType<typeof resolveRadialTrendPalette>
+): void => {
+  drawActiveLeds(
+    context,
+    config,
+    clampedValue,
+    size,
+    geometry,
+    resolvedScale,
+    sectionAngles,
+    gradientSampler
+  )
+
+  if (config.visibility.showLcd) {
+    drawRadialLcd(
+      context,
+      config.style.lcdColor,
+      config.style.digitalFont,
+      config.lcdDecimals,
+      clampedValue,
+      size,
+      paint
+    )
+  }
+
+  const ledSize = Math.ceil(size * 0.093457)
+  const ledRadius = ledSize * 0.5
+  drawRadialSimpleLed(
+    context,
+    0.53 * size + ledRadius,
+    0.61 * size + ledRadius,
+    ledSize,
+    '#ff2a2a',
+    config.indicators.ledVisible
+  )
+
+  const userLedX = config.style.gaugeType === 'type3' ? 0.7 * size : size * 0.5
+  const userLedY = config.style.gaugeType === 'type3' ? 0.61 * size : 0.75 * size
+  drawRadialSimpleLed(
+    context,
+    userLedX + ledRadius,
+    userLedY + ledRadius,
+    ledSize,
+    '#00c74a',
+    config.indicators.userLedVisible
+  )
+
+  drawRadialTrendIndicator(
+    context,
+    config.indicators.trendVisible,
+    config.indicators.trendState,
+    size,
+    0.38 * size,
+    0.57 * size,
+    trendPalette
+  )
+}
+
 const drawActiveLeds = (
   context: RadialBargraphDrawContext,
   config: RadialBargraphGaugeConfig,
@@ -670,14 +823,41 @@ export const renderRadialBargraphGauge = (
   const centerX = size * 0.5
   const centerY = size * 0.5
   const radius = size * 0.48
+  const staticLayerSignature = resolveRadialBargraphStaticLayerSignature(
+    config,
+    paint,
+    resolvedScale
+  )
 
   context.clearRect(0, 0, config.size.width, config.size.height)
 
-  drawFrameBackground(context, config, size, centerX, centerY, radius, paint)
-  drawTrackAndInactiveLeds(context, size, geometry, centerX, centerY)
-  drawTickMarks(context, config, geometry, resolvedScale, size, centerX, centerY)
-  drawTitleAndUnit(context, config, size, centerX)
-  drawActiveLeds(
+  const staticLayerCache = getRadialBargraphStaticLayerCache(
+    context,
+    config.size.width,
+    config.size.height
+  )
+  if (staticLayerCache !== null) {
+    if (staticLayerCache.signature !== staticLayerSignature) {
+      drawStaticLayer(
+        staticLayerCache.context,
+        config,
+        size,
+        centerX,
+        centerY,
+        radius,
+        geometry,
+        resolvedScale,
+        paint
+      )
+      staticLayerCache.signature = staticLayerSignature
+    }
+
+    context.drawImage(staticLayerCache.canvas, 0, 0)
+  } else {
+    drawStaticLayer(context, config, size, centerX, centerY, radius, geometry, resolvedScale, paint)
+  }
+
+  drawDynamicLayer(
     context,
     config,
     clampedValue,
@@ -685,61 +865,10 @@ export const renderRadialBargraphGauge = (
     geometry,
     resolvedScale,
     sectionAngles,
-    gradientSampler
-  )
-  drawThresholdIndicator(
-    context,
-    config.indicators.threshold,
-    geometry,
-    resolvedScale,
-    size,
-    centerX,
-    centerY
-  )
-  if (config.visibility.showLcd) {
-    drawRadialLcd(
-      context,
-      config.style.lcdColor,
-      config.style.digitalFont,
-      config.lcdDecimals,
-      clampedValue,
-      size,
-      paint
-    )
-  }
-
-  const ledSize = Math.ceil(size * 0.093457)
-  const ledRadius = ledSize * 0.5
-  drawRadialSimpleLed(
-    context,
-    0.53 * size + ledRadius,
-    0.61 * size + ledRadius,
-    ledSize,
-    '#ff2a2a',
-    config.indicators.ledVisible
-  )
-
-  const userLedX = config.style.gaugeType === 'type3' ? 0.7 * size : size * 0.5
-  const userLedY = config.style.gaugeType === 'type3' ? 0.61 * size : 0.75 * size
-  drawRadialSimpleLed(
-    context,
-    userLedX + ledRadius,
-    userLedY + ledRadius,
-    ledSize,
-    '#00c74a',
-    config.indicators.userLedVisible
-  )
-
-  drawRadialTrendIndicator(
-    context,
-    config.indicators.trendVisible,
-    config.indicators.trendState,
-    size,
-    0.38 * size,
-    0.57 * size,
+    gradientSampler,
+    paint,
     trendPalette
   )
-  drawForeground(context, config, centerX, centerY, radius)
 
   return {
     value: clampedValue,

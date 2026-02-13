@@ -28,6 +28,11 @@ import { drawRadialSimpleLed } from '../render/radial-led.js'
 import { drawRadialTrendIndicator } from '../render/radial-trend.js'
 import { resolveRadialTrendPalette } from '../render/trend-palette.js'
 import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
+import {
+  createStaticLayerCache,
+  resizeStaticLayerCache,
+  type StaticLayerCache
+} from '../render/static-layer-cache.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
   RadialAlert,
@@ -667,34 +672,86 @@ const drawForeground = (
   }
 }
 
-export const renderRadialGauge = (
+const radialStaticLayerCaches = new WeakMap<RadialDrawContext, StaticLayerCache>()
+const radialStaticLayerUnavailable = new WeakSet<RadialDrawContext>()
+
+const getRadialStaticLayerCache = (
+  context: RadialDrawContext,
+  width: number,
+  height: number
+): StaticLayerCache | null => {
+  if (radialStaticLayerUnavailable.has(context)) {
+    return null
+  }
+
+  const existing = radialStaticLayerCaches.get(context)
+  if (existing !== undefined) {
+    resizeStaticLayerCache(existing, width, height)
+    return existing
+  }
+
+  const created = createStaticLayerCache(width, height)
+  if (created === null) {
+    radialStaticLayerUnavailable.add(context)
+    return null
+  }
+
+  radialStaticLayerCaches.set(context, created)
+  return created
+}
+
+const resolveStaticLayerSignature = (config: RadialGaugeConfig, paint: ThemePaint): string => {
+  return JSON.stringify({
+    size: config.size,
+    style: {
+      gaugeType: config.style.gaugeType,
+      orientation: config.style.orientation,
+      frameDesign: config.style.frameDesign,
+      backgroundColor: config.style.backgroundColor,
+      foregroundType: config.style.foregroundType,
+      pointerType: config.style.pointerType
+    },
+    visibility: {
+      showFrame: config.visibility.showFrame,
+      showBackground: config.visibility.showBackground,
+      showForeground: config.visibility.showForeground
+    },
+    value: {
+      min: config.value.min,
+      max: config.value.max
+    },
+    scale: config.scale,
+    text: config.text,
+    segments: config.segments,
+    areas: config.areas,
+    indicators: {
+      threshold: config.indicators.threshold,
+      minMeasuredValueVisible: config.indicators.minMeasuredValueVisible,
+      minMeasuredValue: config.indicators.minMeasuredValue,
+      maxMeasuredValueVisible: config.indicators.maxMeasuredValueVisible,
+      maxMeasuredValue: config.indicators.maxMeasuredValue
+    },
+    paint
+  })
+}
+
+const drawStaticLayer = (
   context: RadialDrawContext,
   config: RadialGaugeConfig,
-  options: RadialRenderOptions = {}
-): RadialRenderResult => {
-  const paint = mergePaint(options.paint)
-  const minValue = config.value.min
-  const maxValue = config.value.max
-  const clampedValue = clamp(options.value ?? config.value.current, minValue, maxValue)
-  const geometry = resolveGeometry(config)
-
-  const activeAlerts = resolveGaugeValueAlerts(clampedValue, config.indicators.alerts)
-  const thresholdBreached =
-    config.indicators.threshold !== undefined &&
-    config.indicators.threshold.show &&
-    clampedValue >= config.indicators.threshold.value
-  const tone = resolveGaugeToneFromAlerts(activeAlerts, thresholdBreached)
-
-  const size = Math.min(config.size.width, config.size.height)
-  const centerX = size * 0.5
-  const layout = resolveLayout(size, config.style.gaugeType)
-  const trendPalette = resolveRadialTrendPalette(paint)
-
+  geometry: RadialGeometry,
+  minValue: number,
+  maxValue: number,
+  size: number,
+  centerX: number,
+  layout: RadialLayout,
+  paint: ThemePaint,
+  orientation: RadialOrientation
+): void => {
   context.clearRect(0, 0, config.size.width, config.size.height)
 
   drawFrameBackground(context, config, size, centerX, layout.frameCenterY, layout.radius, paint)
 
-  const drawOrientedContents = (): void => {
+  const drawOrientedStaticContents = (): void => {
     drawSegments(
       context,
       config,
@@ -737,7 +794,28 @@ export const renderRadialGauge = (
       centerX,
       layout.gaugeCenterY
     )
+    drawForeground(context, config, centerX, size, layout)
+  }
 
+  withOrientationTransform(context, orientation, size, drawOrientedStaticContents)
+  drawTitleAndUnit(context, config, size, centerX, layout)
+}
+
+const drawDynamicLayer = (
+  context: RadialDrawContext,
+  config: RadialGaugeConfig,
+  geometry: RadialGeometry,
+  clampedValue: number,
+  minValue: number,
+  maxValue: number,
+  size: number,
+  centerX: number,
+  layout: RadialLayout,
+  paint: ThemePaint,
+  trendPalette: ReturnType<typeof resolveRadialTrendPalette>,
+  orientation: RadialOrientation
+): void => {
+  const drawOrientedDynamicContents = (): void => {
     drawPointer(
       context,
       config,
@@ -776,19 +854,91 @@ export const renderRadialGauge = (
       layout.trendY,
       trendPalette
     )
-
-    drawForeground(context, config, centerX, size, layout)
   }
 
-  const orientation =
-    config.style.gaugeType === 'type5' ? config.style.orientation : ('north' as const)
-  withOrientationTransform(context, orientation, size, drawOrientedContents)
-
-  drawTitleAndUnit(context, config, size, centerX, layout)
+  withOrientationTransform(context, orientation, size, drawOrientedDynamicContents)
 
   if (config.visibility.showLcd) {
     drawLcd(context, clampedValue, size, paint, layout)
   }
+}
+
+export const renderRadialGauge = (
+  context: RadialDrawContext,
+  config: RadialGaugeConfig,
+  options: RadialRenderOptions = {}
+): RadialRenderResult => {
+  const paint = mergePaint(options.paint)
+  const minValue = config.value.min
+  const maxValue = config.value.max
+  const clampedValue = clamp(options.value ?? config.value.current, minValue, maxValue)
+  const geometry = resolveGeometry(config)
+
+  const activeAlerts = resolveGaugeValueAlerts(clampedValue, config.indicators.alerts)
+  const thresholdBreached =
+    config.indicators.threshold !== undefined &&
+    config.indicators.threshold.show &&
+    clampedValue >= config.indicators.threshold.value
+  const tone = resolveGaugeToneFromAlerts(activeAlerts, thresholdBreached)
+
+  const size = Math.min(config.size.width, config.size.height)
+  const centerX = size * 0.5
+  const layout = resolveLayout(size, config.style.gaugeType)
+  const trendPalette = resolveRadialTrendPalette(paint)
+  const orientation =
+    config.style.gaugeType === 'type5' ? config.style.orientation : ('north' as const)
+  const staticLayerSignature = resolveStaticLayerSignature(config, paint)
+
+  context.clearRect(0, 0, config.size.width, config.size.height)
+
+  const staticLayerCache = getRadialStaticLayerCache(context, config.size.width, config.size.height)
+  if (staticLayerCache !== null) {
+    if (staticLayerCache.signature !== staticLayerSignature) {
+      drawStaticLayer(
+        staticLayerCache.context,
+        config,
+        geometry,
+        minValue,
+        maxValue,
+        size,
+        centerX,
+        layout,
+        paint,
+        orientation
+      )
+      staticLayerCache.signature = staticLayerSignature
+    }
+
+    context.drawImage(staticLayerCache.canvas, 0, 0)
+  } else {
+    drawStaticLayer(
+      context,
+      config,
+      geometry,
+      minValue,
+      maxValue,
+      size,
+      centerX,
+      layout,
+      paint,
+      orientation
+    )
+  }
+
+  drawDynamicLayer(
+    context,
+    config,
+    geometry,
+    clampedValue,
+    minValue,
+    maxValue,
+    size,
+    centerX,
+    layout,
+    paint,
+    trendPalette,
+    orientation
+  )
 
   return {
     value: clampedValue,

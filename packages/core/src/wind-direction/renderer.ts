@@ -34,7 +34,11 @@ import {
   configureGaugeTextLayout,
   drawGaugeText
 } from '../render/gauge-text-primitives.js'
-import { runGaugeRenderPipeline, type GaugeRenderContextContract } from '../render/pipeline.js'
+import {
+  createStaticLayerCache,
+  resizeStaticLayerCache,
+  type StaticLayerCache
+} from '../render/static-layer-cache.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { WindDirectionAlert, WindDirectionGaugeConfig } from './schema.js'
 
@@ -65,14 +69,6 @@ export type WindDirectionAnimationOptions = {
   onComplete?: (result: WindDirectionRenderResult) => void
 }
 
-type WindDirectionPipelineContext = GaugeRenderContextContract & {
-  config: WindDirectionGaugeConfig
-  paint: ThemePaint
-  latest: number
-  average: number
-  palette: GaugeBackgroundPalette
-}
-
 const PI = Math.PI
 const RAD_FACTOR = PI / 180
 
@@ -101,6 +97,198 @@ const getWindBackgroundPalette = (
   backgroundColor: WindDirectionGaugeConfig['style']['backgroundColor']
 ): GaugeBackgroundPalette => {
   return getGaugeBackgroundPalette(backgroundColor)
+}
+
+const windDirectionStaticLayerCaches = new WeakMap<WindDirectionDrawContext, StaticLayerCache>()
+const windDirectionStaticLayerUnavailable = new WeakSet<WindDirectionDrawContext>()
+
+const getWindDirectionStaticLayerCache = (
+  context: WindDirectionDrawContext,
+  width: number,
+  height: number
+): StaticLayerCache | null => {
+  if (windDirectionStaticLayerUnavailable.has(context)) {
+    return null
+  }
+
+  const existing = windDirectionStaticLayerCaches.get(context)
+  if (existing !== undefined) {
+    resizeStaticLayerCache(existing, width, height)
+    return existing
+  }
+
+  const created = createStaticLayerCache(width, height)
+  if (created === null) {
+    windDirectionStaticLayerUnavailable.add(context)
+    return null
+  }
+
+  windDirectionStaticLayerCaches.set(context, created)
+  return created
+}
+
+const resolveCustomLayerSignature = (
+  customLayer: WindDirectionGaugeConfig['style']['customLayer']
+): {
+  visible: boolean
+  hasImage: boolean
+  imageWidth: number | null
+  imageHeight: number | null
+} => {
+  const layer = customLayer as
+    | { visible?: boolean; image?: CanvasImageSource | null }
+    | null
+    | undefined
+  const image = layer?.image as { width?: number; height?: number } | null | undefined
+
+  return {
+    visible: layer?.visible ?? false,
+    hasImage: image !== null && image !== undefined,
+    imageWidth: image?.width ?? null,
+    imageHeight: image?.height ?? null
+  }
+}
+
+const resolveWindDirectionStaticLayerSignature = (
+  config: WindDirectionGaugeConfig,
+  paint: ThemePaint
+): string => {
+  return JSON.stringify({
+    size: config.size,
+    style: {
+      frameDesign: config.style.frameDesign,
+      foregroundType: config.style.foregroundType,
+      knobType: config.style.knobType,
+      knobStyle: config.style.knobStyle,
+      backgroundColor: config.style.backgroundColor,
+      pointSymbols: config.style.pointSymbols,
+      customLayer: resolveCustomLayerSignature(config.style.customLayer),
+      pointerLatest: config.style.pointerLatest
+    },
+    visibility: config.visibility,
+    scale: config.scale,
+    sections: config.sections,
+    areas: config.areas,
+    paint
+  })
+}
+
+const drawWindDirectionStaticLayer = (
+  context: WindDirectionDrawContext,
+  config: WindDirectionGaugeConfig,
+  paint: ThemePaint,
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  palette: GaugeBackgroundPalette
+): void => {
+  context.clearRect(0, 0, width, height)
+
+  if (config.visibility.showFrame) {
+    drawGaugeRadialFrameByDesign(
+      context,
+      config.style.frameDesign,
+      centerX,
+      centerY,
+      Math.min(width, height) / 2
+    )
+  }
+
+  if (config.visibility.showBackground) {
+    drawRadialBackground(
+      context,
+      config.style.backgroundColor,
+      width,
+      centerX,
+      centerY,
+      Math.min(width, height) / 2,
+      paint,
+      rgbTupleToCss(palette.labelColor)
+    )
+
+    const customLayer = config.style.customLayer as
+      | { visible?: boolean; image?: CanvasImageSource }
+      | undefined
+    if (customLayer?.image && customLayer.visible) {
+      context.drawImage(customLayer.image, 0, 0, width, height)
+    }
+
+    if (config.areas.length > 0) {
+      drawGaugeSectionArcs(
+        context,
+        config.areas.map((section) => ({
+          startDeg: section.start,
+          stopDeg: section.stop,
+          color: section.color
+        })),
+        {
+          centerX,
+          centerY,
+          innerRadius: radius * 0.4,
+          outerRadius: radius * 0.75,
+          filled: true
+        }
+      )
+    }
+
+    if (config.sections.length > 0) {
+      drawGaugeSectionArcs(
+        context,
+        config.sections.map((section) => ({
+          startDeg: section.start,
+          stopDeg: section.stop,
+          color: section.color
+        })),
+        {
+          centerX,
+          centerY,
+          innerRadius: radius * 0.4,
+          outerRadius: radius * 0.75
+        }
+      )
+    }
+
+    if (config.visibility.showRose) {
+      drawSharedCompassRose(context, centerX, centerY, width, height, palette.symbolColor)
+    }
+
+    if (config.visibility.showDegreeScale || config.visibility.showPointSymbols) {
+      drawWindDirectionCompassTicks(context, config, width, palette)
+    }
+  }
+
+  if (config.visibility.showForeground) {
+    drawGaugeRadialForegroundByType(
+      context,
+      config.style.foregroundType,
+      centerX,
+      centerY,
+      width / 2
+    )
+
+    const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
+    if (showKnob) {
+      drawGaugeCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
+    }
+  }
+}
+
+const drawWindDirectionDynamicLayer = (
+  context: WindDirectionDrawContext,
+  config: WindDirectionGaugeConfig,
+  centerX: number,
+  centerY: number,
+  width: number,
+  latest: number,
+  average: number
+): void => {
+  if (config.visibility.showLcd) {
+    drawLcds(context, config, centerX, centerY, width, latest, average)
+  }
+
+  drawPointers(context, config, centerX, centerY, width, latest, average)
 }
 
 const drawWindDirectionCompassTicks = (
@@ -312,126 +500,43 @@ export const renderWindDirectionGauge = (
   const latest = normalizeAngle360(options.latest ?? config.value.latest)
   const average = normalizeAngle360(options.average ?? config.value.average)
   const palette = getWindBackgroundPalette(config.style.backgroundColor)
+  const staticLayerSignature = resolveWindDirectionStaticLayerSignature(config, paint)
 
   context.clearRect(0, 0, width, height)
 
-  const pipelineContext: WindDirectionPipelineContext = {
-    context,
-    config,
-    paint,
-    latest,
-    average,
-    palette,
-    width,
-    height,
-    centerX,
-    centerY,
-    radius
+  const staticLayerCache = getWindDirectionStaticLayerCache(context, width, height)
+  if (staticLayerCache !== null) {
+    if (staticLayerCache.signature !== staticLayerSignature) {
+      drawWindDirectionStaticLayer(
+        staticLayerCache.context,
+        config,
+        paint,
+        width,
+        height,
+        centerX,
+        centerY,
+        radius,
+        palette
+      )
+      staticLayerCache.signature = staticLayerSignature
+    }
+
+    context.drawImage(staticLayerCache.canvas, 0, 0)
+  } else {
+    drawWindDirectionStaticLayer(
+      context,
+      config,
+      paint,
+      width,
+      height,
+      centerX,
+      centerY,
+      radius,
+      palette
+    )
   }
 
-  runGaugeRenderPipeline(pipelineContext, {
-    drawFrame: () => {
-      if (!config.visibility.showFrame) {
-        return
-      }
-
-      drawGaugeRadialFrameByDesign(
-        context,
-        config.style.frameDesign,
-        centerX,
-        centerY,
-        Math.min(width, height) / 2
-      )
-    },
-    drawBackground: () => {
-      if (!config.visibility.showBackground) {
-        return
-      }
-
-      drawRadialBackground(
-        context,
-        config.style.backgroundColor,
-        width,
-        centerX,
-        centerY,
-        Math.min(width, height) / 2,
-        paint,
-        rgbTupleToCss(palette.labelColor)
-      )
-
-      if (config.style.customLayer?.image && config.style.customLayer.visible) {
-        context.drawImage(config.style.customLayer.image, 0, 0, width, height)
-      }
-
-      if (config.areas.length > 0) {
-        drawGaugeSectionArcs(
-          context,
-          config.areas.map((section) => ({
-            startDeg: section.start,
-            stopDeg: section.stop,
-            color: section.color
-          })),
-          {
-            centerX,
-            centerY,
-            innerRadius: radius * 0.4,
-            outerRadius: radius * 0.75,
-            filled: true
-          }
-        )
-      }
-
-      if (config.sections.length > 0) {
-        drawGaugeSectionArcs(
-          context,
-          config.sections.map((section) => ({
-            startDeg: section.start,
-            stopDeg: section.stop,
-            color: section.color
-          })),
-          {
-            centerX,
-            centerY,
-            innerRadius: radius * 0.4,
-            outerRadius: radius * 0.75
-          }
-        )
-      }
-
-      if (config.visibility.showRose) {
-        drawSharedCompassRose(context, centerX, centerY, width, height, palette.symbolColor)
-      }
-
-      if (config.visibility.showDegreeScale || config.visibility.showPointSymbols) {
-        drawWindDirectionCompassTicks(context, config, width, palette)
-      }
-    },
-    drawContent: () => {
-      if (config.visibility.showLcd) {
-        drawLcds(context, config, centerX, centerY, width, latest, average)
-      }
-
-      drawPointers(context, config, centerX, centerY, width, latest, average)
-    },
-    drawForeground: () => {
-      if (!config.visibility.showForeground) {
-        return
-      }
-
-      drawGaugeRadialForegroundByType(
-        context,
-        config.style.foregroundType,
-        centerX,
-        centerY,
-        width / 2
-      )
-
-      const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
-      if (showKnob) {
-        drawGaugeCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
-      }
-    }
-  })
+  drawWindDirectionDynamicLayer(context, config, centerX, centerY, width, latest, average)
 
   const activeAlerts = resolveGaugeHeadingAlerts<WindDirectionAlert>(
     latest,

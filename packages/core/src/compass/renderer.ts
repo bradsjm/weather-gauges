@@ -12,7 +12,11 @@ import { drawCompassPointer, resolveCompassPointerColor } from '../render/compas
 import { normalizeAngleInRange } from '../render/gauge-angles.js'
 import { drawCompassRose, drawCompassTickmarks } from '../render/compass-scales.js'
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
-import { runGaugeRenderPipeline, type GaugeRenderContextContract } from '../render/pipeline.js'
+import {
+  createStaticLayerCache,
+  resizeStaticLayerCache,
+  type StaticLayerCache
+} from '../render/static-layer-cache.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { CompassAlert, CompassGaugeConfig } from './schema.js'
 import {
@@ -46,17 +50,6 @@ export type CompassAnimationOptions = {
   onComplete?: (result: CompassRenderResult) => void
 }
 
-type CompassPipelineContext = GaugeRenderContextContract & {
-  config: CompassGaugeConfig
-  paint: ThemePaint
-  heading: number
-  imageWidth: number
-  showHeadingReadout: boolean
-  backgroundPalette: ReturnType<typeof getCompassBackgroundPalette>
-  pointerColorName: CompassGaugeConfig['style']['pointerColor']
-  canTransform: boolean
-}
-
 const PI = Math.PI
 const RAD_FACTOR = PI / 180
 
@@ -67,6 +60,233 @@ const mergePaint = (paint?: Partial<ThemePaint>): ThemePaint => ({
 
 const rgb = (value: readonly [number, number, number]): string =>
   `rgb(${value[0]}, ${value[1]}, ${value[2]})`
+
+const compassStaticLayerCaches = new WeakMap<CompassDrawContext, StaticLayerCache>()
+const compassStaticLayerUnavailable = new WeakSet<CompassDrawContext>()
+
+const getCompassStaticLayerCache = (
+  context: CompassDrawContext,
+  width: number,
+  height: number
+): StaticLayerCache | null => {
+  if (compassStaticLayerUnavailable.has(context)) {
+    return null
+  }
+
+  const existing = compassStaticLayerCaches.get(context)
+  if (existing !== undefined) {
+    resizeStaticLayerCache(existing, width, height)
+    return existing
+  }
+
+  const created = createStaticLayerCache(width, height)
+  if (created === null) {
+    compassStaticLayerUnavailable.add(context)
+    return null
+  }
+
+  compassStaticLayerCaches.set(context, created)
+  return created
+}
+
+const resolveCustomLayerSignature = (
+  customLayer: CompassGaugeConfig['style']['customLayer']
+): {
+  visible: boolean
+  hasImage: boolean
+  imageWidth: number | null
+  imageHeight: number | null
+} => {
+  const layer = customLayer as
+    | { visible?: boolean; image?: CanvasImageSource | null }
+    | null
+    | undefined
+  const image = layer?.image as { width?: number; height?: number } | null | undefined
+
+  return {
+    visible: layer?.visible ?? false,
+    hasImage: image !== null && image !== undefined,
+    imageWidth: image?.width ?? null,
+    imageHeight: image?.height ?? null
+  }
+}
+
+const resolveCompassStaticLayerSignature = (
+  config: CompassGaugeConfig,
+  paint: ThemePaint
+): string => {
+  return JSON.stringify({
+    size: config.size,
+    style: {
+      frameDesign: config.style.frameDesign,
+      foregroundType: config.style.foregroundType,
+      knobType: config.style.knobType,
+      knobStyle: config.style.knobStyle,
+      backgroundColor: config.style.backgroundColor,
+      pointSymbols: config.style.pointSymbols,
+      rotateFace: config.style.rotateFace,
+      roseVisible: config.style.roseVisible,
+      showTickmarks: config.style.showTickmarks,
+      customLayer: resolveCustomLayerSignature(config.style.customLayer)
+    },
+    scale: config.scale,
+    visibility: config.visibility,
+    text: config.text,
+    paint
+  })
+}
+
+const drawCompassStaticLayer = (
+  context: CompassDrawContext,
+  config: CompassGaugeConfig,
+  imageWidth: number,
+  centerX: number,
+  centerY: number,
+  backgroundPalette: ReturnType<typeof getCompassBackgroundPalette>
+): void => {
+  context.clearRect(0, 0, config.size.width, config.size.height)
+
+  if (config.visibility.showFrame) {
+    drawCompassFrame(context, config.style.frameDesign, centerX, centerY, imageWidth, imageWidth)
+  }
+
+  if (config.visibility.showBackground) {
+    drawCompassBackground(context, config.style.backgroundColor, centerX, centerY, imageWidth)
+  }
+
+  const customLayer = config.style.customLayer as
+    | { image?: CanvasImageSource | null }
+    | null
+    | undefined
+  drawCompassCustomImage(
+    context,
+    customLayer?.image ?? null,
+    centerX,
+    centerY,
+    imageWidth,
+    imageWidth
+  )
+
+  if (!config.style.rotateFace) {
+    if (config.style.roseVisible && config.visibility.showBackground) {
+      drawCompassRose(
+        context,
+        centerX,
+        centerY,
+        imageWidth,
+        imageWidth,
+        backgroundPalette.symbolColor
+      )
+    }
+
+    drawCompassTickmarks(
+      context,
+      config,
+      imageWidth,
+      config.style.pointSymbols,
+      backgroundPalette.labelColor,
+      backgroundPalette.symbolColor,
+      {
+        degreeScaleHalf: config.scale.degreeScaleHalf,
+        showTickmarks: config.style.showTickmarks
+      }
+    )
+  }
+
+  if (config.visibility.showForeground) {
+    drawCompassForeground(
+      context,
+      config.style.foregroundType,
+      imageWidth,
+      imageWidth,
+      config.style.knobType,
+      config.style.knobStyle
+    )
+  }
+}
+
+const drawCompassDynamicLayer = (
+  context: CompassDrawContext,
+  config: CompassGaugeConfig,
+  paint: ThemePaint,
+  heading: number,
+  showHeadingReadout: boolean,
+  imageWidth: number,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  pointerColorName: CompassGaugeConfig['style']['pointerColor'],
+  backgroundPalette: ReturnType<typeof getCompassBackgroundPalette>,
+  canTransform: boolean
+): void => {
+  if (canTransform) {
+    if (config.style.rotateFace) {
+      context.save()
+      context.translate(centerX, centerY)
+      context.rotate(-(heading * RAD_FACTOR))
+      context.translate(-centerX, -centerY)
+
+      if (config.style.roseVisible && config.visibility.showBackground) {
+        drawCompassRose(
+          context,
+          centerX,
+          centerY,
+          imageWidth,
+          imageWidth,
+          backgroundPalette.symbolColor
+        )
+      }
+
+      drawCompassTickmarks(
+        context,
+        config,
+        imageWidth,
+        config.style.pointSymbols,
+        backgroundPalette.labelColor,
+        backgroundPalette.symbolColor,
+        {
+          degreeScaleHalf: config.scale.degreeScaleHalf,
+          showTickmarks: config.style.showTickmarks
+        }
+      )
+
+      context.restore()
+    }
+  }
+
+  if (canTransform) {
+    context.save()
+    context.translate(centerX, centerY)
+    if (!config.style.rotateFace) {
+      context.rotate(heading * RAD_FACTOR)
+    }
+
+    context.translate(-centerX, -centerY)
+    context.shadowColor = 'rgba(0, 0, 0, 0.8)'
+    context.shadowOffsetX = imageWidth * compassShadowRatios.pointerOffset
+    context.shadowOffsetY = imageWidth * compassShadowRatios.pointerOffset
+    context.shadowBlur = imageWidth * compassShadowRatios.pointerBlur
+    drawCompassPointer(
+      context,
+      config.style.pointerType,
+      resolveCompassPointerColor(pointerColorName),
+      imageWidth
+    )
+    context.restore()
+  } else {
+    context.beginPath()
+    context.moveTo(centerX, centerY)
+    context.lineTo(centerX, centerY - radius * compassGeometryRatios.fallbackPointerLength)
+    context.strokeStyle = rgb(resolveCompassPointerColor(pointerColorName).medium)
+    context.lineWidth = Math.max(
+      compassFallbackPointerMinLineWidth,
+      radius * compassGeometryRatios.fallbackPointerLineWidth
+    )
+    context.stroke()
+  }
+
+  drawCompassLabels(context, config, paint, heading, showHeadingReadout, centerX, centerY, radius)
+}
 
 export const renderCompassGauge = (
   context: CompassDrawContext,
@@ -94,158 +314,47 @@ export const renderCompassGauge = (
   const backgroundPalette = getCompassBackgroundPalette(config.style.backgroundColor)
   const canTransform =
     typeof context.translate === 'function' && typeof context.rotate === 'function'
+  const staticLayerSignature = resolveCompassStaticLayerSignature(config, paint)
 
   context.clearRect(0, 0, config.size.width, config.size.height)
 
-  const pipelineContext: CompassPipelineContext = {
+  const staticLayerCache = getCompassStaticLayerCache(
+    context,
+    config.size.width,
+    config.size.height
+  )
+  if (staticLayerCache !== null) {
+    if (staticLayerCache.signature !== staticLayerSignature) {
+      drawCompassStaticLayer(
+        staticLayerCache.context,
+        config,
+        imageWidth,
+        centerX,
+        centerY,
+        backgroundPalette
+      )
+      staticLayerCache.signature = staticLayerSignature
+    }
+
+    context.drawImage(staticLayerCache.canvas, 0, 0)
+  } else {
+    drawCompassStaticLayer(context, config, imageWidth, centerX, centerY, backgroundPalette)
+  }
+
+  drawCompassDynamicLayer(
     context,
     config,
     paint,
     heading,
-    width: config.size.width,
-    height: config.size.height,
+    showHeadingReadout,
+    imageWidth,
     centerX,
     centerY,
     radius,
-    imageWidth,
-    showHeadingReadout,
-    backgroundPalette,
     pointerColorName,
+    backgroundPalette,
     canTransform
-  }
-
-  runGaugeRenderPipeline(pipelineContext, {
-    drawFrame: () => {
-      if (!config.visibility.showFrame) {
-        return
-      }
-
-      drawCompassFrame(context, config.style.frameDesign, centerX, centerY, imageWidth, imageWidth)
-    },
-    drawBackground: () => {
-      if (config.visibility.showBackground) {
-        drawCompassBackground(context, config.style.backgroundColor, centerX, centerY, imageWidth)
-      }
-
-      const customLayer = config.style.customLayer as CanvasImageSource | null | undefined
-      drawCompassCustomImage(context, customLayer ?? null, centerX, centerY, imageWidth, imageWidth)
-    },
-    drawContent: () => {
-      if (canTransform) {
-        if (config.style.rotateFace) {
-          context.save()
-          context.translate(centerX, centerY)
-          context.rotate(-(heading * RAD_FACTOR))
-          context.translate(-centerX, -centerY)
-
-          if (config.style.roseVisible && config.visibility.showBackground) {
-            drawCompassRose(
-              context,
-              centerX,
-              centerY,
-              imageWidth,
-              imageWidth,
-              backgroundPalette.symbolColor
-            )
-          }
-
-          drawCompassTickmarks(
-            context,
-            config,
-            imageWidth,
-            config.style.pointSymbols,
-            backgroundPalette.labelColor,
-            backgroundPalette.symbolColor,
-            {
-              degreeScaleHalf: config.scale.degreeScaleHalf,
-              showTickmarks: config.style.showTickmarks
-            }
-          )
-
-          context.restore()
-        } else {
-          if (config.style.roseVisible && config.visibility.showBackground) {
-            drawCompassRose(
-              context,
-              centerX,
-              centerY,
-              imageWidth,
-              imageWidth,
-              backgroundPalette.symbolColor
-            )
-          }
-
-          drawCompassTickmarks(
-            context,
-            config,
-            imageWidth,
-            config.style.pointSymbols,
-            backgroundPalette.labelColor,
-            backgroundPalette.symbolColor,
-            {
-              degreeScaleHalf: config.scale.degreeScaleHalf,
-              showTickmarks: config.style.showTickmarks
-            }
-          )
-        }
-      }
-
-      if (canTransform) {
-        context.save()
-        context.translate(centerX, centerY)
-        if (!config.style.rotateFace) {
-          context.rotate(heading * RAD_FACTOR)
-        }
-
-        context.translate(-centerX, -centerY)
-        context.shadowColor = 'rgba(0, 0, 0, 0.8)'
-        context.shadowOffsetX = imageWidth * compassShadowRatios.pointerOffset
-        context.shadowOffsetY = imageWidth * compassShadowRatios.pointerOffset
-        context.shadowBlur = imageWidth * compassShadowRatios.pointerBlur
-        drawCompassPointer(
-          context,
-          config.style.pointerType,
-          resolveCompassPointerColor(pointerColorName),
-          imageWidth
-        )
-        context.restore()
-        return
-      }
-
-      context.beginPath()
-      context.moveTo(centerX, centerY)
-      context.lineTo(centerX, centerY - radius * compassGeometryRatios.fallbackPointerLength)
-      context.strokeStyle = rgb(resolveCompassPointerColor(pointerColorName).medium)
-      context.lineWidth = Math.max(
-        compassFallbackPointerMinLineWidth,
-        radius * compassGeometryRatios.fallbackPointerLineWidth
-      )
-      context.stroke()
-    },
-    drawForeground: () => {
-      if (config.visibility.showForeground) {
-        drawCompassForeground(
-          context,
-          config.style.foregroundType,
-          imageWidth,
-          imageWidth,
-          config.style.knobType,
-          config.style.knobStyle
-        )
-      }
-
-      drawCompassLabels(
-        context,
-        config,
-        paint,
-        heading,
-        showHeadingReadout,
-        centerX,
-        centerY,
-        radius
-      )
-    }
-  })
+  )
 
   return {
     heading,

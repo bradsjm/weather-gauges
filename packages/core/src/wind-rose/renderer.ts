@@ -21,7 +21,11 @@ import {
   configureGaugeTextLayout,
   drawGaugeText
 } from '../render/gauge-text-primitives.js'
-import { runGaugeRenderPipeline, type GaugeRenderContextContract } from '../render/pipeline.js'
+import {
+  createStaticLayerCache,
+  resizeStaticLayerCache,
+  type StaticLayerCache
+} from '../render/static-layer-cache.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type { WindRoseGaugeConfig, WindRosePetal, WindRoseValue } from './schema.js'
 
@@ -48,13 +52,6 @@ export type WindRoseAnimationOptions = {
   paint?: Partial<ThemePaint>
   onFrame?: (result: WindRoseRenderResult) => void
   onComplete?: (result: WindRoseRenderResult) => void
-}
-
-type WindRosePipelineContext = GaugeRenderContextContract & {
-  config: WindRoseGaugeConfig
-  paint: ThemePaint
-  value: WindRoseValue
-  palette: GaugeBackgroundPalette
 }
 
 type CompassPointSymbolsTuple = readonly [
@@ -132,6 +129,151 @@ const getWindBackgroundPalette = (
   backgroundColor: WindRoseGaugeConfig['style']['backgroundColor']
 ): GaugeBackgroundPalette => {
   return getGaugeBackgroundPalette(backgroundColor)
+}
+
+const windRoseStaticLayerCaches = new WeakMap<WindRoseDrawContext, StaticLayerCache>()
+const windRoseStaticLayerUnavailable = new WeakSet<WindRoseDrawContext>()
+
+const getWindRoseStaticLayerCache = (
+  context: WindRoseDrawContext,
+  width: number,
+  height: number
+): StaticLayerCache | null => {
+  if (windRoseStaticLayerUnavailable.has(context)) {
+    return null
+  }
+
+  const existing = windRoseStaticLayerCaches.get(context)
+  if (existing !== undefined) {
+    resizeStaticLayerCache(existing, width, height)
+    return existing
+  }
+
+  const created = createStaticLayerCache(width, height)
+  if (created === null) {
+    windRoseStaticLayerUnavailable.add(context)
+    return null
+  }
+
+  windRoseStaticLayerCaches.set(context, created)
+  return created
+}
+
+const resolveCustomLayerSignature = (
+  customLayer: WindRoseGaugeConfig['style']['customLayer']
+): {
+  visible: boolean
+  hasImage: boolean
+  imageWidth: number | null
+  imageHeight: number | null
+} => {
+  const layer = customLayer as
+    | { visible?: boolean; image?: CanvasImageSource | null }
+    | null
+    | undefined
+  const image = layer?.image as { width?: number; height?: number } | null | undefined
+
+  return {
+    visible: layer?.visible ?? false,
+    hasImage: image !== null && image !== undefined,
+    imageWidth: image?.width ?? null,
+    imageHeight: image?.height ?? null
+  }
+}
+
+const resolveWindRoseStaticLayerSignature = (
+  config: WindRoseGaugeConfig,
+  paint: ThemePaint,
+  petalCount: number
+): string => {
+  return JSON.stringify({
+    size: config.size,
+    style: {
+      frameDesign: config.style.frameDesign,
+      foregroundType: config.style.foregroundType,
+      backgroundColor: config.style.backgroundColor,
+      pointSymbols: config.style.pointSymbols,
+      roseGradient: config.style.roseGradient,
+      roseLineColor: config.style.roseLineColor,
+      showOutline: config.style.showOutline,
+      customLayer: resolveCustomLayerSignature(config.style.customLayer)
+    },
+    visibility: config.visibility,
+    text: config.text,
+    petalCount,
+    paint
+  })
+}
+
+const drawWindRoseStaticLayer = (
+  context: WindRoseDrawContext,
+  config: WindRoseGaugeConfig,
+  paint: ThemePaint,
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  palette: GaugeBackgroundPalette,
+  petalCount: number
+): void => {
+  context.clearRect(0, 0, width, height)
+
+  if (config.visibility.showFrame) {
+    drawGaugeRadialFrameByDesign(
+      context,
+      config.style.frameDesign,
+      centerX,
+      centerY,
+      Math.min(width, height) / 2
+    )
+  }
+
+  if (config.visibility.showBackground) {
+    drawRadialBackground(
+      context,
+      config.style.backgroundColor,
+      width,
+      centerX,
+      centerY,
+      Math.min(width, height) / 2,
+      paint,
+      rgbTupleToCss(palette.labelColor)
+    )
+
+    const customLayer = config.style.customLayer as
+      | { visible?: boolean; image?: CanvasImageSource }
+      | undefined
+    if (customLayer?.image && customLayer.visible) {
+      context.drawImage(customLayer.image, 0, 0, width, height)
+    }
+
+    drawRoseGrid(
+      context,
+      centerX,
+      centerY,
+      radius * 0.66,
+      petalCount,
+      rgbTupleToCss(palette.symbolColor)
+    )
+    drawAxisDividers(context, centerX, centerY, radius * 0.66, rgbTupleToCss(palette.symbolColor))
+
+    if (config.visibility.showPointSymbols || config.visibility.showDegreeScale) {
+      drawCompassTicks(context, config, width, palette)
+    }
+  }
+
+  drawWindRoseLabels(context, config, centerX, centerY, width, rgbTupleToCss(palette.labelColor))
+
+  if (config.visibility.showForeground) {
+    drawGaugeRadialForegroundByType(
+      context,
+      config.style.foregroundType,
+      centerX,
+      centerY,
+      width / 2
+    )
+  }
 }
 
 const toSortedPetals = (petals: readonly WindRosePetal[]): WindRosePetal[] => {
@@ -413,94 +555,49 @@ export const renderWindRoseGauge = (
   const sortedPetals = toSortedPetals(value.petals)
   const dominantPetal = resolveDominantPetal(sortedPetals)
   const palette = getWindBackgroundPalette(config.style.backgroundColor)
+  const staticLayerSignature = resolveWindRoseStaticLayerSignature(
+    config,
+    paint,
+    sortedPetals.length
+  )
 
   context.clearRect(0, 0, width, height)
 
-  const pipelineContext: WindRosePipelineContext = {
-    context,
-    config,
-    paint,
-    value,
-    palette,
-    width,
-    height,
-    centerX,
-    centerY,
-    radius
+  const staticLayerCache = getWindRoseStaticLayerCache(context, width, height)
+  if (staticLayerCache !== null) {
+    if (staticLayerCache.signature !== staticLayerSignature) {
+      drawWindRoseStaticLayer(
+        staticLayerCache.context,
+        config,
+        paint,
+        width,
+        height,
+        centerX,
+        centerY,
+        radius,
+        palette,
+        sortedPetals.length
+      )
+      staticLayerCache.signature = staticLayerSignature
+    }
+
+    context.drawImage(staticLayerCache.canvas, 0, 0)
+  } else {
+    drawWindRoseStaticLayer(
+      context,
+      config,
+      paint,
+      width,
+      height,
+      centerX,
+      centerY,
+      radius,
+      palette,
+      sortedPetals.length
+    )
   }
 
-  runGaugeRenderPipeline(pipelineContext, {
-    drawFrame: () => {
-      if (!config.visibility.showFrame) {
-        return
-      }
-
-      drawGaugeRadialFrameByDesign(
-        context,
-        config.style.frameDesign,
-        centerX,
-        centerY,
-        Math.min(width, height) / 2
-      )
-    },
-    drawBackground: () => {
-      if (!config.visibility.showBackground) {
-        return
-      }
-
-      drawRadialBackground(
-        context,
-        config.style.backgroundColor,
-        width,
-        centerX,
-        centerY,
-        Math.min(width, height) / 2,
-        paint,
-        rgbTupleToCss(palette.labelColor)
-      )
-
-      if (config.style.customLayer?.image && config.style.customLayer.visible) {
-        context.drawImage(config.style.customLayer.image, 0, 0, width, height)
-      }
-
-      drawRoseGrid(
-        context,
-        centerX,
-        centerY,
-        radius * 0.66,
-        sortedPetals.length,
-        rgbTupleToCss(palette.symbolColor)
-      )
-
-      drawAxisDividers(context, centerX, centerY, radius * 0.66, rgbTupleToCss(palette.symbolColor))
-
-      if (config.visibility.showPointSymbols || config.visibility.showDegreeScale) {
-        drawCompassTicks(context, config, width, palette)
-      }
-    },
-    drawContent: () => {
-      drawWindRosePetals(context, config, centerX, centerY, radius * 0.62, value)
-      drawWindRoseLabels(
-        context,
-        config,
-        centerX,
-        centerY,
-        width,
-        rgbTupleToCss(palette.labelColor)
-      )
-    },
-    drawForeground: () => {
-      if (config.visibility.showForeground) {
-        drawGaugeRadialForegroundByType(
-          context,
-          config.style.foregroundType,
-          centerX,
-          centerY,
-          width / 2
-        )
-      }
-    }
-  })
+  drawWindRosePetals(context, config, centerX, centerY, radius * 0.62, value)
 
   return {
     value: dominantPetal.value,
