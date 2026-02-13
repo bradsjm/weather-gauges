@@ -266,7 +266,7 @@ export const drawCompassFrame = (
       }
 
       context.beginPath()
-      context.arc(centerX, centerY, 0.495327 * imageWidth, 0, TWO_PI)
+      context.arc(centerX, centerY, imageWidth / 2, 0, TWO_PI)
       context.arc(centerX, centerY, 0.42056 * imageWidth, 0, TWO_PI, true)
       closePathSafe(context)
       context.fill()
@@ -785,7 +785,7 @@ const drawLegacyRadialFrame = (
   context.fill()
   context.restore()
 
-  drawCircle(context, centerX, centerY, radius * 0.995)
+  drawCircle(context, centerX, centerY, radius)
   context.lineWidth = Math.max(1, (radius * 2) / 90)
   context.strokeStyle = 'rgba(132,132,132,0.8)'
   context.stroke()
@@ -825,7 +825,7 @@ const drawLegacyRadialFrameMetal = (
   context.fill()
   context.restore()
 
-  drawCircle(context, centerX, centerY, radius * 0.995)
+  drawCircle(context, centerX, centerY, radius)
   context.lineWidth = Math.max(1, (radius * 2) / 90)
   context.strokeStyle = 'rgba(132,132,132,0.8)'
   context.stroke()
