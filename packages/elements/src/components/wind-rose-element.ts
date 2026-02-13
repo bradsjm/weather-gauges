@@ -52,7 +52,7 @@ export class WxWindRoseElement extends WeatherGaugeElement {
   @property({ type: String })
   unit = ''
 
-  @property({ type: String, attribute: 'frame-design' })
+  @property({ type: String, attribute: false })
   frameDesign:
     | 'blackMetal'
     | 'metal'
@@ -66,7 +66,7 @@ export class WxWindRoseElement extends WeatherGaugeElement {
     | 'tiltedBlack'
     | 'glossyMetal' = 'metal'
 
-  @property({ type: String, attribute: 'background-color' })
+  @property({ type: String, attribute: false })
   backgroundColor:
     | 'DARK_GRAY'
     | 'SATIN_GRAY'
@@ -87,31 +87,31 @@ export class WxWindRoseElement extends WeatherGaugeElement {
     | 'BRUSHED_STAINLESS'
     | 'TURNED' = 'DARK_GRAY'
 
-  @property({ type: String, attribute: 'knob-type' })
+  @property({ type: String, attribute: false })
   knobType: 'standardKnob' | 'metalKnob' = 'standardKnob'
 
-  @property({ type: String, attribute: 'knob-style' })
+  @property({ type: String, attribute: false })
   knobStyle: 'black' | 'brass' | 'silver' = 'silver'
 
-  @property({ type: String, attribute: 'foreground-type' })
+  @property({ type: String, attribute: false })
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
-  @property({ type: String, attribute: 'rose-center-color' })
+  @property({ type: String, attribute: false })
   roseCenterColor = '#f5a68a'
 
-  @property({ type: String, attribute: 'rose-edge-color' })
+  @property({ type: String, attribute: false })
   roseEdgeColor = '#d6452f'
 
-  @property({ type: String, attribute: 'rose-line-color' })
+  @property({ type: String, attribute: false })
   roseLineColor = '#8d2f1f'
 
-  @property({ type: Boolean, attribute: 'show-outline', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showOutline = true
 
-  @property({ type: Number, attribute: 'rose-center-alpha' })
+  @property({ type: Number, attribute: false })
   roseCenterAlpha = 0.25
 
-  @property({ type: Number, attribute: 'rose-edge-alpha' })
+  @property({ type: Number, attribute: false })
   roseEdgeAlpha = 0.7
 
   @property({ attribute: false })
@@ -120,26 +120,26 @@ export class WxWindRoseElement extends WeatherGaugeElement {
   @property({ attribute: false })
   overlay: WindRoseCustomLayer | null = null
 
-  @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showFrame = true
 
-  @property({ type: Boolean, attribute: 'show-background', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showBackground = true
 
-  @property({ type: Boolean, attribute: 'show-foreground', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showForeground = true
 
   @property({
     type: Boolean,
-    attribute: 'show-point-symbols',
+    attribute: false,
     converter: booleanAttributeConverter
   })
   showPointSymbols = true
 
-  @property({ type: Boolean, attribute: 'show-degree-scale', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showDegreeScale = false
 
-  @property({ type: Boolean, attribute: 'show-tickmarks', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showTickmarks = true
 
   @property({ type: Boolean, attribute: 'animated', converter: booleanAttributeConverter })

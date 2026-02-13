@@ -58,22 +58,22 @@ export class WxBargraphElement extends WeatherGaugeElement {
   @property({ type: String })
   preset: MeasurementPreset = ''
 
-  @property({ type: Boolean, attribute: 'show-threshold', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showThreshold = false
 
-  @property({ type: Boolean, attribute: 'alerts-enabled', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   alertsEnabled = false
 
-  @property({ type: Number, attribute: 'warning-alert-value' })
+  @property({ type: Number, attribute: false })
   warningAlertValue = 80
 
-  @property({ type: Number, attribute: 'critical-alert-value' })
+  @property({ type: Number, attribute: false })
   criticalAlertValue = 95
 
-  @property({ type: Number, attribute: 'lcd-decimals' })
+  @property({ type: Number, attribute: 'decimals' })
   lcdDecimals = 2
 
-  @property({ type: String, attribute: 'frame-design' })
+  @property({ type: String, attribute: false })
   frameDesign:
     | 'blackMetal'
     | 'metal'
@@ -87,7 +87,7 @@ export class WxBargraphElement extends WeatherGaugeElement {
     | 'tiltedBlack'
     | 'glossyMetal' = 'metal'
 
-  @property({ type: String, attribute: 'background-color' })
+  @property({ type: String, attribute: false })
   backgroundColor:
     | 'DARK_GRAY'
     | 'SATIN_GRAY'
@@ -108,13 +108,13 @@ export class WxBargraphElement extends WeatherGaugeElement {
     | 'BRUSHED_STAINLESS'
     | 'TURNED' = 'DARK_GRAY'
 
-  @property({ type: String, attribute: 'foreground-type' })
+  @property({ type: String, attribute: false })
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
-  @property({ type: String, attribute: 'gauge-type' })
+  @property({ type: String, attribute: false })
   gaugeType: 'type1' | 'type2' | 'type3' | 'type4' = 'type4'
 
-  @property({ type: String, attribute: 'value-color' })
+  @property({ type: String, attribute: false })
   valueColor:
     | 'RED'
     | 'GREEN'
@@ -130,7 +130,7 @@ export class WxBargraphElement extends WeatherGaugeElement {
     | 'GREEN_LCD'
     | 'JUG_GREEN' = 'RED'
 
-  @property({ type: String, attribute: 'lcd-color' })
+  @property({ type: String, attribute: false })
   lcdColor:
     | 'STANDARD'
     | 'STANDARD_GREEN'
@@ -142,13 +142,13 @@ export class WxBargraphElement extends WeatherGaugeElement {
     | 'GRAY'
     | 'BLACK' = 'STANDARD'
 
-  @property({ type: String, attribute: 'label-number-format' })
+  @property({ type: String, attribute: false })
   labelNumberFormat: 'standard' | 'fractional' | 'scientific' = 'standard'
 
-  @property({ type: String, attribute: 'tick-label-orientation' })
+  @property({ type: String, attribute: false })
   tickLabelOrientation?: 'horizontal' | 'tangent' | 'normal'
 
-  @property({ type: Number, attribute: 'fractional-scale-decimals' })
+  @property({ type: Number, attribute: false })
   fractionalScaleDecimals = 1
 
   @property({ attribute: false })
@@ -157,43 +157,43 @@ export class WxBargraphElement extends WeatherGaugeElement {
   @property({ attribute: false })
   valueGradientStops: RadialBargraphValueGradientStop[] = []
 
-  @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showFrame = true
 
-  @property({ type: Boolean, attribute: 'show-background', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showBackground = true
 
-  @property({ type: Boolean, attribute: 'show-foreground', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showForeground = true
 
-  @property({ type: Boolean, attribute: 'show-lcd', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showLcd = true
 
-  @property({ type: Boolean, attribute: 'led-visible', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   ledVisible = false
 
-  @property({ type: Boolean, attribute: 'user-led-visible', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   userLedVisible = false
 
-  @property({ type: Boolean, attribute: 'trend-visible', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   trendVisible = false
 
-  @property({ type: String, attribute: 'trend-state' })
+  @property({ type: String, attribute: false })
   trendState: 'up' | 'steady' | 'down' | 'off' = 'off'
 
-  @property({ type: Boolean, attribute: 'digital-font', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   digitalFont = false
 
   @property({
     type: Boolean,
-    attribute: 'use-section-colors',
+    attribute: false,
     converter: booleanAttributeConverter
   })
   useSectionColors = false
 
   @property({
     type: Boolean,
-    attribute: 'use-value-gradient',
+    attribute: false,
     converter: booleanAttributeConverter
   })
   useValueGradient = false

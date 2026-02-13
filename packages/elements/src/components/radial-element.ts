@@ -58,31 +58,31 @@ export class WxGaugeElement extends WeatherGaugeElement {
   @property({ type: String })
   preset: MeasurementPreset = ''
 
-  @property({ type: Boolean, attribute: 'show-threshold', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showThreshold = false
 
-  @property({ type: Boolean, attribute: 'alerts-enabled', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   alertsEnabled = false
 
-  @property({ type: Number, attribute: 'warning-alert-value' })
+  @property({ type: Number, attribute: false })
   warningAlertValue = 80
 
-  @property({ type: Number, attribute: 'critical-alert-value' })
+  @property({ type: Number, attribute: false })
   criticalAlertValue = 95
 
-  @property({ type: Number, attribute: 'major-tick-count' })
+  @property({ type: Number, attribute: false })
   majorTickCount = 9
 
-  @property({ type: Number, attribute: 'minor-ticks-per-major' })
+  @property({ type: Number, attribute: false })
   minorTicksPerMajor = 4
 
-  @property({ type: Number, attribute: 'start-angle' })
+  @property({ type: Number, attribute: false })
   startAngle = (-3 * Math.PI) / 4
 
-  @property({ type: Number, attribute: 'end-angle' })
+  @property({ type: Number, attribute: false })
   endAngle = (3 * Math.PI) / 4
 
-  @property({ type: String, attribute: 'frame-design' })
+  @property({ type: String, attribute: false })
   frameDesign:
     | 'blackMetal'
     | 'metal'
@@ -96,7 +96,7 @@ export class WxGaugeElement extends WeatherGaugeElement {
     | 'tiltedBlack'
     | 'glossyMetal' = 'metal'
 
-  @property({ type: String, attribute: 'background-color' })
+  @property({ type: String, attribute: false })
   backgroundColor:
     | 'DARK_GRAY'
     | 'SATIN_GRAY'
@@ -117,16 +117,16 @@ export class WxGaugeElement extends WeatherGaugeElement {
     | 'BRUSHED_STAINLESS'
     | 'TURNED' = 'DARK_GRAY'
 
-  @property({ type: String, attribute: 'foreground-type' })
+  @property({ type: String, attribute: false })
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
-  @property({ type: String, attribute: 'gauge-type' })
+  @property({ type: String, attribute: false })
   gaugeType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type4'
 
-  @property({ type: String })
+  @property({ type: String, attribute: false })
   orientation: 'north' | 'east' | 'west' = 'north'
 
-  @property({ type: String, attribute: 'pointer-type' })
+  @property({ type: String, attribute: false })
   pointerType:
     | 'type1'
     | 'type2'
@@ -145,7 +145,7 @@ export class WxGaugeElement extends WeatherGaugeElement {
     | 'type15'
     | 'type16' = 'type1'
 
-  @property({ type: String, attribute: 'pointer-color' })
+  @property({ type: String, attribute: false })
   pointerColor:
     | 'RED'
     | 'GREEN'
@@ -167,48 +167,48 @@ export class WxGaugeElement extends WeatherGaugeElement {
   @property({ attribute: false })
   areas: RadialArea[] = []
 
-  @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showFrame = true
 
-  @property({ type: Boolean, attribute: 'show-background', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showBackground = true
 
-  @property({ type: Boolean, attribute: 'show-foreground', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showForeground = true
 
-  @property({ type: Boolean, attribute: 'show-lcd', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showLcd = true
 
-  @property({ type: Boolean, attribute: 'led-visible', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   ledVisible = false
 
-  @property({ type: Boolean, attribute: 'user-led-visible', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   userLedVisible = false
 
-  @property({ type: Boolean, attribute: 'trend-visible', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   trendVisible = false
 
-  @property({ type: String, attribute: 'trend-state' })
+  @property({ type: String, attribute: false })
   trendState: 'up' | 'steady' | 'down' = 'down'
 
   @property({
     type: Boolean,
-    attribute: 'min-measured-value-visible',
+    attribute: false,
     converter: booleanAttributeConverter
   })
   minMeasuredValueVisible = false
 
   @property({
     type: Boolean,
-    attribute: 'max-measured-value-visible',
+    attribute: false,
     converter: booleanAttributeConverter
   })
   maxMeasuredValueVisible = false
 
-  @property({ type: Number, attribute: 'min-measured-value' })
+  @property({ type: Number, attribute: false })
   minMeasuredValue = 0
 
-  @property({ type: Number, attribute: 'max-measured-value' })
+  @property({ type: Number, attribute: false })
   maxMeasuredValue = 100
 
   @property({

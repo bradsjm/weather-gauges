@@ -254,7 +254,7 @@ This section is a gap-aware implementation plan based on the current repository 
 ### 7.2 Gaps / Changes Needed To Fully Match This PLAN
 
 - `theme` attribute is not currently implemented as a discrete theme selector; theming is CSS-token driven today.
-- The public element API is not yet “small surface” (the elements expose many advanced attributes vs the 8-10 attribute target in Section 4).
+- The public element API has been reduced to a small stable HTML-first attribute surface; advanced options now route through JS properties.
 - `threshold-label` and `average-label` attribute alignment has been implemented; migration notes should be kept visible in docs/release notes.
 - Wind rose scale auto-derivation is already present in `wx-wind-rose`; this item is now verification/docs alignment instead of net-new behavior.
 - `TrendCalculator` helper has been implemented in `core`; docs/examples should reference the exported helper API.
@@ -270,7 +270,7 @@ Progress tracker:
 - [x] 4. Wind Rose Auto-Scale (PLAN behavior)
 - [x] 5. Add `TrendCalculator` to `core`
 - [x] 6. Add `overlay` Support End-to-End
-- [ ] 7. Reduce Public Surface To 8-10 Attributes (breaking)
+- [x] 7. Reduce Public Surface To 8-10 Attributes (breaking)
 
 1. Contract + Docs Hardening (no behavior change)
    - Update README/docs-site to reflect the intended stable HTML-first subset.
@@ -307,3 +307,4 @@ Progress tracker:
    - Define the supported attribute surface as the set in Section 4 (+ gauge-specific attributes in Section 5).
    - Remove advanced attributes from elements and move advanced configuration behind JS properties (`style`, `visibility`, `indicators`, etc.).
    - Update docs-site covering the new public API.
+   - Status: Completed. Elements now expose stable HTML-first attributes only (shared + gauge-specific), while advanced visual and behavior settings are JS property-only. Docs contract references were updated in package READMEs.

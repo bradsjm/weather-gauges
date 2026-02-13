@@ -35,7 +35,7 @@ export class WxCompassElement extends WeatherGaugeElement {
   @property({ type: String })
   unit = 'deg'
 
-  @property({ type: String, attribute: 'frame-design' })
+  @property({ type: String, attribute: false })
   frameDesign:
     | 'blackMetal'
     | 'metal'
@@ -49,7 +49,7 @@ export class WxCompassElement extends WeatherGaugeElement {
     | 'tiltedBlack'
     | 'glossyMetal' = 'metal'
 
-  @property({ type: String, attribute: 'background-color' })
+  @property({ type: String, attribute: false })
   backgroundColor:
     | 'DARK_GRAY'
     | 'SATIN_GRAY'
@@ -70,10 +70,10 @@ export class WxCompassElement extends WeatherGaugeElement {
     | 'BRUSHED_STAINLESS'
     | 'TURNED' = 'DARK_GRAY'
 
-  @property({ type: String, attribute: 'pointer-type' })
+  @property({ type: String, attribute: false })
   pointerType = 'type2'
 
-  @property({ type: String, attribute: 'pointer-color' })
+  @property({ type: String, attribute: false })
   pointerColor:
     | 'RED'
     | 'GREEN'
@@ -89,22 +89,22 @@ export class WxCompassElement extends WeatherGaugeElement {
     | 'GREEN_LCD'
     | 'JUG_GREEN' = 'RED'
 
-  @property({ type: String, attribute: 'knob-type' })
+  @property({ type: String, attribute: false })
   knobType: 'standardKnob' | 'metalKnob' = 'standardKnob'
 
-  @property({ type: String, attribute: 'knob-style' })
+  @property({ type: String, attribute: false })
   knobStyle: 'black' | 'brass' | 'silver' = 'silver'
 
-  @property({ type: String, attribute: 'foreground-type' })
+  @property({ type: String, attribute: false })
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
   @property({ type: Boolean, attribute: 'show-degrees' })
   degreeScale = false
 
-  @property({ type: Boolean, attribute: 'degree-scale-half' })
+  @property({ type: Boolean, attribute: false })
   degreeScaleHalf = false
 
-  @property({ type: Boolean, attribute: 'rose-visible' })
+  @property({ type: Boolean, attribute: false })
   roseVisible = true
 
   @property({ type: Boolean, attribute: 'face-rotates' })
@@ -113,31 +113,31 @@ export class WxCompassElement extends WeatherGaugeElement {
   @property({ type: Boolean, attribute: 'show-labels' })
   pointSymbolsVisible = true
 
-  @property({ type: Boolean, attribute: 'show-tickmarks', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showTickmarks = true
 
-  @property({ type: String, attribute: 'point-symbol-n' })
+  @property({ type: String, attribute: false })
   pointSymbolN = 'N'
 
-  @property({ type: String, attribute: 'point-symbol-ne' })
+  @property({ type: String, attribute: false })
   pointSymbolNE = 'NE'
 
-  @property({ type: String, attribute: 'point-symbol-e' })
+  @property({ type: String, attribute: false })
   pointSymbolE = 'E'
 
-  @property({ type: String, attribute: 'point-symbol-se' })
+  @property({ type: String, attribute: false })
   pointSymbolSE = 'SE'
 
-  @property({ type: String, attribute: 'point-symbol-s' })
+  @property({ type: String, attribute: false })
   pointSymbolS = 'S'
 
-  @property({ type: String, attribute: 'point-symbol-sw' })
+  @property({ type: String, attribute: false })
   pointSymbolSW = 'SW'
 
-  @property({ type: String, attribute: 'point-symbol-w' })
+  @property({ type: String, attribute: false })
   pointSymbolW = 'W'
 
-  @property({ type: String, attribute: 'point-symbol-nw' })
+  @property({ type: String, attribute: false })
   pointSymbolNW = 'NW'
 
   @property({ attribute: false })
@@ -146,16 +146,16 @@ export class WxCompassElement extends WeatherGaugeElement {
   @property({ attribute: false })
   overlay: CompassOverlay | null = null
 
-  @property({ type: Boolean, attribute: 'show-heading-readout' })
+  @property({ type: Boolean, attribute: false })
   showHeadingReadout = false
 
-  @property({ type: Boolean, attribute: 'alerts-enabled', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   alertsEnabled = false
 
-  @property({ type: Number, attribute: 'warning-alert-heading' })
+  @property({ type: Number, attribute: false })
   warningAlertHeading = 90
 
-  @property({ type: Number, attribute: 'critical-alert-heading' })
+  @property({ type: Number, attribute: false })
   criticalAlertHeading = 180
 
   @property({

@@ -46,7 +46,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
   @property({ type: String })
   preset: WindDirectionPreset = ''
 
-  @property({ type: String, attribute: 'frame-design' })
+  @property({ type: String, attribute: false })
   frameDesign:
     | 'blackMetal'
     | 'metal'
@@ -60,7 +60,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     | 'tiltedBlack'
     | 'glossyMetal' = 'metal'
 
-  @property({ type: String, attribute: 'background-color' })
+  @property({ type: String, attribute: false })
   backgroundColor:
     | 'DARK_GRAY'
     | 'SATIN_GRAY'
@@ -81,7 +81,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     | 'BRUSHED_STAINLESS'
     | 'TURNED' = 'DARK_GRAY'
 
-  @property({ type: String, attribute: 'pointer-type-latest' })
+  @property({ type: String, attribute: false })
   pointerTypeLatest:
     | 'type1'
     | 'type2'
@@ -100,7 +100,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     | 'type15'
     | 'type16' = 'type1'
 
-  @property({ type: String, attribute: 'pointer-type-average' })
+  @property({ type: String, attribute: false })
   pointerTypeAverage:
     | 'type1'
     | 'type2'
@@ -119,7 +119,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     | 'type15'
     | 'type16' = 'type8'
 
-  @property({ type: String, attribute: 'pointer-color-latest' })
+  @property({ type: String, attribute: false })
   pointerColorLatest:
     | 'RED'
     | 'GREEN'
@@ -135,7 +135,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     | 'GREEN_LCD'
     | 'JUG_GREEN' = 'RED'
 
-  @property({ type: String, attribute: 'pointer-color-average' })
+  @property({ type: String, attribute: false })
   pointerColorAverage:
     | 'RED'
     | 'GREEN'
@@ -151,16 +151,16 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     | 'GREEN_LCD'
     | 'JUG_GREEN' = 'BLUE'
 
-  @property({ type: String, attribute: 'knob-type' })
+  @property({ type: String, attribute: false })
   knobType: 'standardKnob' | 'metalKnob' = 'standardKnob'
 
-  @property({ type: String, attribute: 'knob-style' })
+  @property({ type: String, attribute: false })
   knobStyle: 'black' | 'brass' | 'silver' = 'silver'
 
-  @property({ type: String, attribute: 'foreground-type' })
+  @property({ type: String, attribute: false })
   foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
 
-  @property({ type: String, attribute: 'lcd-color' })
+  @property({ type: String, attribute: false })
   lcdColor:
     | 'STANDARD'
     | 'STANDARD_GREEN'
@@ -187,50 +187,50 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
   @property({ attribute: false })
   overlay: WindDirectionCustomLayer | null = null
 
-  @property({ type: Boolean, attribute: 'show-frame', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showFrame = true
 
-  @property({ type: Boolean, attribute: 'show-background', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showBackground = true
 
-  @property({ type: Boolean, attribute: 'show-foreground', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showForeground = true
 
-  @property({ type: Boolean, attribute: 'show-lcd', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showLcd = true
 
   @property({
     type: Boolean,
-    attribute: 'show-point-symbols',
+    attribute: false,
     converter: booleanAttributeConverter
   })
   showPointSymbols = true
 
-  @property({ type: Boolean, attribute: 'show-tickmarks', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showTickmarks = true
 
-  @property({ type: Boolean, attribute: 'show-degree-scale', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showDegreeScale = false
 
-  @property({ type: Boolean, attribute: 'show-rose', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showRose = false
 
-  @property({ type: Boolean, attribute: 'degree-scale-half', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   degreeScaleHalf = false
 
-  @property({ type: Boolean, attribute: 'digital-font', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   digitalFont = false
 
-  @property({ type: Boolean, attribute: 'use-color-labels', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   useColorLabels = false
 
-  @property({ type: Boolean, attribute: 'alerts-enabled', converter: booleanAttributeConverter })
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   alertsEnabled = false
 
-  @property({ type: Number, attribute: 'warning-alert-heading' })
+  @property({ type: Number, attribute: false })
   warningAlertHeading = 90
 
-  @property({ type: Number, attribute: 'critical-alert-heading' })
+  @property({ type: Number, attribute: false })
   criticalAlertHeading = 180
 
   @property({
