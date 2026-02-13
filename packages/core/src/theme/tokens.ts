@@ -7,7 +7,23 @@ export const themeTokenDefaults = {
   '--ss3-frame-color': '#dbe4ee',
   '--ss3-accent-color': '#0f766e',
   '--ss3-warning-color': '#b45309',
-  '--ss3-danger-color': '#b91c1c'
+  '--ss3-danger-color': '#b91c1c',
+  '--ss3-trend-up-inner-1': '#FF9A89',
+  '--ss3-trend-up-inner-2': '#FF9A89',
+  '--ss3-trend-up-outer': '#FF3300',
+  '--ss3-trend-up-corona': '#FF8D70',
+  '--ss3-trend-steady-inner-1': '#9AFF89',
+  '--ss3-trend-steady-inner-2': '#9AFF89',
+  '--ss3-trend-steady-outer': '#59FF2A',
+  '--ss3-trend-steady-corona': '#A5FF00',
+  '--ss3-trend-down-inner-1': '#00FFFF',
+  '--ss3-trend-down-inner-2': '#00FFFF',
+  '--ss3-trend-down-outer': '#1BC3C3',
+  '--ss3-trend-down-corona': '#00FFFF',
+  '--ss3-trend-disabled-from': '#323232',
+  '--ss3-trend-disabled-to': '#5C5C5C',
+  '--ss3-trend-shadow': 'rgba(0, 0, 0, 0.4)',
+  '--ss3-trend-highlight': 'rgba(255, 255, 255, 0.3)'
 } as const
 
 export type ThemeTokenName = keyof typeof themeTokenDefaults
@@ -23,6 +39,22 @@ export type ThemePaint = {
   accentColor: string
   warningColor: string
   dangerColor: string
+  trendUpInner1: string
+  trendUpInner2: string
+  trendUpOuter: string
+  trendUpCorona: string
+  trendSteadyInner1: string
+  trendSteadyInner2: string
+  trendSteadyOuter: string
+  trendSteadyCorona: string
+  trendDownInner1: string
+  trendDownInner2: string
+  trendDownOuter: string
+  trendDownCorona: string
+  trendDisabledFrom: string
+  trendDisabledTo: string
+  trendShadow: string
+  trendHighlight: string
 }
 
 export type ThemeTokenSource = (token: ThemeTokenName) => string | null | undefined
@@ -98,7 +130,23 @@ export const resolveThemePaint = (
     frameColor: tokens['--ss3-frame-color'],
     accentColor: tokens['--ss3-accent-color'],
     warningColor: tokens['--ss3-warning-color'],
-    dangerColor: tokens['--ss3-danger-color']
+    dangerColor: tokens['--ss3-danger-color'],
+    trendUpInner1: tokens['--ss3-trend-up-inner-1'],
+    trendUpInner2: tokens['--ss3-trend-up-inner-2'],
+    trendUpOuter: tokens['--ss3-trend-up-outer'],
+    trendUpCorona: tokens['--ss3-trend-up-corona'],
+    trendSteadyInner1: tokens['--ss3-trend-steady-inner-1'],
+    trendSteadyInner2: tokens['--ss3-trend-steady-inner-2'],
+    trendSteadyOuter: tokens['--ss3-trend-steady-outer'],
+    trendSteadyCorona: tokens['--ss3-trend-steady-corona'],
+    trendDownInner1: tokens['--ss3-trend-down-inner-1'],
+    trendDownInner2: tokens['--ss3-trend-down-inner-2'],
+    trendDownOuter: tokens['--ss3-trend-down-outer'],
+    trendDownCorona: tokens['--ss3-trend-down-corona'],
+    trendDisabledFrom: tokens['--ss3-trend-disabled-from'],
+    trendDisabledTo: tokens['--ss3-trend-disabled-to'],
+    trendShadow: tokens['--ss3-trend-shadow'],
+    trendHighlight: tokens['--ss3-trend-highlight']
   }
 }
 

@@ -23,6 +23,7 @@ import { drawRadialTextLabel } from '../render/gauge-ticks.js'
 import { drawRadialLcd } from '../render/radial-lcd.js'
 import { drawRadialSimpleLed } from '../render/radial-led.js'
 import { drawRadialTrendIndicator } from '../render/radial-trend.js'
+import { resolveRadialTrendPalette } from '../render/trend-palette.js'
 import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
 import { drawGaugeRadialThreshold } from '../render/gauge-threshold.js'
 import { resolveGaugeValueSectionArcs, type GaugeSectionArc } from '../render/gauge-sections.js'
@@ -644,6 +645,7 @@ export const renderRadialBargraphGauge = (
   options: RadialBargraphRenderOptions = {}
 ): RadialBargraphRenderResult => {
   const paint = mergePaint(options.paint)
+  const trendPalette = resolveRadialTrendPalette(paint)
   const resolvedScale = resolveScale(config)
   const clampedValue = clamp(
     options.value ?? config.value.current,
@@ -732,7 +734,10 @@ export const renderRadialBargraphGauge = (
     context,
     config.indicators.trendVisible,
     config.indicators.trendState,
-    size
+    size,
+    0.38 * size,
+    0.57 * size,
+    trendPalette
   )
   drawForeground(context, config, centerX, centerY, radius)
 

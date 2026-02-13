@@ -26,6 +26,7 @@ import {
 } from '../render/radial-lcd.js'
 import { drawRadialSimpleLed } from '../render/radial-led.js'
 import { drawRadialTrendIndicator } from '../render/radial-trend.js'
+import { resolveRadialTrendPalette } from '../render/trend-palette.js'
 import { resolveGaugeToneFromAlerts, resolveGaugeValueAlerts } from '../render/gauge-alerts.js'
 import { resolveThemePaint, type ThemePaint } from '../theme/tokens.js'
 import type {
@@ -90,8 +91,8 @@ type RadialLayout = {
   ledX: number
   userLedX: number
   ledY: number
-  trendOffsetX: number
-  trendOffsetY: number
+  trendX: number
+  trendY: number
   knobCenterY: number
   pointerImageSize: number
   pointerShadow: boolean
@@ -127,8 +128,8 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
       radius: size * 0.48,
       areaInnerRadius: 0,
       areaOuterRadius: size * 0.33,
-      segmentInnerRadius: size * 0.345,
-      segmentOuterRadius: size * 0.38,
+      segmentInnerRadius: size * 0.34,
+      segmentOuterRadius: size * 0.385,
       majorTickInnerRadius: size * 0.41,
       majorTickOuterRadius: size * 0.44,
       minorTickInnerRadius: size * 0.42,
@@ -146,8 +147,8 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
       ledX: size * 0.455,
       userLedX: size * 0.545,
       ledY: size * 0.51,
-      trendOffsetX: -0.12 * size,
-      trendOffsetY: -0.12 * size,
+      trendX: size * 0.3,
+      trendY: size * 0.73364,
       knobCenterY: size * 0.733644,
       pointerImageSize: size,
       pointerShadow: true
@@ -179,8 +180,8 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
     ledX: size * 0.6,
     userLedX: size * 0.4,
     ledY: size * 0.38,
-    trendOffsetX: -0.12 * size,
-    trendOffsetY: -0.12 * size,
+    trendX: size * 0.3,
+    trendY: size * 0.45,
     knobCenterY: size * 0.5,
     pointerImageSize: size,
     pointerShadow: false
@@ -677,6 +678,7 @@ export const renderRadialGauge = (
   const size = Math.min(config.size.width, config.size.height)
   const centerX = size * 0.5
   const layout = resolveLayout(size, config.style.gaugeType)
+  const trendPalette = resolveRadialTrendPalette(paint)
 
   context.clearRect(0, 0, config.size.width, config.size.height)
 
@@ -755,15 +757,15 @@ export const renderRadialGauge = (
       config.indicators.userLedVisible
     )
 
-    context.save()
-    context.translate(layout.trendOffsetX, layout.trendOffsetY)
     drawRadialTrendIndicator(
       context,
       config.indicators.trendVisible,
       config.indicators.trendState,
-      size
+      size,
+      layout.trendX,
+      layout.trendY,
+      trendPalette
     )
-    context.restore()
 
     drawForeground(context, config, centerX, size, layout)
   }
