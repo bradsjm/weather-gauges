@@ -14,6 +14,10 @@ import { customElement, property, query } from 'lit/decorators.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter } from '../shared/css-utils.js'
 import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
+import {
+  resolveWindDirectionTextDefaults,
+  type WindDirectionPreset
+} from '../shared/wind-direction-presets.js'
 
 @customElement('steelseries-wind-direction-v3')
 export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
@@ -40,7 +44,7 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
   unit = '°'
 
   @property({ type: String })
-  preset: '' | 'wind-direction' = ''
+  preset: WindDirectionPreset = ''
 
   @property({ type: String, attribute: 'frame-design' })
   frameDesign:
@@ -336,30 +340,17 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
     const childSections = this.parseSectionChildren()
     const sections = this.sections.length > 0 ? this.sections : childSections
     const areas = this.areas.length > 0 ? this.areas : []
-    const title =
-      this.hasAttribute('title') || this.title.length > 0
-        ? this.title
-        : this.preset === 'wind-direction'
-          ? 'Wind Direction'
-          : ''
-    const unit =
-      this.hasAttribute('unit') || this.unit.length > 0
-        ? this.unit
-        : this.preset === 'wind-direction'
-          ? '°'
-          : ''
-    const lcdTitleLatest =
-      this.hasAttribute('lcd-title-latest') || this.lcdTitleLatest.length > 0
-        ? this.lcdTitleLatest
-        : this.preset === 'wind-direction'
-          ? 'Latest'
-          : ''
-    const lcdTitleAverage =
-      this.hasAttribute('lcd-title-average') || this.lcdTitleAverage.length > 0
-        ? this.lcdTitleAverage
-        : this.preset === 'wind-direction'
-          ? 'Average'
-          : ''
+    const textDefaults = resolveWindDirectionTextDefaults({
+      preset: this.preset,
+      title: this.title,
+      unit: this.unit,
+      lcdTitleLatest: this.lcdTitleLatest,
+      lcdTitleAverage: this.lcdTitleAverage,
+      hasTitleAttr: this.hasAttribute('title'),
+      hasUnitAttr: this.hasAttribute('unit'),
+      hasLcdTitleLatestAttr: this.hasAttribute('lcd-title-latest'),
+      hasLcdTitleAverageAttr: this.hasAttribute('lcd-title-average')
+    })
 
     return windDirectionGaugeConfigSchema.parse({
       value: {
@@ -371,8 +362,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
         height: this.size
       },
       text: {
-        ...(title ? { title } : {}),
-        ...(unit ? { unit } : {})
+        ...(textDefaults.title ? { title: textDefaults.title } : {}),
+        ...(textDefaults.unit ? { unit: textDefaults.unit } : {})
       },
       visibility: {
         showFrame: this.showFrame,
@@ -411,8 +402,8 @@ export class SteelseriesWindDirectionV3Element extends SteelseriesGaugeElement {
         pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
       },
       lcdTitles: {
-        latest: lcdTitleLatest,
-        average: lcdTitleAverage
+        latest: textDefaults.lcdTitleLatest,
+        average: textDefaults.lcdTitleAverage
       },
       indicators: {
         alerts

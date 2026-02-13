@@ -440,7 +440,7 @@ export const renderRadialPage = (root: HTMLElement): void => {
   renderPlaygroundPage(
     root,
     'Radial Gauge Playground',
-    'Adjust radial-gauge settings live, including new type5 radial-vertical orientation options, pointer style, threshold, and measured min/max markers.',
+    'Adjust radial-gauge settings live. Preset precedence: property > child > preset > default. Example: <code>&lt;steelseries-radial-v3 preset="temperature" min-value="-30"&gt;&lt;/steelseries-radial-v3&gt;</code>.',
     'steelseries-radial-v3',
     controls,
     defaults,

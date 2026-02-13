@@ -13,6 +13,31 @@ import {
 import { renderPlaygroundPage } from '../playground'
 import type { ControlDef, PlaygroundState } from '../types'
 
+type PresetKey = '' | 'wind-direction'
+
+const windDirectionPresetExamples: Record<PresetKey, Partial<PlaygroundState>> = {
+  '': {
+    title: 'Wind',
+    unit: 'deg',
+    lcdTitleLatest: 'Latest',
+    lcdTitleAverage: 'Average',
+    valueLatest: 48,
+    valueAverage: 63,
+    warningAlertHeading: 90,
+    criticalAlertHeading: 180
+  },
+  'wind-direction': {
+    title: 'Wind Direction',
+    unit: '°',
+    lcdTitleLatest: 'Latest',
+    lcdTitleAverage: 'Average',
+    valueLatest: 245,
+    valueAverage: 238,
+    warningAlertHeading: 260,
+    criticalAlertHeading: 290
+  }
+}
+
 export const renderWindPage = (root: HTMLElement): void => {
   const defaults: PlaygroundState = {
     valueLatest: 48,
@@ -252,14 +277,26 @@ export const renderWindPage = (root: HTMLElement): void => {
     }
   ]
 
+  let previousPreset: PresetKey = ''
+
   renderPlaygroundPage(
     root,
     'Wind Direction Playground',
-    'Tune the dual-pointer wind-direction gauge live, including rose, LCD, pointer styles, and visibility options.',
+    'Tune the dual-pointer wind-direction gauge live. Preset precedence: property > child > preset > default. Example: <code>&lt;steelseries-wind-direction-v3 preset="wind-direction" unit="deg"&gt;&lt;/steelseries-wind-direction-v3&gt;</code>.',
     'steelseries-wind-direction-v3',
     controls,
     defaults,
     (state) => {
+      const preset =
+        typeof state.preset === 'string' && state.preset in windDirectionPresetExamples
+          ? (state.preset as PresetKey)
+          : ''
+      if (preset !== previousPreset) {
+        const example = windDirectionPresetExamples[preset]
+        Object.assign(state, example)
+        previousPreset = preset
+      }
+
       state.valueLatest = clampNumber(asFiniteNumber(state.valueLatest, 0), 0, 359)
       state.valueAverage = clampNumber(asFiniteNumber(state.valueAverage, 0), 0, 359)
       state.warningAlertHeading = clampNumber(asFiniteNumber(state.warningAlertHeading, 90), 0, 359)

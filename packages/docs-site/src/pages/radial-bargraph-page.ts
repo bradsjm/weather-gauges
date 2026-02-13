@@ -393,7 +393,7 @@ export const renderRadialBargraphPage = (root: HTMLElement): void => {
   renderPlaygroundPage(
     root,
     'Radial Bargraph Playground',
-    'Adjust radial-bargraph settings live on a single larger gauge. Each control includes behavior notes and defaults.',
+    'Adjust radial-bargraph settings live. Preset precedence: property > child > preset > default. Example: <code>&lt;steelseries-radial-bargraph-v3 preset="rain-rate" max-value="20"&gt;&lt;/steelseries-radial-bargraph-v3&gt;</code>.',
     'steelseries-radial-bargraph-v3',
     controls,
     defaults,
