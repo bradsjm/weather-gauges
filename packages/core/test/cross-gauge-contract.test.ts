@@ -4,6 +4,7 @@ import {
   compassGaugeConfigSchema,
   gaugeContract,
   radialBargraphGaugeConfigSchema,
+  toGaugeContractError,
   toGaugeContractState,
   windDirectionGaugeConfigSchema,
   validateCompassConfig,
@@ -36,6 +37,21 @@ describe('cross-gauge contracts', () => {
     expect(gaugeContract.valueChangeEvent).toBe('ss3-value-change')
     expect(gaugeContract.errorEvent).toBe('ss3-error')
     expect(gaugeContract.defaultAnimationDurationMs).toBe(500)
+  })
+
+  it('normalizes structured error payloads', () => {
+    const error = toGaugeContractError(
+      'radial',
+      [{ path: 'value.current', message: 'current must be within min and max range' }],
+      'Invalid radial configuration'
+    )
+
+    expect(error).toEqual({
+      kind: 'radial',
+      code: 'invalid_config',
+      message: 'Invalid radial configuration',
+      issues: [{ path: 'value.current', message: 'current must be within min and max range' }]
+    })
   })
 
   it('returns consistent structured validation semantics across gauges', () => {

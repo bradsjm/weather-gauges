@@ -8,11 +8,7 @@ import {
 import { type RadialRenderResult } from '../radial/index.js'
 import { type WindDirectionRenderResult } from '../wind-direction/index.js'
 import { type WindRoseRenderResult } from '../wind-rose/index.js'
-import {
-  formatZodError,
-  type ValidationIssue,
-  type ValidationResult
-} from '../schemas/validation.js'
+import { formatZodError, type ValidationResult } from '../schemas/validation.js'
 
 export const gaugeContract = {
   valueChangeEvent: 'ss3-value-change',
@@ -43,9 +39,18 @@ export type GaugeContractState = {
   alerts: GaugeContractAlert[]
 }
 
+export type GaugeContractErrorCode = 'invalid_config' | 'invalid_value' | 'render_error'
+
+export type GaugeContractErrorIssue = {
+  path: string
+  message: string
+}
+
 export type GaugeContractError = {
   kind: GaugeContractKind
-  errors: ValidationIssue[]
+  code: GaugeContractErrorCode
+  message: string
+  issues?: GaugeContractErrorIssue[]
 }
 
 const validateWithSchema = <T>(schema: z.ZodType<T>, input: unknown): ValidationResult<T> => {
@@ -107,10 +112,13 @@ export const toGaugeContractState = (
 
 export const toGaugeContractError = (
   kind: GaugeContractKind,
-  errors: ValidationIssue[]
+  errors: GaugeContractErrorIssue[],
+  message = 'Invalid gauge configuration'
 ): GaugeContractError => {
   return {
     kind,
-    errors
+    code: 'invalid_config',
+    message,
+    ...(errors.length > 0 ? { issues: errors } : {})
   }
 }
