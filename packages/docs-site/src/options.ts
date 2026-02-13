@@ -120,6 +120,13 @@ export const lcdColorOptions: SelectOption[] = [
 
 export const minMaxAreaColor = 'rgba(212,132,134,0.6)'
 
+export const measurementPresetOptions: SelectOption[] = [
+  { value: '', label: 'none' },
+  { value: 'temperature', label: 'temperature' },
+  { value: 'humidity', label: 'humidity' },
+  { value: 'pressure', label: 'pressure' }
+]
+
 export const temperatureSections = [
   { from: -200, to: -30, color: 'rgba(195, 92, 211, 0.4)' },
   { from: -30, to: -25, color: 'rgba(139, 74, 197, 0.4)' },

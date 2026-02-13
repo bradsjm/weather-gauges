@@ -3,6 +3,7 @@ import {
   backgroundOptions,
   foregroundTypeOptions,
   frameOptions,
+  measurementPresetOptions,
   minMaxAreaColor,
   orientationOptions,
   pointerColorOptions,
@@ -19,6 +20,7 @@ export const renderRadialPage = (root: HTMLElement): void => {
     minValue: 0,
     maxValue: 100,
     threshold: 72,
+    preset: '',
     showThreshold: false,
     alertsEnabled: false,
     warningAlertValue: 72,
@@ -54,6 +56,14 @@ export const renderRadialPage = (root: HTMLElement): void => {
   }
 
   const controls: ControlDef[] = [
+    {
+      key: 'preset',
+      label: 'Measurement Preset',
+      description: 'Applies temperature, humidity, or pressure defaults when enabled.',
+      type: 'select',
+      options: measurementPresetOptions,
+      documentation: 'Set to none to use manual min/max and section settings only.'
+    },
     {
       key: 'minValue',
       label: 'Min Value',

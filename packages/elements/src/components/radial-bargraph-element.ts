@@ -14,6 +14,14 @@ import { customElement, property, query } from 'lit/decorators.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 import { booleanAttributeConverter, readCssCustomPropertyColor } from '../shared/css-utils.js'
 import { SteelseriesGaugeElement } from '../shared/gauge-base-element.js'
+import {
+  isPresetTrendEnabled,
+  resolveEffectivePresetUnit,
+  resolvePresetRange,
+  resolvePresetSections,
+  resolvePresetTitle,
+  type MeasurementPreset
+} from '../shared/measurement-presets.js'
 
 @customElement('steelseries-radial-bargraph-v3')
 export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement {
@@ -45,7 +53,7 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
   threshold = 80
 
   @property({ type: String })
-  preset: '' | 'temperature' | 'humidity' | 'pressure' = ''
+  preset: MeasurementPreset = ''
 
   @property({ type: Boolean, attribute: 'show-threshold', converter: booleanAttributeConverter })
   showThreshold = false
@@ -266,146 +274,12 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       )
   }
 
-  private isPresetEnabled(name: 'temperature' | 'humidity' | 'pressure'): boolean {
-    return this.preset === name
-  }
-
-  private presetTitle(): string {
-    if (this.isPresetEnabled('temperature')) {
-      return 'Temperature'
-    }
-
-    if (this.isPresetEnabled('humidity')) {
-      return 'Humidity'
-    }
-
-    if (this.isPresetEnabled('pressure')) {
-      return 'Pressure'
-    }
-
-    return ''
-  }
-
-  private presetUnit(): string {
-    if (this.isPresetEnabled('temperature')) {
-      return '°C'
-    }
-
-    if (this.isPresetEnabled('humidity')) {
-      return '%'
-    }
-
-    if (this.isPresetEnabled('pressure')) {
-      return 'hPa'
-    }
-
-    return ''
-  }
-
-  private detectPressureUnit(value: number): 'hPa' | 'kPa' | 'inHg' {
-    if (value >= 900) {
-      return 'hPa'
-    }
-
-    if (value >= 90) {
-      return 'kPa'
-    }
-
-    return 'inHg'
-  }
-
-  private effectiveUnit(rawUnit: string, value: number): string {
-    if (rawUnit.length > 0) {
-      return rawUnit
-    }
-
-    if (this.isPresetEnabled('pressure')) {
-      return this.detectPressureUnit(this.normalizeNonNegative(value, 1000))
-    }
-
-    return this.presetUnit()
-  }
-
-  private presetRange(unit: string): { min: number; max: number } | undefined {
-    if (this.isPresetEnabled('temperature')) {
-      return unit.toLowerCase().includes('f') ? { min: 0, max: 100 } : { min: -20, max: 40 }
-    }
-
-    if (this.isPresetEnabled('humidity')) {
-      return { min: 0, max: 100 }
-    }
-
-    if (this.isPresetEnabled('pressure')) {
-      const normalizedUnit = unit.toLowerCase()
-      if (normalizedUnit.includes('kpa')) {
-        return { min: 99, max: 103 }
-      }
-      if (normalizedUnit.includes('inhg')) {
-        return { min: 29.2, max: 30.4 }
-      }
-      return { min: 990, max: 1030 }
-    }
-
-    return undefined
-  }
-
-  private presetSections(
-    range: { min: number; max: number },
-    unit: string
-  ): RadialBargraphSection[] {
-    if (this.isPresetEnabled('temperature')) {
-      const imperial = unit.toLowerCase().includes('f')
-      const freezing = imperial ? 32 : 0
-      const warm = imperial ? 77 : 25
-      const hot = imperial ? 95 : 35
-
-      return [
-        { from: range.min, to: Math.min(range.max, freezing), color: '#3b82f6' },
-        { from: Math.max(range.min, freezing), to: Math.min(range.max, warm), color: '#22c55e' },
-        { from: Math.max(range.min, warm), to: Math.min(range.max, hot), color: '#f59e0b' },
-        { from: Math.max(range.min, hot), to: range.max, color: '#ef4444' }
-      ].filter((section) => section.to > section.from)
-    }
-
-    if (this.isPresetEnabled('humidity')) {
-      return [
-        { from: range.min, to: 20, color: '#f59e0b' },
-        { from: 20, to: 80, color: '#22c55e' },
-        { from: 80, to: range.max, color: '#3b82f6' }
-      ].filter((section) => section.to > section.from)
-    }
-
-    if (this.isPresetEnabled('pressure')) {
-      if (unit.toLowerCase().includes('kpa')) {
-        return [
-          { from: range.min, to: 100.8, color: '#f59e0b' },
-          { from: 100.8, to: 102.2, color: '#22c55e' },
-          { from: 102.2, to: range.max, color: '#3b82f6' }
-        ].filter((section) => section.to > section.from)
-      }
-
-      if (unit.toLowerCase().includes('inhg')) {
-        return [
-          { from: range.min, to: 29.8, color: '#f59e0b' },
-          { from: 29.8, to: 30.2, color: '#22c55e' },
-          { from: 30.2, to: range.max, color: '#3b82f6' }
-        ].filter((section) => section.to > section.from)
-      }
-
-      return [
-        { from: range.min, to: 1008, color: '#f59e0b' },
-        { from: 1008, to: 1022, color: '#22c55e' },
-        { from: 1022, to: range.max, color: '#3b82f6' }
-      ].filter((section) => section.to > section.from)
-    }
-
-    return []
-  }
-
   private buildConfig(current: number): RadialBargraphGaugeConfig {
     const unit = this.unit.trim()
-    const effectiveUnit = this.effectiveUnit(unit, current)
-    const presetRange = this.presetRange(effectiveUnit)
+    const preset = this.preset
+    const normalizedCurrent = this.normalizeNonNegative(current, 1000)
+    const effectiveUnit = resolveEffectivePresetUnit(preset, unit, normalizedCurrent)
+    const presetRange = resolvePresetRange(preset, effectiveUnit)
     const hasExplicitMin = this.hasAttribute('min-value') || this.minValue !== 0
     const hasExplicitMax = this.hasAttribute('max-value') || this.maxValue !== 100
     const minValue = hasExplicitMin ? this.minValue : (presetRange?.min ?? this.minValue)
@@ -432,7 +306,7 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       : []
 
     const childSections = this.parseSectionChildren(range)
-    const presetSections = this.presetSections(range, effectiveUnit)
+    const presetSections = resolvePresetSections(preset, range, effectiveUnit)
     const sections =
       this.sections.length > 0
         ? this.sections
@@ -487,11 +361,11 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
       : childAlerts
     const trendVisible = this.hasAttribute('trend-visible')
       ? this.trendVisible
-      : this.isPresetEnabled('temperature') || this.isPresetEnabled('pressure')
+      : isPresetTrendEnabled(preset)
     const title =
       this.hasAttribute('title') || this.title !== 'Radial Bargraph'
         ? this.title
-        : this.presetTitle()
+        : resolvePresetTitle(preset)
 
     return radialBargraphGaugeConfigSchema.parse({
       value: {
@@ -568,8 +442,13 @@ export class SteelseriesRadialBargraphV3Element extends SteelseriesGaugeElement 
 
     const paint = this.getThemePaint()
     const unit = this.unit.trim()
-    const effectiveUnit = this.effectiveUnit(unit, this.value)
-    const presetRange = this.presetRange(effectiveUnit)
+    const preset = this.preset
+    const effectiveUnit = resolveEffectivePresetUnit(
+      preset,
+      unit,
+      this.normalizeNonNegative(this.value, 1000)
+    )
+    const presetRange = resolvePresetRange(preset, effectiveUnit)
     const hasExplicitMin = this.hasAttribute('min-value') || this.minValue !== 0
     const hasExplicitMax = this.hasAttribute('max-value') || this.maxValue !== 100
     const minValue = hasExplicitMin ? this.minValue : (presetRange?.min ?? this.minValue)
