@@ -95,7 +95,7 @@ const parseRgbColor = (color: string): { r: number; g: number; b: number } | und
   const canvas = document.createElement('canvas')
   canvas.width = 1
   canvas.height = 1
-  const context = canvas.getContext('2d')
+  const context = canvas.getContext('2d', { willReadFrequently: true })
   if (!context) {
     return undefined
   }
@@ -276,7 +276,7 @@ const createGradientSampler = (
   const canvas = document.createElement('canvas')
   canvas.width = 256
   canvas.height = 1
-  const context = canvas.getContext('2d')
+  const context = canvas.getContext('2d', { willReadFrequently: true })
   if (!context) {
     return undefined
   }
