@@ -118,6 +118,8 @@ export const radialBargraphGaugeConfigSchema = sharedGaugeConfigSchema
     indicators: radialBargraphIndicatorsSchema
   })
   .superRefine((value, ctx) => {
+    const { min, max } = value.value
+
     if (value.style.useValueGradient && value.valueGradientStops.length === 0) {
       ctx.addIssue({
         code: 'custom',
@@ -133,6 +135,25 @@ export const radialBargraphGaugeConfigSchema = sharedGaugeConfigSchema
         message: 'sections are required when useSectionColors is true'
       })
     }
+
+    const thresholdValue = value.indicators.threshold?.value
+    if (typeof thresholdValue === 'number' && (thresholdValue < min || thresholdValue > max)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['indicators', 'threshold', 'value'],
+        message: 'threshold value must be within min and max range'
+      })
+    }
+
+    value.indicators.alerts.forEach((alert, index) => {
+      if (alert.value < min || alert.value > max) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['indicators', 'alerts', index, 'value'],
+          message: 'alert value must be within min and max range'
+        })
+      }
+    })
   })
   .strict()
 

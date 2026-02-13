@@ -42,6 +42,7 @@ import type {
 export type RadialBargraphDrawContext = CanvasRenderingContext2D
 
 export type RadialBargraphRenderResult = {
+  reading: number
   value: number
   tone: 'accent' | 'warning' | 'danger'
   activeAlerts: RadialBargraphAlert[]
@@ -871,6 +872,7 @@ export const renderRadialBargraphGauge = (
   )
 
   return {
+    reading: clampedValue,
     value: clampedValue,
     tone,
     activeAlerts

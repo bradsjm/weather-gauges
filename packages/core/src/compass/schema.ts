@@ -156,6 +156,17 @@ export const compassGaugeConfigSchema = sharedGaugeConfigSchema
     }),
     indicators: compassIndicatorsSchema
   })
+  .superRefine((value, ctx) => {
+    value.indicators.alerts.forEach((alert, index) => {
+      if (alert.heading < value.heading.min || alert.heading > value.heading.max) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['indicators', 'alerts', index, 'heading'],
+          message: 'alert heading must be within min and max range'
+        })
+      }
+    })
+  })
   .strict()
 
 export type CompassHeading = z.infer<typeof compassHeadingSchema>

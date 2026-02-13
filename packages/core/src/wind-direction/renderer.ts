@@ -45,6 +45,7 @@ import type { WindDirectionAlert, WindDirectionGaugeConfig } from './schema.js'
 export type WindDirectionDrawContext = CanvasRenderingContext2D
 
 export type WindDirectionRenderResult = {
+  reading: number
   latest: number
   average: number
   tone: 'accent' | 'warning' | 'danger'
@@ -545,6 +546,7 @@ export const renderWindDirectionGauge = (
   const tone = resolveGaugeToneFromAlerts(activeAlerts)
 
   return {
+    reading: average,
     latest,
     average,
     tone,

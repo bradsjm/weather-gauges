@@ -32,6 +32,7 @@ import type { WindRoseGaugeConfig, WindRosePetal, WindRoseValue } from './schema
 export type WindRoseDrawContext = CanvasRenderingContext2D
 
 export type WindRoseRenderResult = {
+  reading: number
   value: number
   tone: 'accent' | 'warning' | 'danger'
   activeAlerts: []
@@ -600,6 +601,7 @@ export const renderWindRoseGauge = (
   drawWindRosePetals(context, config, centerX, centerY, radius * 0.62, value)
 
   return {
+    reading: dominantPetal.value,
     value: dominantPetal.value,
     dominantDirection: normalizeDirection(dominantPetal.direction),
     tone: resolveGaugeToneFromAlerts([]),

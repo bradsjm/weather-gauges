@@ -44,6 +44,7 @@ import type {
 export type RadialDrawContext = CanvasRenderingContext2D
 
 export type RadialRenderResult = {
+  reading: number
   value: number
   tone: 'accent' | 'warning' | 'danger'
   activeAlerts: RadialAlert[]
@@ -941,6 +942,7 @@ export const renderRadialGauge = (
   )
 
   return {
+    reading: clampedValue,
     value: clampedValue,
     tone,
     activeAlerts

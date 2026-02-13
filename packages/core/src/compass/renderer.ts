@@ -28,6 +28,7 @@ import {
 export type CompassDrawContext = CanvasRenderingContext2D
 
 export type CompassRenderResult = {
+  reading: number
   heading: number
   tone: 'accent' | 'warning' | 'danger'
   activeAlerts: CompassAlert[]
@@ -357,6 +358,7 @@ export const renderCompassGauge = (
   )
 
   return {
+    reading: heading,
     heading,
     tone,
     activeAlerts

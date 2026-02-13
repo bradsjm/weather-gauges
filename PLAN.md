@@ -742,8 +742,8 @@ gauge.readingText: string  // Current accessible text representation
 ### Core Package
 
 - [x] Compass schema: remove `value`/`heading` duplication
-- [ ] Consistent range validation across all gauges _(partially complete: compass and wind-direction tightened)_
-- [ ] Normalized "reading" interface for render results _(partially complete via `toGaugeContractState` mapping)_
+- [x] Consistent range validation across all gauges
+- [x] Normalized "reading" interface for render results
 
 ### Elements Package
 

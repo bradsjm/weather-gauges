@@ -137,6 +137,52 @@ export const radialGaugeConfigSchema = sharedGaugeConfigSchema
     areas: z.array(radialAreaSchema).default([]),
     indicators: radialIndicatorsSchema
   })
+  .superRefine((value, ctx) => {
+    const { min, max } = value.value
+
+    const thresholdValue = value.indicators.threshold?.value
+    if (typeof thresholdValue === 'number' && (thresholdValue < min || thresholdValue > max)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['indicators', 'threshold', 'value'],
+        message: 'threshold value must be within min and max range'
+      })
+    }
+
+    value.indicators.alerts.forEach((alert, index) => {
+      if (alert.value < min || alert.value > max) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['indicators', 'alerts', index, 'value'],
+          message: 'alert value must be within min and max range'
+        })
+      }
+    })
+
+    if (
+      value.indicators.minMeasuredValueVisible &&
+      typeof value.indicators.minMeasuredValue === 'number' &&
+      (value.indicators.minMeasuredValue < min || value.indicators.minMeasuredValue > max)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['indicators', 'minMeasuredValue'],
+        message: 'minMeasuredValue must be within min and max range'
+      })
+    }
+
+    if (
+      value.indicators.maxMeasuredValueVisible &&
+      typeof value.indicators.maxMeasuredValue === 'number' &&
+      (value.indicators.maxMeasuredValue < min || value.indicators.maxMeasuredValue > max)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['indicators', 'maxMeasuredValue'],
+        message: 'maxMeasuredValue must be within min and max range'
+      })
+    }
+  })
   .strict()
 
 export type RadialScale = z.infer<typeof radialScaleSchema>

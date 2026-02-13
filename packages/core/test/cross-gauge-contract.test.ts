@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   compassGaugeConfigSchema,
   gaugeContract,
+  radialGaugeConfigSchema,
   radialBargraphGaugeConfigSchema,
   toGaugeContractError,
   toGaugeContractState,
@@ -14,12 +15,14 @@ import {
 describe('cross-gauge contracts', () => {
   it('normalizes render results into unified contract state', () => {
     const radialBargraphState = toGaugeContractState('radial-bargraph', {
+      reading: 42,
       value: 42,
       tone: 'accent',
       activeAlerts: []
     })
 
     const compassState = toGaugeContractState('compass', {
+      reading: 132,
       heading: 132,
       tone: 'danger',
       activeAlerts: [{ id: 'storm', heading: 130, message: 'storm', severity: 'critical' }]
@@ -112,6 +115,54 @@ describe('cross-gauge contracts', () => {
           average: 180
         },
         size: { width: 220, height: 220 }
+      })
+    ).not.toThrowError()
+  })
+
+  it('enforces range-bound indicator values for radial configs', () => {
+    expect(() =>
+      radialGaugeConfigSchema.parse({
+        value: { min: 0, max: 100, current: 50 },
+        size: { width: 220, height: 220 },
+        indicators: {
+          threshold: { value: 120, show: true },
+          alerts: []
+        }
+      })
+    ).toThrowError()
+
+    expect(() =>
+      radialGaugeConfigSchema.parse({
+        value: { min: 0, max: 100, current: 50 },
+        size: { width: 220, height: 220 },
+        indicators: {
+          threshold: { value: 80, show: true },
+          alerts: [{ id: 'warn', value: 70, message: 'high', severity: 'warning' }]
+        }
+      })
+    ).not.toThrowError()
+  })
+
+  it('enforces range-bound indicator values for radial-bargraph configs', () => {
+    expect(() =>
+      radialBargraphGaugeConfigSchema.parse({
+        value: { min: 10, max: 40, current: 20 },
+        size: { width: 220, height: 220 },
+        indicators: {
+          threshold: { value: 50, show: true },
+          alerts: []
+        }
+      })
+    ).toThrowError()
+
+    expect(() =>
+      radialBargraphGaugeConfigSchema.parse({
+        value: { min: 10, max: 40, current: 20 },
+        size: { width: 220, height: 220 },
+        indicators: {
+          threshold: { value: 30, show: true },
+          alerts: [{ id: 'warn', value: 35, message: 'high', severity: 'warning' }]
+        }
       })
     ).not.toThrowError()
   })
