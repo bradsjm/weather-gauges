@@ -10,6 +10,7 @@ import { LitElement } from 'lit'
 import { property } from 'lit/decorators.js'
 
 type GaugeValidationMode = 'clamp' | 'coerce' | 'strict'
+type GaugeTheme = 'classic' | 'flat' | 'high-contrast'
 
 type GaugeErrorIssue = {
   path: string
@@ -51,6 +52,9 @@ const hasIssues = (value: unknown): value is ErrorWithIssues => {
 export abstract class WeatherGaugeElement extends LitElement {
   @property({ type: String })
   validation: GaugeValidationMode = 'clamp'
+
+  @property({ type: String, reflect: true })
+  theme: GaugeTheme = 'classic'
 
   @property({ attribute: false })
   readingText = ''

@@ -78,26 +78,45 @@ pnpm add @bradsjm/weather-gauges-elements
 </html>
 ```
 
-## Common Attributes
+## Stable HTML-First API (Implementation In Progress)
 
-| Attribute   | Type    | Default | Description                   |
-| ----------- | ------- | ------- | ----------------------------- |
-| `value`     | Number  | `0`     | Primary reading               |
-| `gauge-min` | Number  | `0`     | Scale minimum (scalar gauges) |
-| `gauge-max` | Number  | `100`   | Scale maximum (scalar gauges) |
-| `label`     | String  | `''`    | Gauge label                   |
-| `unit`      | String  | `''`    | Unit label                    |
-| `size`      | Number  | `220`   | Canvas size in px             |
-| `animated`  | Boolean | `true`  | Enable value animation        |
-| `duration`  | Number  | `500`   | Animation duration in ms      |
-| `preset`    | String  | `''`    | Measurement preset            |
+The stable, long-term attribute surface is intentionally small for common use:
 
-Wind-direction specific:
+| Attribute    | Type    | Default   | Description                                         |
+| ------------ | ------- | --------- | --------------------------------------------------- |
+| `value`      | Number  | `0`       | Current gauge reading                               |
+| `gauge-min`  | Number  | `0`       | Scale minimum (scalar gauges)                       |
+| `gauge-max`  | Number  | `100`     | Scale maximum (scalar gauges)                       |
+| `label`      | String  | `''`      | Primary label                                       |
+| `unit`       | String  | `''`      | Unit label                                          |
+| `size`       | Number  | `200`     | Canvas size in px (square)                          |
+| `animated`   | Boolean | `true`    | Enable value animation                              |
+| `duration`   | Number  | `500`     | Animation duration in ms                            |
+| `preset`     | String  | `''`      | Measurement preset                                  |
+| `validation` | String  | `clamp`   | Validation mode: `clamp`, `coerce`, or `strict`     |
+| `theme`      | String  | `classic` | Theme selector (`classic`, `flat`, `high-contrast`) |
 
-| Attribute | Type   | Default | Description            |
-| --------- | ------ | ------- | ---------------------- |
-| `value`   | Number | `0`     | Latest wind direction  |
-| `average` | Number | `0`     | Average wind direction |
+Gauge-specific attributes in the stable surface:
+
+- Radial + bargraph: `threshold`, `threshold-label`, `decimals`
+- Compass: `show-labels`, `show-degrees`, `face-rotates`
+- Wind direction: `average`, `average-label`
+- Wind rose: optional `gauge-max` (auto-derived from petals when omitted)
+
+Notes:
+
+- Additional advanced HTML attributes currently work, but are being moved behind JS properties and are not considered stable long-term API.
+- `theme` is documented as part of the target public contract; current theming remains CSS token driven (`--wx-*`) until the discrete selector ships.
+
+### Canonical Child Config Tags
+
+Child tags are parsed as declarative configuration and do not need custom element registration.
+
+- `wx-section`: `start`, `end`, `color`, optional `label`
+- `wx-alert`: `threshold`, `severity`, optional `message`, optional `id`
+- `wx-petal`: `direction`, `value`, optional `color`
+
+Compatibility aliases are currently accepted by some gauges (for example `from`/`to` and `heading`), but the canonical names above are the supported long-term docs contract.
 
 ## Events
 
