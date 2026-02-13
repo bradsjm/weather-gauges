@@ -43,9 +43,6 @@ export const drawCompassFrame = (
   closePathSafe(context)
   context.fillStyle = '#848484'
   context.fill()
-  context.lineWidth = 1
-  context.strokeStyle = 'rgba(132, 132, 132, 0.5)'
-  context.stroke()
 
   context.beginPath()
   context.arc(centerX, centerY, (0.990654 * imageWidth) / 2, 0, TWO_PI)
