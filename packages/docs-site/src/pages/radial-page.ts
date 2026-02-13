@@ -14,6 +14,141 @@ import {
 import { renderPlaygroundPage } from '../playground'
 import type { ControlDef, PlaygroundState } from '../types'
 
+type PresetKey =
+  | ''
+  | 'temperature'
+  | 'humidity'
+  | 'pressure'
+  | 'wind-speed'
+  | 'rainfall'
+  | 'rain-rate'
+  | 'solar'
+  | 'uv-index'
+  | 'cloud-base'
+
+const radialPresetExamples: Record<PresetKey, Partial<PlaygroundState>> = {
+  '': {
+    title: 'Temperature',
+    unit: '°F',
+    minValue: 0,
+    maxValue: 100,
+    value: 45,
+    threshold: 72,
+    warningAlertValue: 72,
+    criticalAlertValue: 88,
+    trendVisible: true,
+    segments: temperatureSections
+  },
+  temperature: {
+    title: 'Temperature',
+    unit: '°C',
+    minValue: -20,
+    maxValue: 40,
+    value: 18,
+    threshold: 30,
+    warningAlertValue: 30,
+    criticalAlertValue: 35,
+    trendVisible: true,
+    segments: []
+  },
+  humidity: {
+    title: 'Humidity',
+    unit: '%',
+    minValue: 0,
+    maxValue: 100,
+    value: 62,
+    threshold: 80,
+    warningAlertValue: 70,
+    criticalAlertValue: 85,
+    trendVisible: false,
+    segments: []
+  },
+  pressure: {
+    title: 'Pressure',
+    unit: 'hPa',
+    minValue: 990,
+    maxValue: 1030,
+    value: 1013,
+    threshold: 1022,
+    warningAlertValue: 1018,
+    criticalAlertValue: 1025,
+    trendVisible: true,
+    segments: []
+  },
+  'wind-speed': {
+    title: 'Wind Speed',
+    unit: 'km/h',
+    minValue: 0,
+    maxValue: 30,
+    value: 14,
+    threshold: 20,
+    warningAlertValue: 18,
+    criticalAlertValue: 24,
+    trendVisible: true,
+    segments: []
+  },
+  rainfall: {
+    title: 'Rainfall',
+    unit: 'mm',
+    minValue: 0,
+    maxValue: 10,
+    value: 2.4,
+    threshold: 6,
+    warningAlertValue: 5,
+    criticalAlertValue: 8,
+    trendVisible: false,
+    segments: []
+  },
+  'rain-rate': {
+    title: 'Rain Rate',
+    unit: 'mm/h',
+    minValue: 0,
+    maxValue: 10,
+    value: 3.1,
+    threshold: 6,
+    warningAlertValue: 5,
+    criticalAlertValue: 8,
+    trendVisible: false,
+    segments: []
+  },
+  solar: {
+    title: 'Solar',
+    unit: 'W/m²',
+    minValue: 0,
+    maxValue: 1000,
+    value: 640,
+    threshold: 800,
+    warningAlertValue: 700,
+    criticalAlertValue: 900,
+    trendVisible: false,
+    segments: []
+  },
+  'uv-index': {
+    title: 'UV Index',
+    unit: '',
+    minValue: 0,
+    maxValue: 10,
+    value: 6,
+    threshold: 7,
+    warningAlertValue: 6,
+    criticalAlertValue: 8,
+    trendVisible: false,
+    segments: []
+  },
+  'cloud-base': {
+    title: 'Cloud Base',
+    unit: 'm',
+    minValue: 0,
+    maxValue: 1000,
+    value: 420,
+    threshold: 700,
+    warningAlertValue: 500,
+    criticalAlertValue: 300,
+    trendVisible: false,
+    segments: []
+  }
+}
+
 export const renderRadialPage = (root: HTMLElement): void => {
   const defaults: PlaygroundState = {
     value: 45.1,
@@ -59,10 +194,11 @@ export const renderRadialPage = (root: HTMLElement): void => {
     {
       key: 'preset',
       label: 'Measurement Preset',
-      description: 'Applies temperature, humidity, or pressure defaults when enabled.',
+      description: 'Applies weather-specific defaults and example values when enabled.',
       type: 'select',
       options: measurementPresetOptions,
-      documentation: 'Set to none to use manual min/max and section settings only.'
+      documentation:
+        'Includes temperature, humidity, pressure, wind, rain, solar, UV, and cloud-base.'
     },
     {
       key: 'minValue',
@@ -299,6 +435,8 @@ export const renderRadialPage = (root: HTMLElement): void => {
     }
   ]
 
+  let previousPreset: PresetKey = ''
+
   renderPlaygroundPage(
     root,
     'Radial Gauge Playground',
@@ -307,6 +445,16 @@ export const renderRadialPage = (root: HTMLElement): void => {
     controls,
     defaults,
     (state, controlDefs) => {
+      const preset =
+        typeof state.preset === 'string' && state.preset in radialPresetExamples
+          ? (state.preset as PresetKey)
+          : ''
+      if (preset !== previousPreset) {
+        const example = radialPresetExamples[preset]
+        Object.assign(state, example)
+        previousPreset = preset
+      }
+
       const rawMin = asFiniteNumber(state.minValue, 0)
       const rawMax = asFiniteNumber(state.maxValue, 100)
       const minValue = Math.min(rawMin, rawMax)

@@ -11,6 +11,131 @@ import {
 import { renderPlaygroundPage } from '../playground'
 import type { ControlDef, PlaygroundState } from '../types'
 
+type PresetKey =
+  | ''
+  | 'temperature'
+  | 'humidity'
+  | 'pressure'
+  | 'wind-speed'
+  | 'rainfall'
+  | 'rain-rate'
+  | 'solar'
+  | 'uv-index'
+  | 'cloud-base'
+
+const radialBargraphPresetExamples: Record<PresetKey, Partial<PlaygroundState>> = {
+  '': {
+    title: 'Pressure',
+    unit: 'psi',
+    minValue: 0,
+    maxValue: 100,
+    value: 72,
+    threshold: 80,
+    warningAlertValue: 80,
+    criticalAlertValue: 95,
+    trendVisible: false
+  },
+  temperature: {
+    title: 'Temperature',
+    unit: '°C',
+    minValue: -20,
+    maxValue: 40,
+    value: 21,
+    threshold: 30,
+    warningAlertValue: 30,
+    criticalAlertValue: 35,
+    trendVisible: true
+  },
+  humidity: {
+    title: 'Humidity',
+    unit: '%',
+    minValue: 0,
+    maxValue: 100,
+    value: 58,
+    threshold: 80,
+    warningAlertValue: 70,
+    criticalAlertValue: 85,
+    trendVisible: false
+  },
+  pressure: {
+    title: 'Pressure',
+    unit: 'hPa',
+    minValue: 990,
+    maxValue: 1030,
+    value: 1012,
+    threshold: 1022,
+    warningAlertValue: 1018,
+    criticalAlertValue: 1025,
+    trendVisible: true
+  },
+  'wind-speed': {
+    title: 'Wind Speed',
+    unit: 'km/h',
+    minValue: 0,
+    maxValue: 30,
+    value: 16,
+    threshold: 20,
+    warningAlertValue: 18,
+    criticalAlertValue: 24,
+    trendVisible: true
+  },
+  rainfall: {
+    title: 'Rainfall',
+    unit: 'mm',
+    minValue: 0,
+    maxValue: 10,
+    value: 2,
+    threshold: 6,
+    warningAlertValue: 5,
+    criticalAlertValue: 8,
+    trendVisible: false
+  },
+  'rain-rate': {
+    title: 'Rain Rate',
+    unit: 'mm/h',
+    minValue: 0,
+    maxValue: 10,
+    value: 3,
+    threshold: 6,
+    warningAlertValue: 5,
+    criticalAlertValue: 8,
+    trendVisible: false
+  },
+  solar: {
+    title: 'Solar',
+    unit: 'W/m²',
+    minValue: 0,
+    maxValue: 1000,
+    value: 560,
+    threshold: 800,
+    warningAlertValue: 700,
+    criticalAlertValue: 900,
+    trendVisible: false
+  },
+  'uv-index': {
+    title: 'UV Index',
+    unit: '',
+    minValue: 0,
+    maxValue: 10,
+    value: 5,
+    threshold: 7,
+    warningAlertValue: 6,
+    criticalAlertValue: 8,
+    trendVisible: false
+  },
+  'cloud-base': {
+    title: 'Cloud Base',
+    unit: 'm',
+    minValue: 0,
+    maxValue: 1000,
+    value: 480,
+    threshold: 700,
+    warningAlertValue: 500,
+    criticalAlertValue: 300,
+    trendVisible: false
+  }
+}
+
 export const renderRadialBargraphPage = (root: HTMLElement): void => {
   const defaults: PlaygroundState = {
     value: 72,
@@ -51,10 +176,11 @@ export const renderRadialBargraphPage = (root: HTMLElement): void => {
     {
       key: 'preset',
       label: 'Measurement Preset',
-      description: 'Applies temperature, humidity, or pressure defaults when enabled.',
+      description: 'Applies weather-specific defaults and example values when enabled.',
       type: 'select',
       options: measurementPresetOptions,
-      documentation: 'Set to none to use manual min/max and section settings only.'
+      documentation:
+        'Includes temperature, humidity, pressure, wind, rain, solar, UV, and cloud-base.'
     },
     {
       key: 'minValue',
@@ -262,6 +388,8 @@ export const renderRadialBargraphPage = (root: HTMLElement): void => {
     }
   ]
 
+  let previousPreset: PresetKey = ''
+
   renderPlaygroundPage(
     root,
     'Radial Bargraph Playground',
@@ -270,6 +398,16 @@ export const renderRadialBargraphPage = (root: HTMLElement): void => {
     controls,
     defaults,
     (state, controlDefs) => {
+      const preset =
+        typeof state.preset === 'string' && state.preset in radialBargraphPresetExamples
+          ? (state.preset as PresetKey)
+          : ''
+      if (preset !== previousPreset) {
+        const example = radialBargraphPresetExamples[preset]
+        Object.assign(state, example)
+        previousPreset = preset
+      }
+
       const rawMin = asFiniteNumber(state.minValue, 0)
       const rawMax = asFiniteNumber(state.maxValue, 100)
       const minValue = Math.min(rawMin, rawMax)
