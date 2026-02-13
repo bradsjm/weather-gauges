@@ -712,28 +712,6 @@ const LEGACY_CHROME_COLORS = [
   '#ffffff'
 ]
 
-const LEGACY_STAINLESS_FRACTIONS = [
-  0, 0.03, 0.1, 0.14, 0.24, 0.33, 0.38, 0.5, 0.62, 0.67, 0.76, 0.81, 0.85, 0.97, 1
-]
-
-const LEGACY_STAINLESS_COLORS = [
-  '#fdfdfd',
-  '#f3f3f3',
-  '#cbcbcb',
-  '#f5f5f5',
-  '#c5c5c5',
-  '#f4f4f4',
-  '#d0d0d0',
-  '#f8f8f8',
-  '#d0d0d0',
-  '#f7f7f7',
-  '#c3c3c3',
-  '#f3f3f3',
-  '#c8c8c8',
-  '#f5f5f5',
-  '#dcdcdc'
-]
-
 const createGradientFromStops = (
   context: CanvasRenderingContext2D,
   centerX: number,
@@ -856,28 +834,13 @@ const drawLegacyRadialFrameMetal = (
   context.stroke()
 }
 
-const drawLegacyRadialBackground = (
+const drawRadialInnerShadow = (
   context: CanvasRenderingContext2D,
-  paint: ThemePaint,
   centerX: number,
   centerY: number,
   radius: number
 ): void => {
-  const baseRadius = radius * 0.84
-  const stainlessGradient = createGradientFromStops(
-    context,
-    centerX,
-    centerY,
-    LEGACY_STAINLESS_FRACTIONS,
-    LEGACY_STAINLESS_COLORS,
-    paint.backgroundColor
-  )
-
-  drawCircle(context, centerX, centerY, baseRadius)
-  context.fillStyle = stainlessGradient
-  context.fill()
-
-  const toneOverlay = addColorStops(
+  const shadow = addColorStops(
     createRadialGradientSafe(
       context,
       centerX,
@@ -885,41 +848,209 @@ const drawLegacyRadialBackground = (
       0,
       centerX,
       centerY,
-      baseRadius,
-      paint.backgroundColor
+      radius,
+      'rgba(0, 0, 0, 0.3)'
     ),
     [
-      [0, paint.backgroundColor],
-      [0.78, 'rgba(0, 0, 0, 0.08)'],
-      [1, 'rgba(0, 0, 0, 0.22)']
+      [0, 'rgba(0, 0, 0, 0)'],
+      [0.7, 'rgba(0, 0, 0, 0)'],
+      [0.71, 'rgba(0, 0, 0, 0)'],
+      [0.86, 'rgba(0, 0, 0, 0.03)'],
+      [0.92, 'rgba(0, 0, 0, 0.07)'],
+      [0.97, 'rgba(0, 0, 0, 0.15)'],
+      [1, 'rgba(0, 0, 0, 0.3)']
     ]
   )
-  drawCircle(context, centerX, centerY, baseRadius)
-  context.fillStyle = toneOverlay
-  context.fill()
 
-  const edgeVignette = addColorStops(
-    createRadialGradientSafe(
-      context,
-      centerX,
-      centerY,
-      baseRadius * 0.35,
-      centerX,
-      centerY,
-      baseRadius,
-      'rgba(0,0,0,0.1)'
-    ),
+  context.beginPath()
+  context.arc(centerX, centerY, radius, 0, TWO_PI)
+  closePathSafe(context)
+  context.fillStyle = shadow
+  context.fill()
+}
+
+const drawRadialColorBackground = (
+  context: CanvasRenderingContext2D,
+  palette: GaugeBackgroundPalette,
+  size: number,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  fallbackColor: string
+): void => {
+  const gradient = addColorStops(
+    createLinearGradientSafe(context, 0, 0.084112 * size, 0, radius * 2, fallbackColor),
     [
-      [0.7, 'rgba(0,0,0,0)'],
-      [0.86, 'rgba(0,0,0,0.03)'],
-      [0.92, 'rgba(0,0,0,0.07)'],
-      [0.97, 'rgba(0,0,0,0.15)'],
-      [1, 'rgba(0,0,0,0.3)']
+      [0, rgbTupleToCss(palette.gradientStart)],
+      [0.4, rgbTupleToCss(palette.gradientFraction)],
+      [1, rgbTupleToCss(palette.gradientStop)]
     ]
   )
-  drawCircle(context, centerX, centerY, baseRadius)
-  context.fillStyle = edgeVignette
+
+  context.fillStyle = gradient
+  context.beginPath()
+  context.arc(centerX, centerY, radius, 0, TWO_PI)
+  closePathSafe(context)
   context.fill()
+}
+
+const drawRadialTextureBackground = (
+  context: CanvasRenderingContext2D,
+  backgroundColor: RadialBackgroundColorName,
+  palette: GaugeBackgroundPalette,
+  centerX: number,
+  centerY: number,
+  radius: number
+): boolean => {
+  if (backgroundColor === 'CARBON') {
+    const pattern = drawCarbonPattern(context)
+    context.fillStyle = pattern ?? rgbTupleToCss(palette.gradientStop)
+    context.beginPath()
+    context.arc(centerX, centerY, radius, 0, TWO_PI)
+    closePathSafe(context)
+    context.fill()
+
+    context.beginPath()
+    context.arc(centerX, centerY, radius, 0, TWO_PI)
+    closePathSafe(context)
+    context.fillStyle = addColorStops(
+      createLinearGradientSafe(
+        context,
+        centerX - radius,
+        centerY,
+        centerX + radius,
+        centerY,
+        'rgba(0, 0, 0, 0.25)'
+      ),
+      [
+        [0, 'rgba(0, 0, 0, 0.25)'],
+        [0.5, 'rgba(0, 0, 0, 0)'],
+        [1, 'rgba(0, 0, 0, 0.25)']
+      ]
+    )
+    context.fill()
+    return true
+  }
+
+  if (backgroundColor === 'PUNCHED_SHEET') {
+    const pattern = drawPunchedSheetPattern(context)
+    context.fillStyle = pattern ?? rgbTupleToCss(palette.gradientStop)
+    context.beginPath()
+    context.arc(centerX, centerY, radius, 0, TWO_PI)
+    closePathSafe(context)
+    context.fill()
+
+    context.beginPath()
+    context.arc(centerX, centerY, radius, 0, TWO_PI)
+    closePathSafe(context)
+    context.fillStyle = addColorStops(
+      createLinearGradientSafe(
+        context,
+        centerX - radius,
+        centerY,
+        centerX + radius,
+        centerY,
+        'rgba(0, 0, 0, 0.25)'
+      ),
+      [
+        [0, 'rgba(0, 0, 0, 0.25)'],
+        [0.5, 'rgba(0, 0, 0, 0)'],
+        [1, 'rgba(0, 0, 0, 0.25)']
+      ]
+    )
+    context.fill()
+    return true
+  }
+
+  if (backgroundColor === 'BRUSHED_METAL' || backgroundColor === 'BRUSHED_STAINLESS') {
+    const pattern = drawBrushedMetalPattern(
+      context,
+      palette.gradientStop,
+      backgroundColor === 'BRUSHED_METAL'
+    )
+    context.fillStyle = pattern ?? rgbTupleToCss(palette.gradientStop)
+    context.beginPath()
+    context.arc(centerX, centerY, radius, 0, TWO_PI)
+    closePathSafe(context)
+    context.fill()
+    return true
+  }
+
+  if (backgroundColor === 'STAINLESS' || backgroundColor === 'TURNED') {
+    if (typeof context.createConicGradient === 'function') {
+      const gradient = context.createConicGradient(-HALF_PI, centerX, centerY)
+      const fractions = [
+        0, 0.03, 0.1, 0.14, 0.24, 0.33, 0.38, 0.5, 0.62, 0.67, 0.76, 0.81, 0.85, 0.97, 1
+      ]
+      const colors = [
+        '#FDFDFD',
+        '#FDFDFD',
+        '#B2B2B4',
+        '#ACACAE',
+        '#FDFDFD',
+        '#8E8E8E',
+        '#8E8E8E',
+        '#FDFDFD',
+        '#8E8E8E',
+        '#8E8E8E',
+        '#FDFDFD',
+        '#ACACAE',
+        '#B2B2B4',
+        '#FDFDFD',
+        '#FDFDFD'
+      ]
+      for (let i = 0; i < fractions.length; i += 1) {
+        gradient.addColorStop(fractions[i] ?? 1, colors[i] ?? '#FDFDFD')
+      }
+      context.fillStyle = gradient
+    } else {
+      context.fillStyle = rgbTupleToCss(palette.gradientStop)
+    }
+
+    context.beginPath()
+    context.arc(centerX, centerY, radius, 0, TWO_PI)
+    closePathSafe(context)
+    context.fill()
+
+    if (backgroundColor === 'TURNED') {
+      const turnRadius = radius * 0.55
+      const stepSize = RAD_FACTOR * (500 / radius)
+      const end = TWO_PI - stepSize * 0.3
+
+      context.save()
+      context.beginPath()
+      context.arc(centerX, centerY, radius, 0, TWO_PI)
+      closePathSafe(context)
+      context.clip()
+      context.lineWidth = 0.5
+
+      for (let angle = 0; angle < end; angle += stepSize) {
+        context.strokeStyle = 'rgba(240, 240, 255, 0.25)'
+        context.beginPath()
+        context.arc(centerX + turnRadius, centerY, turnRadius, 0, TWO_PI)
+        context.stroke()
+
+        context.translate(centerX, centerY)
+        context.rotate(stepSize * 0.3)
+        context.translate(-centerX, -centerY)
+
+        context.strokeStyle = 'rgba(25, 10, 10, 0.1)'
+        context.beginPath()
+        context.arc(centerX + turnRadius, centerY, turnRadius, 0, TWO_PI)
+        context.stroke()
+
+        context.translate(centerX, centerY)
+        context.rotate(stepSize - stepSize * 0.3)
+        context.translate(-centerX, -centerY)
+      }
+
+      context.restore()
+    }
+
+    return true
+  }
+
+  return false
 }
 
 const drawLegacyRadialForegroundTyped = (
@@ -1284,7 +1415,7 @@ export const drawGaugeRadialFrameByDesign = (
   drawLegacyRadialFrameMetal(context, centerX, centerY, radius)
 }
 
-export const drawGaugeRadialBackgroundByStyle = (
+export const drawRadialBackground = (
   context: CanvasRenderingContext2D,
   backgroundColor: RadialBackgroundColorName,
   size: number,
@@ -1294,59 +1425,38 @@ export const drawGaugeRadialBackgroundByStyle = (
   paint: ThemePaint,
   textColor: string
 ): void => {
-  const patchedPaint: ThemePaint = {
-    ...paint,
-    textColor,
-    backgroundColor: paint.backgroundColor
-  }
+  void textColor
+  void radius
 
-  if (backgroundColor === 'DARK_GRAY') {
-    const dialRadius = radius * 0.866
-    const dialGradient = createLinearGradientSafe(
-      context,
-      0,
-      0.084112 * size,
-      0,
-      0.831775 * size,
-      '#4b4b4b'
-    )
-    if (typeof dialGradient !== 'string') {
-      dialGradient.addColorStop(0, 'rgb(0, 0, 0)')
-      dialGradient.addColorStop(0.4, 'rgb(51, 51, 51)')
-      dialGradient.addColorStop(1, 'rgb(153, 153, 153)')
-    }
-    context.fillStyle = dialGradient
-    context.beginPath()
-    context.arc(centerX, centerY, dialRadius, 0, TWO_PI)
-    context.fill()
+  const backgroundRadius = (0.831775 * size) / 2
+  const palette = getGaugeBackgroundPalette(backgroundColor)
+  const fallbackColor = paint.backgroundColor || rgbTupleToCss(palette.gradientStop)
 
-    const innerShadow = createRadialGradientSafe(
+  context.save()
+
+  if (
+    !drawRadialTextureBackground(
       context,
+      backgroundColor,
+      palette,
       centerX,
       centerY,
-      0,
+      backgroundRadius
+    )
+  ) {
+    drawRadialColorBackground(
+      context,
+      palette,
+      size,
       centerX,
       centerY,
-      dialRadius,
-      'rgba(0, 0, 0, 0)'
+      backgroundRadius,
+      fallbackColor
     )
-    if (typeof innerShadow !== 'string') {
-      innerShadow.addColorStop(0, 'rgba(0, 0, 0, 0)')
-      innerShadow.addColorStop(0.7, 'rgba(0, 0, 0, 0)')
-      innerShadow.addColorStop(0.71, 'rgba(0, 0, 0, 0)')
-      innerShadow.addColorStop(0.86, 'rgba(0, 0, 0, 0.03)')
-      innerShadow.addColorStop(0.92, 'rgba(0, 0, 0, 0.07)')
-      innerShadow.addColorStop(0.97, 'rgba(0, 0, 0, 0.15)')
-      innerShadow.addColorStop(1, 'rgba(0, 0, 0, 0.30)')
-    }
-    context.fillStyle = innerShadow
-    context.beginPath()
-    context.arc(centerX, centerY, dialRadius, 0, TWO_PI)
-    context.fill()
-    return
   }
 
-  drawLegacyRadialBackground(context, patchedPaint, centerX, centerY, radius)
+  drawRadialInnerShadow(context, centerX, centerY, backgroundRadius)
+  context.restore()
 }
 
 export const drawGaugeRadialForegroundByType = (

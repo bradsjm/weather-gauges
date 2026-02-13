@@ -1,7 +1,7 @@
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
 import { clamp } from '../math/range.js'
 import {
-  drawGaugeRadialBackgroundByStyle,
+  drawRadialBackground,
   drawGaugeRadialForegroundByType,
   drawGaugeRadialFrameByDesign
 } from '../render/gauge-materials.js'
@@ -284,7 +284,7 @@ const drawFrameBackground = (
     return
   }
 
-  drawGaugeRadialBackgroundByStyle(
+  drawRadialBackground(
     context,
     config.style.backgroundColor,
     size,

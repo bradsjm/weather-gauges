@@ -13,7 +13,7 @@ import {
 } from '../render/gauge-pointer.js'
 import {
   drawGaugeRadialForegroundByType,
-  drawGaugeRadialBackgroundByStyle,
+  drawRadialBackground,
   drawGaugeRadialFrameByDesign
 } from '../render/gauge-materials.js'
 import { drawGaugeCenterKnob } from '../render/gauge-knob.js'
@@ -345,7 +345,7 @@ export const renderWindDirectionGauge = (
         return
       }
 
-      drawGaugeRadialBackgroundByStyle(
+      drawRadialBackground(
         context,
         config.style.backgroundColor,
         width,
