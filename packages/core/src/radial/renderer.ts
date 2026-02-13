@@ -91,6 +91,7 @@ type RadialLayout = {
   ledX: number
   userLedX: number
   ledY: number
+  userLedY: number
   trendX: number
   trendY: number
   knobCenterY: number
@@ -106,6 +107,9 @@ const DEFAULT_START_ANGLE = (-3 * PI) / 4
 const DEFAULT_END_ANGLE = (3 * PI) / 4
 const DEFAULT_ANGLE_EPSILON = 1e-6
 const STD_FONT_NAME = 'Arial,Verdana,sans-serif'
+const V2_LED_SIZE_FACTOR = 0.093457 * 0.75
+const TITLE_Y_NUDGE_PX = 3
+const TREND_Y_NUDGE_PX = 4
 const TYPE5_START_ANGLE = 1.25 * PI
 const ORIENTATION_ROTATION: Record<RadialOrientation, number> = {
   north: 0,
@@ -147,6 +151,7 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
       ledX: size * 0.455,
       userLedX: size * 0.545,
       ledY: size * 0.51,
+      userLedY: size * 0.51,
       trendX: size * 0.3,
       trendY: size * 0.73364,
       knobCenterY: size * 0.733644,
@@ -154,6 +159,10 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
       pointerShadow: true
     }
   }
+
+  const ledY = size * 0.4
+  const userLedX = size * 0.4
+  const userLedY = ledY
 
   return {
     frameCenterY: size * 0.5,
@@ -168,9 +177,9 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
     minorTickInnerRadius: size * 0.34,
     minorTickOuterRadius: size * 0.385,
     labelRadius: size * 0.27,
-    titleY: size * 0.57,
-    unitY: size * 0.79,
-    lcdY: size * 0.62,
+    titleY: size * 0.3 + TITLE_Y_NUDGE_PX,
+    unitY: size * 0.38,
+    lcdY: size * 0.57,
     thresholdInnerRadius: size * 0.34,
     thresholdOuterRadius: size * 0.425,
     thresholdLineWidth: Math.max(1.5, size * 0.006),
@@ -178,10 +187,11 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
     measuredOuterRadius: size * 0.405,
     measuredLineWidth: Math.max(1.25, size * 0.005),
     ledX: size * 0.6,
-    userLedX: size * 0.4,
-    ledY: size * 0.38,
+    userLedX,
+    ledY,
+    userLedY,
     trendX: size * 0.3,
-    trendY: size * 0.45,
+    trendY: size * 0.45 - TREND_Y_NUDGE_PX,
     knobCenterY: size * 0.5,
     pointerImageSize: size,
     pointerShadow: false
@@ -476,14 +486,14 @@ const drawTitleAndUnit = (
 
   if (config.text.title) {
     configureGaugeTextLayout(context, {
-      font: buildGaugeFont(Math.max(12, Math.round(size * 0.048)), STD_FONT_NAME)
+      font: buildGaugeFont(Math.max(12, Math.round(size * 0.046728)), STD_FONT_NAME)
     })
     drawGaugeText(context, config.text.title, centerX, layout.titleY)
   }
 
   if (config.text.unit) {
     configureGaugeTextLayout(context, {
-      font: buildGaugeFont(Math.max(10, Math.round(size * 0.036)), STD_FONT_NAME)
+      font: buildGaugeFont(Math.max(12, Math.round(size * 0.046728)), STD_FONT_NAME)
     })
     drawGaugeText(context, config.text.unit, centerX, layout.unitY)
   }
@@ -497,8 +507,8 @@ const drawLcd = (
   layout: RadialLayout
 ): void => {
   const lcdPalette = resolveRadialLcdPalette('STANDARD')
-  const lcdWidth = size * 0.21
-  const lcdHeight = size * 0.07
+  const lcdWidth = size * 0.32
+  const lcdHeight = size * 0.11
   const lcdX = (size - lcdWidth) * 0.5
   const lcdY = layout.lcdY
 
@@ -738,7 +748,7 @@ export const renderRadialGauge = (
       layout
     )
 
-    const ledSize = Math.ceil(size * 0.093457)
+    const ledSize = Math.ceil(size * V2_LED_SIZE_FACTOR)
     drawRadialSimpleLed(
       context,
       layout.ledX,
@@ -751,7 +761,7 @@ export const renderRadialGauge = (
     drawRadialSimpleLed(
       context,
       layout.userLedX,
-      layout.ledY,
+      layout.userLedY,
       ledSize,
       '#00c74a',
       config.indicators.userLedVisible
