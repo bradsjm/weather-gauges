@@ -124,7 +124,13 @@ export const measurementPresetOptions: SelectOption[] = [
   { value: '', label: 'none' },
   { value: 'temperature', label: 'temperature' },
   { value: 'humidity', label: 'humidity' },
-  { value: 'pressure', label: 'pressure' }
+  { value: 'pressure', label: 'pressure' },
+  { value: 'wind-speed', label: 'wind-speed' },
+  { value: 'rainfall', label: 'rainfall' },
+  { value: 'rain-rate', label: 'rain-rate' },
+  { value: 'solar', label: 'solar' },
+  { value: 'uv-index', label: 'uv-index' },
+  { value: 'cloud-base', label: 'cloud-base' }
 ]
 
 export const windDirectionPresetOptions: SelectOption[] = [

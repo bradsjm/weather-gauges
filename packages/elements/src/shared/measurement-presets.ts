@@ -1,4 +1,14 @@
-export type MeasurementPreset = '' | 'temperature' | 'humidity' | 'pressure'
+export type MeasurementPreset =
+  | ''
+  | 'temperature'
+  | 'humidity'
+  | 'pressure'
+  | 'wind-speed'
+  | 'rainfall'
+  | 'rain-rate'
+  | 'solar'
+  | 'uv-index'
+  | 'cloud-base'
 
 export type PresetRange = {
   min: number
@@ -46,6 +56,30 @@ export const resolvePresetTitle = (preset: MeasurementPreset): string => {
     return 'Pressure'
   }
 
+  if (preset === 'wind-speed') {
+    return 'Wind Speed'
+  }
+
+  if (preset === 'rainfall') {
+    return 'Rainfall'
+  }
+
+  if (preset === 'rain-rate') {
+    return 'Rain Rate'
+  }
+
+  if (preset === 'solar') {
+    return 'Solar'
+  }
+
+  if (preset === 'uv-index') {
+    return 'UV Index'
+  }
+
+  if (preset === 'cloud-base') {
+    return 'Cloud Base'
+  }
+
   return ''
 }
 
@@ -60,6 +94,30 @@ export const resolvePresetUnit = (preset: MeasurementPreset): string => {
 
   if (preset === 'pressure') {
     return 'hPa'
+  }
+
+  if (preset === 'wind-speed') {
+    return 'km/h'
+  }
+
+  if (preset === 'rainfall') {
+    return 'mm'
+  }
+
+  if (preset === 'rain-rate') {
+    return 'mm/h'
+  }
+
+  if (preset === 'solar') {
+    return 'W/m²'
+  }
+
+  if (preset === 'uv-index') {
+    return ''
+  }
+
+  if (preset === 'cloud-base') {
+    return 'm'
   }
 
   return ''
@@ -114,6 +172,40 @@ export const resolvePresetRange = (
       return { min: 29.2, max: 30.4 }
     }
     return { min: 990, max: 1030 }
+  }
+
+  if (preset === 'wind-speed') {
+    const normalizedUnit = unit.toLowerCase()
+    if (normalizedUnit.includes('mph')) {
+      return { min: 0, max: 20 }
+    }
+    if (normalizedUnit.includes('kts') || normalizedUnit.includes('kt')) {
+      return { min: 0, max: 20 }
+    }
+    return { min: 0, max: 30 }
+  }
+
+  if (preset === 'rainfall') {
+    const normalizedUnit = unit.toLowerCase()
+    return normalizedUnit.includes('in') ? { min: 0, max: 0.5 } : { min: 0, max: 10 }
+  }
+
+  if (preset === 'rain-rate') {
+    const normalizedUnit = unit.toLowerCase()
+    return normalizedUnit.includes('in') ? { min: 0, max: 0.5 } : { min: 0, max: 10 }
+  }
+
+  if (preset === 'solar') {
+    return { min: 0, max: 1000 }
+  }
+
+  if (preset === 'uv-index') {
+    return { min: 0, max: 10 }
+  }
+
+  if (preset === 'cloud-base') {
+    const normalizedUnit = unit.toLowerCase()
+    return normalizedUnit.includes('ft') ? { min: 0, max: 3000 } : { min: 0, max: 1000 }
   }
 
   return undefined
@@ -201,8 +293,79 @@ export const resolvePresetSections = (
     )
   }
 
+  if (preset === 'wind-speed') {
+    const normalizedUnit = unit.toLowerCase()
+    const high = normalizedUnit.includes('mph') || normalizedUnit.includes('kt') ? 14 : 20
+    const medium = normalizedUnit.includes('mph') || normalizedUnit.includes('kt') ? 8 : 12
+    return clippedSections(
+      nonEmptySections([
+        { from: range.min, to: medium, color: '#22c55e' },
+        { from: medium, to: high, color: '#f59e0b' },
+        { from: high, to: range.max, color: '#ef4444' }
+      ]),
+      range
+    )
+  }
+
+  if (preset === 'rainfall' || preset === 'rain-rate') {
+    return clippedSections(
+      nonEmptySections([
+        { from: range.min, to: range.max * 0.25, color: '#93c5fd' },
+        { from: range.max * 0.25, to: range.max * 0.6, color: '#3b82f6' },
+        { from: range.max * 0.6, to: range.max, color: '#1d4ed8' }
+      ]),
+      range
+    )
+  }
+
+  if (preset === 'solar') {
+    return clippedSections(
+      nonEmptySections([
+        { from: range.min, to: 300, color: '#60a5fa' },
+        { from: 300, to: 700, color: '#facc15' },
+        { from: 700, to: range.max, color: '#f97316' }
+      ]),
+      range
+    )
+  }
+
+  if (preset === 'uv-index') {
+    return clippedSections(
+      nonEmptySections([
+        { from: range.min, to: 2, color: '#22c55e' },
+        { from: 2, to: 5, color: '#facc15' },
+        { from: 5, to: 7, color: '#f97316' },
+        { from: 7, to: range.max, color: '#ef4444' }
+      ]),
+      range
+    )
+  }
+
+  if (preset === 'cloud-base') {
+    const normalizedUnit = unit.toLowerCase()
+    if (normalizedUnit.includes('ft')) {
+      return clippedSections(
+        nonEmptySections([
+          { from: range.min, to: 1000, color: '#ef4444' },
+          { from: 1000, to: 2000, color: '#f59e0b' },
+          { from: 2000, to: range.max, color: '#22c55e' }
+        ]),
+        range
+      )
+    }
+
+    return clippedSections(
+      nonEmptySections([
+        { from: range.min, to: 300, color: '#ef4444' },
+        { from: 300, to: 700, color: '#f59e0b' },
+        { from: 700, to: range.max, color: '#22c55e' }
+      ]),
+      range
+    )
+  }
+
   return []
 }
 
 export const isPresetTrendEnabled = (preset: MeasurementPreset): boolean =>
-  preset === 'temperature' || preset === 'pressure'
+  preset === 'temperature' || preset === 'pressure' || preset === 'wind-speed'
