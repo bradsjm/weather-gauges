@@ -741,35 +741,35 @@ gauge.readingText: string  // Current accessible text representation
 
 ### Core Package
 
-- [ ] Compass schema: remove `value`/`heading` duplication
-- [ ] Consistent range validation across all gauges
-- [ ] Normalized "reading" interface for render results
+- [x] Compass schema: remove `value`/`heading` duplication
+- [ ] Consistent range validation across all gauges _(partially complete: compass and wind-direction tightened)_
+- [ ] Normalized "reading" interface for render results _(partially complete via `toGaugeContractState` mapping)_
 
 ### Elements Package
 
-- [ ] Clamp values before Zod parsing (when not strict mode)
-- [ ] Map Zod issues to `{path, message}` in error events
-- [ ] Parse `wx-section`/`wx-alert`/`wx-petal` child elements
-- [ ] Implement precedence: properties > children > presets > defaults
-- [ ] CSS variable resolution via `getComputedStyle`
+- [x] Clamp values before Zod parsing (when not strict mode)
+- [x] Map Zod issues to `{path, message}` in error events
+- [x] Parse `wx-section`/`wx-alert`/`wx-petal` child elements
+- [x] Implement precedence: properties > children > presets > defaults
+- [x] CSS variable resolution via `getComputedStyle`
 - [ ] ARIA attributes on canvas elements
 - [ ] Screen reader slot support
-- [ ] Measurement presets implementation:
-  - [ ] `temperature` preset with auto unit detection
-  - [ ] `humidity` preset with comfort zones
-  - [ ] `pressure` preset with unit-specific ranges
-  - [ ] `rainfall` and `rain-rate` presets
-  - [ ] `wind-speed` and `wind-direction` presets
-  - [ ] `solar` and `uv-index` presets
-  - [ ] `cloud-base` preset
-  - [ ] Unit auto-detection logic
+- [x] Measurement presets implementation:
+  - [x] `temperature` preset with auto unit detection
+  - [x] `humidity` preset with comfort zones
+  - [x] `pressure` preset with unit-specific ranges
+  - [x] `rainfall` and `rain-rate` presets
+  - [x] `wind-speed` and `wind-direction` presets
+  - [x] `solar` and `uv-index` presets
+  - [x] `cloud-base` preset
+  - [x] Unit auto-detection logic
 
 ### Documentation
 
 - [ ] Element API reference
 - [ ] CSS custom properties catalog
 - [ ] Visual customization options reference
-- [ ] Event payload documentation
+- [x] Event payload documentation _(updated with structured error payload)_
 - [ ] Validation mode behavior guide
 - [ ] Accessibility implementation guide
 
