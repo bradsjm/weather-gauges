@@ -66,7 +66,8 @@ export const gaugeVisibilitySchema = z
 export const gaugeTextSchema = z
   .object({
     title: nonEmptyStringSchema.optional(),
-    unit: nonEmptyStringSchema.optional()
+    unit: nonEmptyStringSchema.optional(),
+    thresholdLabel: nonEmptyStringSchema.optional()
   })
   .strict()
 

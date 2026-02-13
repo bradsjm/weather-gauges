@@ -7,19 +7,17 @@ describe('wind-direction preset defaults', () => {
       preset: 'wind-direction',
       title: '',
       unit: '',
-      lcdTitleLatest: '',
-      lcdTitleAverage: '',
+      averageLabel: '',
       hasTitleAttr: false,
       hasUnitAttr: false,
-      hasLcdTitleLatestAttr: false,
-      hasLcdTitleAverageAttr: false
+      hasAverageLabelAttr: false
     })
 
     expect(resolved).toEqual({
       title: 'Wind Direction',
       unit: '°',
-      lcdTitleLatest: 'Latest',
-      lcdTitleAverage: 'Average'
+      latestLabel: 'Latest',
+      averageLabel: 'Average'
     })
   })
 
@@ -28,19 +26,17 @@ describe('wind-direction preset defaults', () => {
       preset: 'wind-direction',
       title: 'Wind',
       unit: 'deg',
-      lcdTitleLatest: 'Now',
-      lcdTitleAverage: 'Mean',
+      averageLabel: 'Mean',
       hasTitleAttr: true,
       hasUnitAttr: true,
-      hasLcdTitleLatestAttr: true,
-      hasLcdTitleAverageAttr: true
+      hasAverageLabelAttr: true
     })
 
     expect(resolved).toEqual({
       title: 'Wind',
       unit: 'deg',
-      lcdTitleLatest: 'Now',
-      lcdTitleAverage: 'Mean'
+      latestLabel: 'Latest',
+      averageLabel: 'Mean'
     })
   })
 
@@ -49,19 +45,17 @@ describe('wind-direction preset defaults', () => {
       preset: '',
       title: '',
       unit: '',
-      lcdTitleLatest: '',
-      lcdTitleAverage: '',
+      averageLabel: '',
       hasTitleAttr: false,
       hasUnitAttr: false,
-      hasLcdTitleLatestAttr: false,
-      hasLcdTitleAverageAttr: false
+      hasAverageLabelAttr: false
     })
 
     expect(resolved).toEqual({
       title: '',
       unit: '',
-      lcdTitleLatest: '',
-      lcdTitleAverage: ''
+      latestLabel: '',
+      averageLabel: ''
     })
   })
 })

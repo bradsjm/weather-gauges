@@ -52,6 +52,9 @@ export class WxGaugeElement extends WeatherGaugeElement {
   @property({ type: Number })
   threshold = 80
 
+  @property({ type: String, attribute: 'threshold-label' })
+  thresholdLabel = ''
+
   @property({ type: String })
   preset: MeasurementPreset = ''
 
@@ -374,7 +377,8 @@ export class WxGaugeElement extends WeatherGaugeElement {
       },
       text: {
         ...(title ? { title } : {}),
-        ...(effectiveUnit ? { unit: effectiveUnit } : {})
+        ...(effectiveUnit ? { unit: effectiveUnit } : {}),
+        ...(this.thresholdLabel ? { thresholdLabel: this.thresholdLabel } : {})
       },
       visibility: {
         showFrame: this.showFrame,

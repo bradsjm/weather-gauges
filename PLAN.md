@@ -255,9 +255,9 @@ This section is a gap-aware implementation plan based on the current repository 
 
 - `theme` attribute is not currently implemented as a discrete theme selector; theming is CSS-token driven today.
 - The public element API is not yet “small surface” (the elements expose many advanced attributes vs the 8-10 attribute target in Section 4).
-- `threshold-label` and `average-label` attributes are not implemented (current code uses more specific LCD-title style attributes instead).
+- `threshold-label` and `average-label` attribute alignment has been implemented; migration notes should be kept visible in docs/release notes.
 - Wind rose scale auto-derivation is already present in `wx-wind-rose`; this item is now verification/docs alignment instead of net-new behavior.
-- `TrendCalculator` helper is not implemented in `core`.
+- `TrendCalculator` helper has been implemented in `core`; docs/examples should reference the exported helper API.
 - `overlay` (logo/watermark) contract is not implemented as described (no `element.overlay` property and no renderer support).
 
 ### 7.3 Phased Work Plan
@@ -266,9 +266,9 @@ Progress tracker:
 
 - [x] 1. Contract + Docs Hardening (no behavior change)
 - [x] 2. Implement `theme` Selector
-- [ ] 3. Rename Attributes To Match PLAN (breaking)
+- [x] 3. Rename Attributes To Match PLAN (breaking)
 - [x] 4. Wind Rose Auto-Scale (PLAN behavior)
-- [ ] 5. Add `TrendCalculator` to `core`
+- [x] 5. Add `TrendCalculator` to `core`
 - [ ] 6. Add `overlay` Support End-to-End
 - [ ] 7. Reduce Public Surface To 8-10 Attributes (breaking)
 
@@ -287,6 +287,7 @@ Progress tracker:
      - Add `threshold-label` and remove/replace existing threshold/LCD title attributes.
      - Add `average-label` and remove/replace existing wind-direction LCD title attributes.
    - Update docs-site examples and any consumer code accordingly.
+   - Status: Completed. Added `threshold-label` on radial and bargraph elements, replaced wind-direction `lcd-title-*` attributes with `average-label`, and updated docs-site examples/controls and preset tests.
 
 4. Wind Rose Auto-Scale (PLAN behavior)
    - Change `wx-wind-rose` to derive max scale from petals when `gauge-max` is not explicitly set.
@@ -295,6 +296,7 @@ Progress tracker:
 5. Add `TrendCalculator` to `core`
    - Implement a small, pure helper (`calculate(values, { threshold, windowMs })`) returning `up|down|steady|null`.
    - Document recommended usage from elements/consumers; add unit tests.
+   - Status: Completed. Added `calculateTrend` and `TrendCalculator.calculate` in core with configurable `threshold` and `windowMs`, plus a dedicated unit test file.
 
 6. Add `overlay` Support End-to-End
    - Core: extend relevant gauge configs + renderers to optionally draw an overlay image (opacity/position/scale).

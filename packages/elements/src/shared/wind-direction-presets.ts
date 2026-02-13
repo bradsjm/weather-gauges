@@ -4,19 +4,17 @@ type ResolveWindDirectionTextInput = {
   preset: WindDirectionPreset
   title: string
   unit: string
-  lcdTitleLatest: string
-  lcdTitleAverage: string
+  averageLabel: string
   hasTitleAttr: boolean
   hasUnitAttr: boolean
-  hasLcdTitleLatestAttr: boolean
-  hasLcdTitleAverageAttr: boolean
+  hasAverageLabelAttr: boolean
 }
 
 export type WindDirectionTextDefaults = {
   title: string
   unit: string
-  lcdTitleLatest: string
-  lcdTitleAverage: string
+  latestLabel: string
+  averageLabel: string
 }
 
 export const resolveWindDirectionTextDefaults = (
@@ -32,15 +30,10 @@ export const resolveWindDirectionTextDefaults = (
           ? 'Wind Direction'
           : '',
     unit: input.hasUnitAttr || input.unit.length > 0 ? input.unit : hasPreset ? '°' : '',
-    lcdTitleLatest:
-      input.hasLcdTitleLatestAttr || input.lcdTitleLatest.length > 0
-        ? input.lcdTitleLatest
-        : hasPreset
-          ? 'Latest'
-          : '',
-    lcdTitleAverage:
-      input.hasLcdTitleAverageAttr || input.lcdTitleAverage.length > 0
-        ? input.lcdTitleAverage
+    latestLabel: hasPreset ? 'Latest' : '',
+    averageLabel:
+      input.hasAverageLabelAttr || input.averageLabel.length > 0
+        ? input.averageLabel
         : hasPreset
           ? 'Average'
           : ''

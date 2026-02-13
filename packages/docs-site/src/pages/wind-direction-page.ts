@@ -19,8 +19,7 @@ const windDirectionPresetExamples: Record<PresetKey, Partial<PlaygroundState>> =
   '': {
     title: 'Wind',
     unit: 'deg',
-    lcdTitleLatest: 'Latest',
-    lcdTitleAverage: 'Average',
+    averageLabel: 'Average',
     valueLatest: 48,
     valueAverage: 63,
     warningAlertHeading: 90,
@@ -29,8 +28,7 @@ const windDirectionPresetExamples: Record<PresetKey, Partial<PlaygroundState>> =
   'wind-direction': {
     title: 'Wind Direction',
     unit: '°',
-    lcdTitleLatest: 'Latest',
-    lcdTitleAverage: 'Average',
+    averageLabel: 'Average',
     valueLatest: 245,
     valueAverage: 238,
     warningAlertHeading: 260,
@@ -58,8 +56,7 @@ export const renderWindPage = (root: HTMLElement): void => {
     knobStyle: 'silver',
     foregroundType: 'type1',
     lcdColor: 'STANDARD',
-    lcdTitleLatest: 'Latest',
-    lcdTitleAverage: 'Average',
+    averageLabel: 'Average',
     showFrame: true,
     showBackground: true,
     showForeground: true,
@@ -78,7 +75,7 @@ export const renderWindPage = (root: HTMLElement): void => {
     {
       key: 'preset',
       label: 'Measurement Preset',
-      description: 'Apply wind-direction defaults for title/unit and LCD labels.',
+      description: 'Apply wind-direction defaults for title/unit and average label.',
       type: 'select',
       options: windDirectionPresetOptions
     },
@@ -197,14 +194,8 @@ export const renderWindPage = (root: HTMLElement): void => {
       options: lcdColorOptions
     },
     {
-      key: 'lcdTitleLatest',
-      label: 'Latest LCD Title',
-      description: 'Title above latest LCD row.',
-      type: 'text'
-    },
-    {
-      key: 'lcdTitleAverage',
-      label: 'Average LCD Title',
+      key: 'averageLabel',
+      label: 'Average Label',
       description: 'Title above average LCD row.',
       type: 'text'
     },

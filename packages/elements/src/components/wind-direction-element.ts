@@ -172,11 +172,8 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     | 'GRAY'
     | 'BLACK' = 'STANDARD'
 
-  @property({ type: String, attribute: 'lcd-title-latest' })
-  lcdTitleLatest = 'Latest'
-
-  @property({ type: String, attribute: 'lcd-title-average' })
-  lcdTitleAverage = 'Average'
+  @property({ type: String, attribute: 'average-label' })
+  averageLabel = 'Average'
 
   @property({ attribute: false })
   sections: WindDirectionSection[] = []
@@ -346,12 +343,10 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
       preset: this.preset,
       title: this.label,
       unit: this.unit,
-      lcdTitleLatest: this.lcdTitleLatest,
-      lcdTitleAverage: this.lcdTitleAverage,
+      averageLabel: this.averageLabel,
       hasTitleAttr: this.hasAttribute('label'),
       hasUnitAttr: this.hasAttribute('unit'),
-      hasLcdTitleLatestAttr: this.hasAttribute('lcd-title-latest'),
-      hasLcdTitleAverageAttr: this.hasAttribute('lcd-title-average')
+      hasAverageLabelAttr: this.hasAttribute('average-label')
     })
 
     return windDirectionGaugeConfigSchema.parse({
@@ -408,8 +403,8 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
         pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
       },
       lcdTitles: {
-        latest: textDefaults.lcdTitleLatest,
-        average: textDefaults.lcdTitleAverage
+        latest: textDefaults.latestLabel,
+        average: textDefaults.averageLabel
       },
       indicators: {
         alerts
