@@ -5,6 +5,7 @@ import {
   frameOptions,
   knobStyleOptions,
   knobTypeOptions,
+  lcdColorOptions,
   pointerColorOptions,
   pointerTypeOptions
 } from '../options'
@@ -23,6 +24,8 @@ export const renderCompassPage = (root: HTMLElement): void => {
     knobType: 'standardKnob',
     knobStyle: 'silver',
     foregroundType: 'top-arc-glass',
+    lcdColor: 'standard',
+    digitalFont: false,
     degreeScale: false,
     degreeScaleHalf: false,
     roseVisible: true,
@@ -33,15 +36,7 @@ export const renderCompassPage = (root: HTMLElement): void => {
     showHeadingReadout: true,
     alertsEnabled: false,
     warningAlertHeading: 90,
-    criticalAlertHeading: 180,
-    pointSymbolN: 'N',
-    pointSymbolNE: 'NE',
-    pointSymbolE: 'E',
-    pointSymbolSE: 'SE',
-    pointSymbolS: 'S',
-    pointSymbolSW: 'SW',
-    pointSymbolW: 'W',
-    pointSymbolNW: 'NW'
+    criticalAlertHeading: 180
   }
 
   const controls: ControlDef[] = [
@@ -130,6 +125,19 @@ export const renderCompassPage = (root: HTMLElement): void => {
       options: foregroundTypeOptions
     },
     {
+      key: 'lcdColor',
+      label: 'LCD Color',
+      description: 'Readout palette used for heading LCD box.',
+      type: 'select',
+      options: lcdColorOptions
+    },
+    {
+      key: 'digitalFont',
+      label: 'Digital LCD Font',
+      description: 'Use segmented LCD-style font for heading readout.',
+      type: 'checkbox'
+    },
+    {
       key: 'degreeScale',
       label: 'Show Degree Scale',
       description: 'Switch to degree labels instead of cardinal-only emphasis.',
@@ -176,54 +184,6 @@ export const renderCompassPage = (root: HTMLElement): void => {
       label: 'Animate Value',
       description: 'Animate heading transitions when heading changes.',
       type: 'checkbox'
-    },
-    {
-      key: 'pointSymbolN',
-      label: 'North Symbol',
-      description: 'Text used for north point marker.',
-      type: 'text'
-    },
-    {
-      key: 'pointSymbolNE',
-      label: 'North-East Symbol',
-      description: 'Text used for north-east marker.',
-      type: 'text'
-    },
-    {
-      key: 'pointSymbolE',
-      label: 'East Symbol',
-      description: 'Text used for east marker.',
-      type: 'text'
-    },
-    {
-      key: 'pointSymbolSE',
-      label: 'South-East Symbol',
-      description: 'Text used for south-east marker.',
-      type: 'text'
-    },
-    {
-      key: 'pointSymbolS',
-      label: 'South Symbol',
-      description: 'Text used for south marker.',
-      type: 'text'
-    },
-    {
-      key: 'pointSymbolSW',
-      label: 'South-West Symbol',
-      description: 'Text used for south-west marker.',
-      type: 'text'
-    },
-    {
-      key: 'pointSymbolW',
-      label: 'West Symbol',
-      description: 'Text used for west marker.',
-      type: 'text'
-    },
-    {
-      key: 'pointSymbolNW',
-      label: 'North-West Symbol',
-      description: 'Text used for north-west marker.',
-      type: 'text'
     }
   ]
 

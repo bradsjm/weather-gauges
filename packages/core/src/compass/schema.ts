@@ -64,6 +64,18 @@ export const compassKnobStyleSchema = gaugeKnobStyleSchema
 
 export const compassPointerColorSchema = gaugePointerColorSchema
 
+export const compassLcdColorSchema = z.enum([
+  'standard',
+  'standard-green',
+  'blue',
+  'orange',
+  'red',
+  'yellow',
+  'white',
+  'gray',
+  'black'
+])
+
 export const compassPointSymbolsSchema = z
   .tuple([
     z.string().trim().min(1),
@@ -86,6 +98,8 @@ export const compassStyleSchema = z
     knobType: compassKnobTypeSchema.default('standardKnob'),
     knobStyle: compassKnobStyleSchema.default('silver'),
     foregroundType: compassForegroundTypeSchema.default('top-arc-glass'),
+    lcdColor: compassLcdColorSchema.default('standard'),
+    digitalFont: z.boolean().default(false),
     pointSymbols: compassPointSymbolsSchema,
     pointSymbolsVisible: z.boolean().default(true),
     showTickmarks: z.boolean().default(true),
@@ -147,6 +161,8 @@ export const compassGaugeConfigSchema = sharedGaugeConfigSchema
       knobType: 'standardKnob',
       knobStyle: 'silver',
       foregroundType: 'top-arc-glass',
+      lcdColor: 'standard',
+      digitalFont: false,
       pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
       pointSymbolsVisible: true,
       showTickmarks: true,
@@ -182,5 +198,6 @@ export type CompassForegroundType = z.infer<typeof compassForegroundTypeSchema>
 export type CompassKnobType = z.infer<typeof compassKnobTypeSchema>
 export type CompassKnobStyle = z.infer<typeof compassKnobStyleSchema>
 export type CompassPointerColorName = z.infer<typeof compassPointerColorSchema>
+export type CompassLcdColorName = z.infer<typeof compassLcdColorSchema>
 export type CompassStyle = z.infer<typeof compassStyleSchema>
 export type CompassGaugeConfig = z.infer<typeof compassGaugeConfigSchema>

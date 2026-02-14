@@ -12,6 +12,22 @@ export type RadialLcdPalette = {
   text: string
 }
 
+type RadialLcdLayoutOptions = {
+  x?: number
+  y?: number
+}
+
+type RadialLcdDrawOptions = RadialLcdLayoutOptions & {
+  text?: string
+  align?: CanvasTextAlign
+}
+
+const RADIAL_LCD_WIDTH_FACTOR = 0.32
+const RADIAL_LCD_HEIGHT_FACTOR = 0.11
+const RADIAL_LCD_FONT_FACTOR = 0.055
+const RADIAL_LCD_MIN_FONT_SIZE = 7
+const RADIAL_LCD_DEFAULT_Y_FACTOR = 0.57
+
 const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
   standard: {
     gradientStart: 'rgb(131, 133, 119)',
@@ -226,13 +242,14 @@ export const drawRadialLcd = (
   lcdDecimals: number,
   value: number,
   size: number,
-  paint: ThemePaint
+  paint: ThemePaint,
+  options: RadialLcdDrawOptions = {}
 ): void => {
   const lcdPalette = resolveRadialLcdPalette(lcdColor)
-  const lcdWidth = 0.4 * size
-  const lcdHeight = 0.13 * size
-  const lcdX = (size - lcdWidth) * 0.5
-  const lcdY = size * 0.5 - lcdHeight * 0.5
+  const lcdWidth = RADIAL_LCD_WIDTH_FACTOR * size
+  const lcdHeight = RADIAL_LCD_HEIGHT_FACTOR * size
+  const lcdX = options.x ?? (size - lcdWidth) * 0.5
+  const lcdY = options.y ?? size * RADIAL_LCD_DEFAULT_Y_FACTOR
 
   drawRadialLcdBox(context, lcdX, lcdY, lcdWidth, lcdHeight, lcdPalette)
 
@@ -248,15 +265,15 @@ export const drawRadialLcd = (
 
   drawRadialLcdValueText({
     context,
-    text: value.toFixed(lcdDecimals),
+    text: options.text ?? value.toFixed(lcdDecimals),
     x: lcdX,
     y: lcdY,
     width: lcdWidth,
     height: lcdHeight,
     textColor: lcdPalette.text,
-    fontSize: Math.max(15, Math.round(size * 0.075)),
+    fontSize: Math.max(RADIAL_LCD_MIN_FONT_SIZE, Math.round(size * RADIAL_LCD_FONT_FACTOR)),
     fontFamily: digitalFont ? paint.fontFamilyLcd : paint.fontFamily,
-    align: 'right',
+    align: options.align ?? 'right',
     baseline: 'middle',
     ...(valueShadow ? { shadow: valueShadow } : {})
   })

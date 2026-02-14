@@ -261,7 +261,7 @@ const drawCompassDynamicLayer = (
     context.stroke()
   }
 
-  drawCompassLabels(context, config, paint, heading, showHeadingReadout, centerX, centerY, radius)
+  drawCompassLabels(context, config, paint, heading, showHeadingReadout, centerX, imageWidth)
 }
 
 export const renderCompassGauge = (

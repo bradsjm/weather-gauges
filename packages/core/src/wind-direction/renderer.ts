@@ -24,11 +24,7 @@ import {
   type GaugeBackgroundPalette
 } from '../render/gauge-color-palettes.js'
 import { resolveGaugeHeadingAlerts, resolveGaugeToneFromAlerts } from '../render/gauge-alerts.js'
-import {
-  drawRadialLcdBox,
-  drawRadialLcdValueText,
-  resolveRadialLcdPalette
-} from '../render/radial-lcd.js'
+import { drawRadialLcd, resolveRadialLcdPalette } from '../render/radial-lcd.js'
 import {
   buildGaugeFont,
   configureGaugeTextLayout,
@@ -246,7 +242,9 @@ const drawWindDirectionStaticLayer = (
       width / 2
     )
 
-    const showKnob = !['ornate-ring-base-needle', 'ring-base-bar-tail-needle'].includes(config.style.pointerLatest.type)
+    const showKnob = !['ornate-ring-base-needle', 'ring-base-bar-tail-needle'].includes(
+      config.style.pointerLatest.type
+    )
     if (showKnob) {
       drawGaugeCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
     }
@@ -259,11 +257,12 @@ const drawWindDirectionDynamicLayer = (
   centerX: number,
   centerY: number,
   width: number,
+  paint: ThemePaint,
   latest: number,
   average: number
 ): void => {
   if (config.visibility.showLcd) {
-    drawLcds(context, config, centerX, centerY, width, latest, average)
+    drawLcds(context, config, centerX, centerY, width, paint, latest, average)
   }
 
   drawPointers(context, config, centerX, centerY, width, latest, average)
@@ -304,10 +303,10 @@ const drawWindDirectionCompassTicks = (
 const formatWindHeadingText = (heading: number, degreeScaleHalf: boolean): string => {
   const normalized = normalizeCompassHeadingForScale(heading, degreeScaleHalf)
   if (degreeScaleHalf) {
-    return String(normalized)
+    return `${String(normalized)}°`
   }
 
-  return String(normalized).padStart(3, '0')
+  return `${String(normalized).padStart(3, '0')}°`
 }
 
 const drawLcdTitle = (
@@ -316,12 +315,13 @@ const drawLcdTitle = (
   x: number,
   y: number,
   width: number,
+  size: number,
   color: string
 ): void => {
   context.save()
   configureGaugeTextLayout(context, {
     color,
-    font: buildGaugeFont(width * 0.12, 'Arial, sans-serif', 'bold'),
+    font: buildGaugeFont(Math.max(12, Math.round(size * 0.046728)), 'Arial, sans-serif', 'bold'),
     align: 'center',
     baseline: 'middle'
   })
@@ -335,16 +335,18 @@ const drawLcds = (
   centerX: number,
   centerY: number,
   imageWidth: number,
+  paint: ThemePaint,
   latest: number,
   average: number
 ): void => {
   const lcdPalette = resolveRadialLcdPalette(config.style.lcdColor)
-  const lcdWidth = imageWidth * 0.25
-  const lcdHeight = imageWidth * 0.09
-  // Match v2 positioning: both LCDs centered horizontally, stacked vertically
+  const lcdWidth = imageWidth * 0.32
+  const lcdHeight = imageWidth * 0.11
+  const lcdCenterOffset = imageWidth * 0.125
+  // Symmetric vertical distribution: one LCD above center, one below center
   const lcdX = centerX - lcdWidth / 2
-  const lcdY1 = centerY - imageWidth * 0.175 // Upper LCD (above center)
-  const lcdY2 = centerY + imageWidth * 0.075 // Lower LCD (below center, avoiding knob overlap)
+  const lcdY1 = centerY - lcdCenterOffset - lcdHeight / 2
+  const lcdY2 = centerY + lcdCenterOffset - lcdHeight / 2
 
   // Determine title colors based on useColorLabels setting
   const latestTitleColor = config.style.useColorLabels
@@ -355,56 +357,59 @@ const drawLcds = (
     : lcdPalette.text
 
   // Latest LCD (top)
-  drawRadialLcdBox(context, lcdX, lcdY1, lcdWidth, lcdHeight, lcdPalette)
+  drawRadialLcd(
+    context,
+    config.style.lcdColor,
+    config.style.digitalFont,
+    0,
+    latest,
+    imageWidth,
+    paint,
+    {
+      x: lcdX,
+      y: lcdY1,
+      text: formatWindHeadingText(Math.round(latest), config.scale.degreeScaleHalf),
+      align: 'center'
+    }
+  )
   if (config.lcdTitles.latest) {
     drawLcdTitle(
       context,
       config.lcdTitles.latest,
       lcdX,
-      lcdY1 - lcdHeight * 0.15,
+      lcdY1 - lcdHeight * 0.35,
       lcdWidth,
+      imageWidth,
       latestTitleColor
     )
   }
-  drawRadialLcdValueText({
-    context,
-    text: formatWindHeadingText(Math.round(latest), config.scale.degreeScaleHalf),
-    x: lcdX,
-    y: lcdY1,
-    width: lcdWidth,
-    height: lcdHeight,
-    textColor: lcdPalette.text,
-    fontSize: lcdWidth * 0.25,
-    fontFamily: config.style.digitalFont ? 'monospace, sans-serif' : 'Arial, sans-serif',
-    align: 'center',
-    baseline: 'middle'
-  })
-
   // Average LCD (bottom)
-  drawRadialLcdBox(context, lcdX, lcdY2, lcdWidth, lcdHeight, lcdPalette)
+  drawRadialLcd(
+    context,
+    config.style.lcdColor,
+    config.style.digitalFont,
+    0,
+    average,
+    imageWidth,
+    paint,
+    {
+      x: lcdX,
+      y: lcdY2,
+      text: formatWindHeadingText(Math.round(average), config.scale.degreeScaleHalf),
+      align: 'center'
+    }
+  )
   if (config.lcdTitles.average) {
     drawLcdTitle(
       context,
       config.lcdTitles.average,
       lcdX,
-      lcdY2 - lcdHeight * 0.15,
+      lcdY2 + lcdHeight * 1.35,
       lcdWidth,
+      imageWidth,
       averageTitleColor
     )
   }
-  drawRadialLcdValueText({
-    context,
-    text: formatWindHeadingText(Math.round(average), config.scale.degreeScaleHalf),
-    x: lcdX,
-    y: lcdY2,
-    width: lcdWidth,
-    height: lcdHeight,
-    textColor: lcdPalette.text,
-    fontSize: lcdWidth * 0.25,
-    fontFamily: config.style.digitalFont ? 'monospace, sans-serif' : 'Arial, sans-serif',
-    align: 'center',
-    baseline: 'middle'
-  })
 }
 
 const drawPointers = (
@@ -514,7 +519,7 @@ export const renderWindDirectionGauge = (
     )
   }
 
-  drawWindDirectionDynamicLayer(context, config, centerX, centerY, width, latest, average)
+  drawWindDirectionDynamicLayer(context, config, centerX, centerY, width, paint, latest, average)
 
   const activeAlerts = resolveGaugeHeadingAlerts<WindDirectionAlert>(
     latest,

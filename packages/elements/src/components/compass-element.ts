@@ -103,6 +103,21 @@ export class WxCompassElement extends WeatherGaugeElement {
     | 'center-glow-glass'
     | 'sweep-glass' = 'top-arc-glass'
 
+  @property({ type: String, attribute: false })
+  lcdColor:
+    | 'standard'
+    | 'standard-green'
+    | 'blue'
+    | 'orange'
+    | 'red'
+    | 'yellow'
+    | 'white'
+    | 'gray'
+    | 'black' = 'standard'
+
+  @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
+  digitalFont = false
+
   @property({ type: Boolean, attribute: 'show-degrees' })
   degreeScale = false
 
@@ -120,30 +135,6 @@ export class WxCompassElement extends WeatherGaugeElement {
 
   @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   showTickmarks = true
-
-  @property({ type: String, attribute: false })
-  pointSymbolN = 'N'
-
-  @property({ type: String, attribute: false })
-  pointSymbolNE = 'NE'
-
-  @property({ type: String, attribute: false })
-  pointSymbolE = 'E'
-
-  @property({ type: String, attribute: false })
-  pointSymbolSE = 'SE'
-
-  @property({ type: String, attribute: false })
-  pointSymbolS = 'S'
-
-  @property({ type: String, attribute: false })
-  pointSymbolSW = 'SW'
-
-  @property({ type: String, attribute: false })
-  pointSymbolW = 'W'
-
-  @property({ type: String, attribute: false })
-  pointSymbolNW = 'NW'
 
   @property({ attribute: false })
   customLayer: CanvasImageSource | null = null
@@ -258,16 +249,9 @@ export class WxCompassElement extends WeatherGaugeElement {
         knobType: this.knobType,
         knobStyle: this.knobStyle,
         foregroundType: this.foregroundType,
-        pointSymbols: [
-          this.pointSymbolN,
-          this.pointSymbolNE,
-          this.pointSymbolE,
-          this.pointSymbolSE,
-          this.pointSymbolS,
-          this.pointSymbolSW,
-          this.pointSymbolW,
-          this.pointSymbolNW
-        ],
+        lcdColor: this.lcdColor,
+        digitalFont: this.digitalFont,
+        pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
         pointSymbolsVisible: this.pointSymbolsVisible,
         showTickmarks: this.showTickmarks,
         degreeScale: this.degreeScale,

@@ -503,14 +503,14 @@ const drawTitleAndUnit = (
 
   if (config.text.title) {
     configureGaugeTextLayout(context, {
-      font: buildGaugeFont(Math.max(12, Math.round(size * 0.046)), STD_FONT_NAME)
+      font: buildGaugeFont(Math.max(12, Math.round(size * 0.046728)), STD_FONT_NAME)
     })
-    drawGaugeText(context, config.text.title, centerX, size * 0.3)
+    drawGaugeText(context, config.text.title, centerX, size * 0.3 + 3)
   }
 
   if (config.text.unit) {
     configureGaugeTextLayout(context, {
-      font: buildGaugeFont(Math.max(10, Math.round(size * 0.035)), STD_FONT_NAME)
+      font: buildGaugeFont(Math.max(12, Math.round(size * 0.046728)), STD_FONT_NAME)
     })
     drawGaugeText(context, config.text.unit, centerX, size * 0.38)
   }
@@ -671,7 +671,10 @@ const drawDynamicLayer = (
       config.lcdDecimals,
       clampedValue,
       size,
-      paint
+      paint,
+      {
+        y: size * 0.445
+      }
     )
   }
 

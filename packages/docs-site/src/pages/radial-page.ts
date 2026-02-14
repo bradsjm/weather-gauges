@@ -490,7 +490,10 @@ export const renderRadialPage = (root: HTMLElement): void => {
       const measuredHigh = Math.max(minMeasuredValue, maxMeasuredValue)
       state.minMeasuredValue = measuredLow
       state.maxMeasuredValue = measuredHigh
-      state.areas = [{ from: measuredLow, to: measuredHigh, color: minMaxAreaColor }]
+      state.areas =
+        measuredHigh > measuredLow
+          ? [{ from: measuredLow, to: measuredHigh, color: minMaxAreaColor }]
+          : []
 
       const warningAlertValue = asFiniteNumber(state.warningAlertValue, minValue)
       const criticalAlertValue = asFiniteNumber(state.criticalAlertValue, maxValue)

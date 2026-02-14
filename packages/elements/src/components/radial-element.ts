@@ -354,13 +354,34 @@ export class WxGaugeElement extends WeatherGaugeElement {
       : childAlerts
     const childSections = this.parseSectionChildren(range)
     const presetSegments = resolvePresetSections(preset, range, effectiveUnit)
+    const normalizedSegments = this.segments
+      .map((segment) => {
+        const from = this.normalizeInRange(segment.from, range.min, range.max, range.min)
+        const to = this.normalizeInRange(segment.to, range.min, range.max, range.max)
+        if (to <= from) {
+          return undefined
+        }
+
+        return { ...segment, from, to }
+      })
+      .filter((segment): segment is RadialSegment => segment !== undefined)
     const segments =
-      this.segments.length > 0
-        ? this.segments
+      normalizedSegments.length > 0
+        ? normalizedSegments
         : childSections.length > 0
           ? childSections
           : presetSegments
-    const areas = this.areas.length > 0 ? this.areas : []
+    const areas = this.areas
+      .map((area) => {
+        const from = this.normalizeInRange(area.from, range.min, range.max, range.min)
+        const to = this.normalizeInRange(area.to, range.min, range.max, range.max)
+        if (to <= from) {
+          return undefined
+        }
+
+        return { ...area, from, to }
+      })
+      .filter((area): area is RadialArea => area !== undefined)
     const trendVisible = this.hasAttribute('trend-visible')
       ? this.trendVisible
       : isPresetTrendEnabled(preset)

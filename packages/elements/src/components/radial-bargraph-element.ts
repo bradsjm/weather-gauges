@@ -317,9 +317,20 @@ export class WxBargraphElement extends WeatherGaugeElement {
 
     const childSections = this.parseSectionChildren(range)
     const presetSections = resolvePresetSections(preset, range, effectiveUnit)
+    const normalizedSections = this.sections
+      .map((section) => {
+        const from = this.normalizeInRange(section.from, range.min, range.max, range.min)
+        const to = this.normalizeInRange(section.to, range.min, range.max, range.max)
+        if (to <= from) {
+          return undefined
+        }
+
+        return { ...section, from, to }
+      })
+      .filter((section): section is RadialBargraphSection => section !== undefined)
     const sections =
-      this.sections.length > 0
-        ? this.sections
+      normalizedSections.length > 0
+        ? normalizedSections
         : childSections.length > 0
           ? childSections
           : presetSections.length > 0

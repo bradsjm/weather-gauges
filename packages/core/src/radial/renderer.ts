@@ -19,11 +19,7 @@ import {
 import { drawGaugeCenterKnob } from '../render/gauge-knob.js'
 import { drawGaugeSectionArcs, resolveGaugeValueSectionArcs } from '../render/gauge-sections.js'
 import { drawGaugeRadialThreshold } from '../render/gauge-threshold.js'
-import {
-  drawRadialLcdBox,
-  drawRadialLcdValueText,
-  resolveRadialLcdPalette
-} from '../render/radial-lcd.js'
+import { drawRadialLcd } from '../render/radial-lcd.js'
 import { drawRadialSimpleLed } from '../render/radial-led.js'
 import { drawRadialTrendIndicator } from '../render/radial-trend.js'
 import { resolveRadialTrendPalette } from '../render/trend-palette.js'
@@ -513,31 +509,8 @@ const drawLcd = (
   paint: ThemePaint,
   layout: RadialLayout
 ): void => {
-  const lcdPalette = resolveRadialLcdPalette('standard')
-  const lcdWidth = size * 0.32
-  const lcdHeight = size * 0.11
-  const lcdX = (size - lcdWidth) * 0.5
-  const lcdY = layout.lcdY
-
-  drawRadialLcdBox(context, lcdX, lcdY, lcdWidth, lcdHeight, lcdPalette)
-  drawRadialLcdValueText({
-    context,
-    text: value.toFixed(2),
-    x: lcdX,
-    y: lcdY,
-    width: lcdWidth,
-    height: lcdHeight,
-    fontSize: Math.max(7, Math.round(size * 0.055)),
-    fontFamily: paint.fontFamilyLcd,
-    textColor: lcdPalette.text,
-    align: 'right',
-    baseline: 'middle',
-    shadow: {
-      color: 'rgba(0, 0, 0, 0.25)',
-      blur: Math.max(1, size * 0.004),
-      offsetX: 0,
-      offsetY: Math.max(1, size * 0.003)
-    }
+  drawRadialLcd(context, 'standard', true, 2, value, size, paint, {
+    y: layout.lcdY
   })
 }
 
