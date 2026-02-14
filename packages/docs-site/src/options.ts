@@ -15,79 +15,79 @@ export const frameOptions: SelectOption[] = [
 ].map((value) => ({ value, label: value }))
 
 export const backgroundOptions: SelectOption[] = [
-  'DARK_GRAY',
-  'SATIN_GRAY',
-  'LIGHT_GRAY',
-  'WHITE',
-  'BLACK',
-  'BEIGE',
-  'BROWN',
-  'RED',
-  'GREEN',
-  'BLUE',
-  'ANTHRACITE',
-  'MUD',
-  'PUNCHED_SHEET',
-  'CARBON',
-  'STAINLESS',
-  'BRUSHED_METAL',
-  'BRUSHED_STAINLESS',
-  'TURNED'
+  'dark-gray',
+  'satin-gray',
+  'light-gray',
+  'white',
+  'black',
+  'beige',
+  'brown',
+  'red',
+  'green',
+  'blue',
+  'anthracite',
+  'mud',
+  'punched-sheet',
+  'carbon',
+  'stainless',
+  'brushed-metal',
+  'brushed-stainless',
+  'turned'
 ].map((value) => ({ value, label: value }))
 
 export const pointerTypeOptions: SelectOption[] = [
-  { value: 'type1', label: 'type1 - Classic compass needle' },
-  { value: 'type2', label: 'type2 - Slim angular needle' },
-  { value: 'type3', label: 'type3 - Thin bar needle' },
-  { value: 'type4', label: 'type4 - Diamond spear needle' },
-  { value: 'type5', label: 'type5 - Triangular split needle' },
-  { value: 'type6', label: 'type6 - Forked center needle' },
-  { value: 'type7', label: 'type7 - Simple triangular needle' },
-  { value: 'type8', label: 'type8 - Curved classic needle' },
-  { value: 'type9', label: 'type9 - Heavy metallic needle' },
-  { value: 'type10', label: 'type10 - Teardrop bulb needle' },
-  { value: 'type11', label: 'type11 - Curved tail needle' },
-  { value: 'type12', label: 'type12 - Narrow spike needle' },
-  { value: 'type13', label: 'type13 - Label-tip marker needle' },
-  { value: 'type14', label: 'type14 - Metallic marker needle' },
-  { value: 'type15', label: 'type15 - Ornate ring-base needle' },
-  { value: 'type16', label: 'type16 - Ring-base bar-tail needle' }
+  { value: 'classic-compass-needle', label: 'Classic compass needle' },
+  { value: 'slim-angular-needle', label: 'Slim angular needle' },
+  { value: 'thin-bar-needle', label: 'Thin bar needle' },
+  { value: 'diamond-spear-needle', label: 'Diamond spear needle' },
+  { value: 'triangular-split-needle', label: 'Triangular split needle' },
+  { value: 'forked-center-needle', label: 'Forked center needle' },
+  { value: 'simple-triangular-needle', label: 'Simple triangular needle' },
+  { value: 'curved-classic-needle', label: 'Curved classic needle' },
+  { value: 'heavy-metallic-needle', label: 'Heavy metallic needle' },
+  { value: 'teardrop-bulb-needle', label: 'Teardrop bulb needle' },
+  { value: 'curved-tail-needle', label: 'Curved tail needle' },
+  { value: 'narrow-spike-needle', label: 'Narrow spike needle' },
+  { value: 'label-tip-marker-needle', label: 'Label-tip marker needle' },
+  { value: 'metallic-marker-needle', label: 'Metallic marker needle' },
+  { value: 'ornate-ring-base-needle', label: 'Ornate ring-base needle' },
+  { value: 'ring-base-bar-tail-needle', label: 'Ring-base bar-tail needle' }
 ]
 
 export const pointerColorOptions: SelectOption[] = [
-  'RED',
-  'GREEN',
-  'BLUE',
-  'ORANGE',
-  'YELLOW',
-  'CYAN',
-  'MAGENTA',
-  'WHITE',
-  'GRAY',
-  'BLACK',
-  'RAITH',
-  'GREEN_LCD',
-  'JUG_GREEN'
+  'red',
+  'green',
+  'blue',
+  'orange',
+  'yellow',
+  'cyan',
+  'magenta',
+  'white',
+  'gray',
+  'black',
+  'raith',
+  'green-lcd',
+  'jug-green'
 ].map((value) => ({ value, label: value }))
 
 export const foregroundTypeOptions: SelectOption[] = [
-  { value: 'type1', label: 'type1 - Classic top highlight' },
-  { value: 'type2', label: 'type2 - Wide dome highlight' },
-  { value: 'type3', label: 'type3 - Deep arc highlight' },
-  { value: 'type4', label: 'type4 - Lens + side flare' },
-  { value: 'type5', label: 'type5 - Curved sweep highlight' }
+  { value: 'top-arc-glass', label: 'Top arc glass' },
+  { value: 'side-reflection-glass', label: 'Side reflection glass' },
+  { value: 'dome-glass', label: 'Dome glass' },
+  { value: 'center-glow-glass', label: 'Center glow glass' },
+  { value: 'sweep-glass', label: 'Sweep glass' }
 ]
 
 export const gaugeTypeOptions: SelectOption[] = [
-  { value: 'type1', label: 'type1 - Quarter arc (90 deg)' },
-  { value: 'type2', label: 'type2 - Half arc (180 deg)' },
-  { value: 'type3', label: 'type3 - Three-quarter arc (270 deg)' },
-  { value: 'type4', label: 'type4 - Full arc with free area' }
+  { value: 'quarter', label: 'Quarter arc (90 deg)' },
+  { value: 'half', label: 'Half arc (180 deg)' },
+  { value: 'three-quarter', label: 'Three-quarter arc (270 deg)' },
+  { value: 'full-gap', label: 'Full arc with free area' }
 ]
 
 export const radialGaugeTypeOptions: SelectOption[] = [
   ...gaugeTypeOptions,
-  { value: 'type5', label: 'type5 - Radial vertical style' }
+  { value: 'quarter-offset', label: 'Quarter arc (orientation-aware)' }
 ]
 
 export const orientationOptions: SelectOption[] = [
@@ -107,15 +107,15 @@ export const knobStyleOptions: SelectOption[] = ['black', 'brass', 'silver'].map
 }))
 
 export const lcdColorOptions: SelectOption[] = [
-  'STANDARD',
-  'STANDARD_GREEN',
-  'BLUE',
-  'ORANGE',
-  'RED',
-  'YELLOW',
-  'WHITE',
-  'GRAY',
-  'BLACK'
+  'standard',
+  'standard-green',
+  'blue',
+  'orange',
+  'red',
+  'yellow',
+  'white',
+  'gray',
+  'black'
 ].map((value) => ({ value, label: value }))
 
 export const minMaxAreaColor = 'rgba(212,132,134,0.6)'

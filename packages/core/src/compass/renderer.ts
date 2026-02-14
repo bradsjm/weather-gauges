@@ -285,7 +285,7 @@ export const renderCompassGauge = (
   const activeAlerts = resolveGaugeHeadingAlerts(heading, config.indicators.alerts)
   const tone = resolveGaugeToneFromAlerts(activeAlerts)
   const pointerColorName =
-    tone === 'danger' ? 'RED' : tone === 'warning' ? 'ORANGE' : config.style.pointerColor
+    tone === 'danger' ? 'red' : tone === 'warning' ? 'orange' : config.style.pointerColor
 
   const backgroundPalette = getCompassBackgroundPalette(config.style.backgroundColor)
   const canTransform =

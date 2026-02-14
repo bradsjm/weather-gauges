@@ -237,15 +237,15 @@ const resolveGeometry = (
   let angleRange = TWO_PI - freeAreaAngle
   let bargraphOffset = -TWO_PI / 6
 
-  if (gaugeType === 'type1') {
+  if (gaugeType === 'quarter') {
     rotationOffset = PI
     angleRange = HALF_PI
     bargraphOffset = 0
-  } else if (gaugeType === 'type2') {
+  } else if (gaugeType === 'half') {
     rotationOffset = PI
     angleRange = PI
     bargraphOffset = 0
-  } else if (gaugeType === 'type3') {
+  } else if (gaugeType === 'three-quarter') {
     rotationOffset = HALF_PI
     angleRange = PI * 1.5
     bargraphOffset = -HALF_PI
@@ -441,7 +441,7 @@ const drawTickMarks = (
   let valueCounter = scale.minValue
   let textWidth = 0.1 * size
 
-  if (config.style.gaugeType === 'type1' || config.style.gaugeType === 'type2') {
+  if (config.style.gaugeType === 'quarter' || config.style.gaugeType === 'half') {
     textWidth = 0.0375 * size
   }
 
@@ -686,8 +686,8 @@ const drawDynamicLayer = (
     config.indicators.ledVisible
   )
 
-  const userLedX = config.style.gaugeType === 'type3' ? 0.7 * size : size * 0.5
-  const userLedY = config.style.gaugeType === 'type3' ? 0.61 * size : 0.75 * size
+  const userLedX = config.style.gaugeType === 'three-quarter' ? 0.7 * size : size * 0.5
+  const userLedY = config.style.gaugeType === 'three-quarter' ? 0.61 * size : 0.75 * size
   drawRadialSimpleLed(
     context,
     userLedX + ledRadius,

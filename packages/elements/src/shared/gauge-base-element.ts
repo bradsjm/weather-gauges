@@ -249,15 +249,21 @@ export abstract class WeatherGaugeElement extends LitElement {
   protected emitGaugeError(kind: GaugeContractKind, error: unknown, fallbackMessage: string): void {
     const issues = this.extractIssues(error)
     const code = issues ? 'invalid_config' : 'render_error'
+    const detail = {
+      kind,
+      code,
+      message: error instanceof Error ? error.message : fallbackMessage,
+      ...(issues ? { issues } : {})
+    }
+
+    console.error(`[weather-gauges] ${kind} ${code}`, {
+      element: this.tagName.toLowerCase(),
+      ...detail
+    })
 
     this.dispatchEvent(
       new CustomEvent(gaugeContract.errorEvent, {
-        detail: {
-          kind,
-          code,
-          message: error instanceof Error ? error.message : fallbackMessage,
-          ...(issues ? { issues } : {})
-        },
+        detail,
         bubbles: true,
         composed: true
       })

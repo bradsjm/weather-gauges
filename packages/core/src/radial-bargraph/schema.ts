@@ -17,15 +17,15 @@ export const radialBargraphLabelNumberFormatSchema = z.enum([
 export const radialBargraphTickLabelOrientationSchema = z.enum(['horizontal', 'tangent', 'normal'])
 
 export const radialBargraphLcdColorSchema = z.enum([
-  'STANDARD',
-  'STANDARD_GREEN',
-  'BLUE',
-  'ORANGE',
-  'RED',
-  'YELLOW',
-  'WHITE',
-  'GRAY',
-  'BLACK'
+  'standard',
+  'standard-green',
+  'blue',
+  'orange',
+  'red',
+  'yellow',
+  'white',
+  'gray',
+  'black'
 ])
 
 export const radialBargraphSectionSchema = gaugeValueSectionSchema
@@ -78,11 +78,11 @@ export const radialBargraphScaleSchema = z
 export const radialBargraphStyleSchema = z
   .object({
     frameDesign: gaugeFrameDesignSchema.default('metal'),
-    backgroundColor: gaugeBackgroundColorSchema.default('DARK_GRAY'),
-    foregroundType: gaugeForegroundTypeSchema.default('type1'),
-    gaugeType: radialGaugeTypeSchema.default('type4'),
-    valueColor: gaugePointerColorSchema.default('RED'),
-    lcdColor: radialBargraphLcdColorSchema.default('STANDARD'),
+    backgroundColor: gaugeBackgroundColorSchema.default('dark-gray'),
+    foregroundType: gaugeForegroundTypeSchema.default('top-arc-glass'),
+    gaugeType: radialGaugeTypeSchema.default('full-gap'),
+    valueColor: gaugePointerColorSchema.default('red'),
+    lcdColor: radialBargraphLcdColorSchema.default('standard'),
     digitalFont: z.boolean().default(false),
     labelNumberFormat: radialBargraphLabelNumberFormatSchema.default('standard'),
     tickLabelOrientation: radialBargraphTickLabelOrientationSchema.default('normal'),
@@ -101,11 +101,11 @@ export const radialBargraphGaugeConfigSchema = sharedGaugeConfigSchema
     })),
     style: radialBargraphStyleSchema.default({
       frameDesign: 'metal',
-      backgroundColor: 'DARK_GRAY',
-      foregroundType: 'type1',
-      gaugeType: 'type4',
-      valueColor: 'RED',
-      lcdColor: 'STANDARD',
+      backgroundColor: 'dark-gray',
+      foregroundType: 'top-arc-glass',
+      gaugeType: 'full-gap',
+      valueColor: 'red',
+      lcdColor: 'standard',
       digitalFont: false,
       labelNumberFormat: 'standard',
       tickLabelOrientation: 'normal',

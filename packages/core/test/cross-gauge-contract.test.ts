@@ -37,8 +37,8 @@ describe('cross-gauge contracts', () => {
   })
 
   it('uses shared event names and default animation duration', () => {
-    expect(gaugeContract.valueChangeEvent).toBe('ss3-value-change')
-    expect(gaugeContract.errorEvent).toBe('ss3-error')
+    expect(gaugeContract.valueChangeEvent).toBe('wx-state-change')
+    expect(gaugeContract.errorEvent).toBe('wx-error')
     expect(gaugeContract.defaultAnimationDurationMs).toBe(500)
   })
 

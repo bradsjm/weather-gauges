@@ -15,7 +15,13 @@ export const radialForegroundTypeSchema = gaugeForegroundTypeSchema
 
 export const radialPointerTypeSchema = gaugePointerTypeSchema
 
-export const radialGaugeTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
+export const radialGaugeTypeSchema = z.enum([
+  'quarter',
+  'half',
+  'three-quarter',
+  'full-gap',
+  'quarter-offset'
+])
 
 export const radialOrientationSchema = z.enum(['north', 'east', 'west'])
 
@@ -24,12 +30,12 @@ export const radialPointerColorSchema = gaugePointerColorSchema
 export const radialStyleSchema = z
   .object({
     frameDesign: radialFrameDesignSchema.default('metal'),
-    backgroundColor: radialBackgroundColorSchema.default('DARK_GRAY'),
-    foregroundType: radialForegroundTypeSchema.default('type1'),
-    pointerType: radialPointerTypeSchema.default('type1'),
-    gaugeType: radialGaugeTypeSchema.default('type4'),
+    backgroundColor: radialBackgroundColorSchema.default('dark-gray'),
+    foregroundType: radialForegroundTypeSchema.default('top-arc-glass'),
+    pointerType: radialPointerTypeSchema.default('classic-compass-needle'),
+    gaugeType: radialGaugeTypeSchema.default('full-gap'),
     orientation: radialOrientationSchema.default('north'),
-    pointerColor: radialPointerColorSchema.default('RED')
+    pointerColor: radialPointerColorSchema.default('red')
   })
   .strict()
 
@@ -126,12 +132,12 @@ export const radialGaugeConfigSchema = sharedGaugeConfigSchema
     })),
     style: radialStyleSchema.default({
       frameDesign: 'metal',
-      backgroundColor: 'DARK_GRAY',
-      foregroundType: 'type1',
-      pointerType: 'type1',
-      gaugeType: 'type4',
+      backgroundColor: 'dark-gray',
+      foregroundType: 'top-arc-glass',
+      pointerType: 'classic-compass-needle',
+      gaugeType: 'full-gap',
       orientation: 'north',
-      pointerColor: 'RED'
+      pointerColor: 'red'
     }),
     segments: z.array(radialSegmentSchema).default([]),
     areas: z.array(radialAreaSchema).default([]),

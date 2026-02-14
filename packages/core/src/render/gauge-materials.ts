@@ -509,7 +509,7 @@ export const drawCompassBackground = (
   context.arc(centerX, centerY, backgroundOffsetX, 0, TWO_PI)
   closePathSafe(context)
 
-  if (backgroundColorName === 'CARBON') {
+  if (backgroundColorName === 'carbon') {
     const pattern = drawCarbonPattern(context)
     context.fillStyle = pattern ?? rgbTupleToCss(color.gradientStop)
     context.fill()
@@ -533,7 +533,7 @@ export const drawCompassBackground = (
       ]
     )
     context.fill()
-  } else if (backgroundColorName === 'PUNCHED_SHEET') {
+  } else if (backgroundColorName === 'punched-sheet') {
     const pattern = drawPunchedSheetPattern(context)
     context.fillStyle = pattern ?? rgbTupleToCss(color.gradientStop)
     context.fill()
@@ -558,17 +558,17 @@ export const drawCompassBackground = (
     )
     context.fill()
   } else if (
-    backgroundColorName === 'BRUSHED_METAL' ||
-    backgroundColorName === 'BRUSHED_STAINLESS'
+    backgroundColorName === 'brushed-metal' ||
+    backgroundColorName === 'brushed-stainless'
   ) {
     const pattern = drawBrushedMetalPattern(
       context,
       color.gradientStop,
-      backgroundColorName === 'BRUSHED_METAL'
+      backgroundColorName === 'brushed-metal'
     )
     context.fillStyle = pattern ?? rgbTupleToCss(color.gradientStop)
     context.fill()
-  } else if (backgroundColorName === 'STAINLESS' || backgroundColorName === 'TURNED') {
+  } else if (backgroundColorName === 'stainless' || backgroundColorName === 'turned') {
     if (typeof context.createConicGradient === 'function') {
       const gradient = context.createConicGradient(-HALF_PI, centerX, centerY)
       const fractions = [
@@ -600,7 +600,7 @@ export const drawCompassBackground = (
     }
     context.fill()
 
-    if (backgroundColorName === 'TURNED') {
+    if (backgroundColorName === 'turned') {
       const radius = backgroundOffsetX
       const turnRadius = radius * 0.55
       const stepSize = RAD_FACTOR * (500 / radius)
@@ -764,7 +764,7 @@ const drawRadialTextureBackground = (
   centerY: number,
   radius: number
 ): boolean => {
-  if (backgroundColor === 'CARBON') {
+  if (backgroundColor === 'carbon') {
     const pattern = drawCarbonPattern(context)
     context.fillStyle = pattern ?? rgbTupleToCss(palette.gradientStop)
     context.beginPath()
@@ -794,7 +794,7 @@ const drawRadialTextureBackground = (
     return true
   }
 
-  if (backgroundColor === 'PUNCHED_SHEET') {
+  if (backgroundColor === 'punched-sheet') {
     const pattern = drawPunchedSheetPattern(context)
     context.fillStyle = pattern ?? rgbTupleToCss(palette.gradientStop)
     context.beginPath()
@@ -824,11 +824,11 @@ const drawRadialTextureBackground = (
     return true
   }
 
-  if (backgroundColor === 'BRUSHED_METAL' || backgroundColor === 'BRUSHED_STAINLESS') {
+  if (backgroundColor === 'brushed-metal' || backgroundColor === 'brushed-stainless') {
     const pattern = drawBrushedMetalPattern(
       context,
       palette.gradientStop,
-      backgroundColor === 'BRUSHED_METAL'
+      backgroundColor === 'brushed-metal'
     )
     context.fillStyle = pattern ?? rgbTupleToCss(palette.gradientStop)
     context.beginPath()
@@ -838,7 +838,7 @@ const drawRadialTextureBackground = (
     return true
   }
 
-  if (backgroundColor === 'STAINLESS' || backgroundColor === 'TURNED') {
+  if (backgroundColor === 'stainless' || backgroundColor === 'turned') {
     if (typeof context.createConicGradient === 'function') {
       const gradient = context.createConicGradient(-HALF_PI, centerX, centerY)
       const fractions = [
@@ -874,7 +874,7 @@ const drawRadialTextureBackground = (
     closePathSafe(context)
     context.fill()
 
-    if (backgroundColor === 'TURNED') {
+    if (backgroundColor === 'turned') {
       const turnRadius = radius * 0.55
       const stepSize = RAD_FACTOR * (500 / radius)
       const end = TWO_PI - stepSize * 0.3
@@ -920,7 +920,7 @@ const drawRadialForegroundTyped = (
   centerX: number,
   centerY: number,
   radius: number,
-  foregroundType: RadialForegroundType = 'type1'
+  foregroundType: RadialForegroundType = 'top-arc-glass'
 ): void => {
   const glassRadius = radius * 0.84
 
@@ -931,7 +931,7 @@ const drawRadialForegroundTyped = (
   }
 
   switch (foregroundType) {
-    case 'type1': {
+    case 'top-arc-glass': {
       const highlight = addColorStops(
         createLinearGradientSafe(
           context,
@@ -977,7 +977,7 @@ const drawRadialForegroundTyped = (
       break
     }
 
-    case 'type2': {
+    case 'side-reflection-glass': {
       const highlight = addColorStops(
         createLinearGradientSafe(
           context,
@@ -1040,7 +1040,7 @@ const drawRadialForegroundTyped = (
       break
     }
 
-    case 'type3': {
+    case 'dome-glass': {
       const highlight = addColorStops(
         createLinearGradientSafe(
           context,
@@ -1102,7 +1102,7 @@ const drawRadialForegroundTyped = (
       break
     }
 
-    case 'type4': {
+    case 'center-glow-glass': {
       const highlight = addColorStops(
         createLinearGradientSafe(
           context,
@@ -1183,7 +1183,7 @@ const drawRadialForegroundTyped = (
       break
     }
 
-    case 'type5': {
+    case 'sweep-glass': {
       const highlight = addColorStops(
         createLinearGradientSafe(
           context,

@@ -1,24 +1,24 @@
 import { z } from 'zod'
 
 export const gaugeBackgroundColorSchema = z.enum([
-  'DARK_GRAY',
-  'SATIN_GRAY',
-  'LIGHT_GRAY',
-  'WHITE',
-  'BLACK',
-  'BEIGE',
-  'BROWN',
-  'RED',
-  'GREEN',
-  'BLUE',
-  'ANTHRACITE',
-  'MUD',
-  'PUNCHED_SHEET',
-  'CARBON',
-  'STAINLESS',
-  'BRUSHED_METAL',
-  'BRUSHED_STAINLESS',
-  'TURNED'
+  'dark-gray',
+  'satin-gray',
+  'light-gray',
+  'white',
+  'black',
+  'beige',
+  'brown',
+  'red',
+  'green',
+  'blue',
+  'anthracite',
+  'mud',
+  'punched-sheet',
+  'carbon',
+  'stainless',
+  'brushed-metal',
+  'brushed-stainless',
+  'turned'
 ])
 
 export type GaugeBackgroundColorName = z.infer<typeof gaugeBackgroundColorSchema>

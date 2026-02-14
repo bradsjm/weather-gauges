@@ -5,19 +5,19 @@ import { pointerTypeSchema } from '../pointers/schema.js'
 export const gaugePointerTypeSchema = pointerTypeSchema
 
 export const gaugePointerColorSchema = z.enum([
-  'RED',
-  'GREEN',
-  'BLUE',
-  'ORANGE',
-  'YELLOW',
-  'CYAN',
-  'MAGENTA',
-  'WHITE',
-  'GRAY',
-  'BLACK',
-  'RAITH',
-  'GREEN_LCD',
-  'JUG_GREEN'
+  'red',
+  'green',
+  'blue',
+  'orange',
+  'yellow',
+  'cyan',
+  'magenta',
+  'white',
+  'gray',
+  'black',
+  'raith',
+  'green-lcd',
+  'jug-green'
 ])
 
 export type GaugePointerType = z.infer<typeof gaugePointerTypeSchema>

@@ -131,7 +131,7 @@ const mergePaint = (paint?: Partial<ThemePaint>): ThemePaint => {
 }
 
 const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout => {
-  if (gaugeType === 'type5') {
+  if (gaugeType === 'quarter-offset') {
     return {
       frameCenterY: size * 0.5,
       gaugeCenterY: size * 0.733644,
@@ -234,26 +234,26 @@ const resolveGeometry = (config: RadialGaugeConfig): RadialGeometry => {
 
   if (!hasCustomScale) {
     switch (config.style.gaugeType) {
-      case 'type1':
+      case 'quarter':
         startAngle = PI
         endAngle = PI + HALF_PI
         break
-      case 'type2':
+      case 'half':
         startAngle = PI
         endAngle = TWO_PI
         break
-      case 'type3':
+      case 'three-quarter':
         startAngle = HALF_PI
         endAngle = TWO_PI
         break
-      case 'type4':
+      case 'full-gap':
       default: {
         const freeAreaAngle = (60 * PI) / 180
         startAngle = HALF_PI + freeAreaAngle * 0.5
         endAngle = startAngle + (TWO_PI - freeAreaAngle)
         break
       }
-      case 'type5':
+      case 'quarter-offset':
         startAngle = TYPE5_START_ANGLE
         endAngle = startAngle + HALF_PI
         break
@@ -416,7 +416,8 @@ const drawTicks = (
   context.textAlign = 'center'
   context.textBaseline = 'middle'
   context.font = buildGaugeFont(Math.max(11, Math.round(size * 0.045)), STD_FONT_NAME)
-  const orientation = config.style.gaugeType === 'type5' ? config.style.orientation : 'north'
+  const orientation =
+    config.style.gaugeType === 'quarter-offset' ? config.style.orientation : 'north'
   const labelRotation = -ORIENTATION_ROTATION[orientation]
 
   for (let majorIndex = 0; majorIndex < majorCount; majorIndex += 1) {
@@ -512,7 +513,7 @@ const drawLcd = (
   paint: ThemePaint,
   layout: RadialLayout
 ): void => {
-  const lcdPalette = resolveRadialLcdPalette('STANDARD')
+  const lcdPalette = resolveRadialLcdPalette('standard')
   const lcdWidth = size * 0.32
   const lcdHeight = size * 0.11
   const lcdX = (size - lcdWidth) * 0.5
@@ -665,7 +666,9 @@ const drawForeground = (
     )
   }
 
-  if (!['type15', 'type16'].includes(config.style.pointerType)) {
+  if (
+    !['ornate-ring-base-needle', 'ring-base-bar-tail-needle'].includes(config.style.pointerType)
+  ) {
     context.save()
     context.translate(0, layout.knobCenterY - size * 0.5)
     drawGaugeCenterKnob(context, size, 'standardKnob', 'silver')
@@ -887,7 +890,7 @@ export const renderRadialGauge = (
   const layout = resolveLayout(size, config.style.gaugeType)
   const trendPalette = resolveRadialTrendPalette(paint)
   const orientation =
-    config.style.gaugeType === 'type5' ? config.style.orientation : ('north' as const)
+    config.style.gaugeType === 'quarter-offset' ? config.style.orientation : ('north' as const)
   const staticLayerSignature = resolveStaticLayerSignature(config, paint)
 
   context.clearRect(0, 0, config.size.width, config.size.height)

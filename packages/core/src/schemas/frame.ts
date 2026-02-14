@@ -14,7 +14,7 @@ export const gaugeFrameDesignSchema = z.enum([
   'glossyMetal'
 ])
 
-export const gaugeForegroundTypeSchema = z.enum(['type1', 'type2', 'type3', 'type4', 'type5'])
+export const gaugeForegroundTypeSchema = z.enum(['top-arc-glass', 'side-reflection-glass', 'dome-glass', 'center-glow-glass', 'sweep-glass'])
 
 export type GaugeFrameDesign = z.infer<typeof gaugeFrameDesignSchema>
 export type GaugeForegroundType = z.infer<typeof gaugeForegroundTypeSchema>

@@ -8,8 +8,8 @@ import { gaugeOverlaySchema, sharedGaugeConfigSchema } from '../schemas/shared.j
 
 export const windDirectionPointerSchema = z
   .object({
-    type: gaugePointerTypeSchema.default('type1'),
-    color: gaugePointerColorSchema.default('RED')
+    type: gaugePointerTypeSchema.default('classic-compass-needle'),
+    color: gaugePointerColorSchema.default('red')
   })
   .strict()
 
@@ -59,10 +59,16 @@ export const windDirectionScaleSchema = z
 export const windDirectionStyleSchema = z
   .object({
     frameDesign: gaugeFrameDesignSchema.default('metal'),
-    backgroundColor: gaugeBackgroundColorSchema.default('DARK_GRAY'),
-    foregroundType: gaugeForegroundTypeSchema.default('type1'),
-    pointerLatest: windDirectionPointerSchema.default({ type: 'type1', color: 'RED' }),
-    pointerAverage: windDirectionPointerSchema.default({ type: 'type8', color: 'BLUE' }),
+    backgroundColor: gaugeBackgroundColorSchema.default('dark-gray'),
+    foregroundType: gaugeForegroundTypeSchema.default('top-arc-glass'),
+    pointerLatest: windDirectionPointerSchema.default({
+      type: 'classic-compass-needle',
+      color: 'red'
+    }),
+    pointerAverage: windDirectionPointerSchema.default({
+      type: 'curved-classic-needle',
+      color: 'blue'
+    }),
     knobType: gaugeKnobTypeSchema.default('standardKnob'),
     knobStyle: gaugeKnobStyleSchema.default('silver'),
     pointSymbols: z
@@ -71,17 +77,17 @@ export const windDirectionStyleSchema = z
       .default(['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']),
     lcdColor: z
       .enum([
-        'STANDARD',
-        'STANDARD_GREEN',
-        'BLUE',
-        'ORANGE',
-        'RED',
-        'YELLOW',
-        'WHITE',
-        'GRAY',
-        'BLACK'
+        'standard',
+        'standard-green',
+        'blue',
+        'orange',
+        'red',
+        'yellow',
+        'white',
+        'gray',
+        'black'
       ])
-      .default('STANDARD'),
+      .default('standard'),
     digitalFont: z.boolean().default(false),
     useColorLabels: z.boolean().default(false),
     customLayer: windDirectionCustomLayerSchema
@@ -112,14 +118,14 @@ export const windDirectionGaugeConfigSchema = sharedGaugeConfigSchema
     })),
     style: windDirectionStyleSchema.default({
       frameDesign: 'metal',
-      backgroundColor: 'DARK_GRAY',
-      foregroundType: 'type1',
-      pointerLatest: { type: 'type1', color: 'RED' },
-      pointerAverage: { type: 'type8', color: 'BLUE' },
+      backgroundColor: 'dark-gray',
+      foregroundType: 'top-arc-glass',
+      pointerLatest: { type: 'classic-compass-needle', color: 'red' },
+      pointerAverage: { type: 'curved-classic-needle', color: 'blue' },
       knobType: 'standardKnob',
       knobStyle: 'silver',
       pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
-      lcdColor: 'STANDARD',
+      lcdColor: 'standard',
       digitalFont: false,
       useColorLabels: false
     }),

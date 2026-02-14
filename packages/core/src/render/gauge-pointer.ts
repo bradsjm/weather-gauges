@@ -523,7 +523,7 @@ const drawType13And14 = (
   context.lineTo(0.485981 * size, 0.168224 * size)
   closePathSafe(context)
 
-  if (pointerType === 'type13') {
+  if (pointerType === 'label-tip-marker-needle') {
     const grad = addColorStops(
       createLinearGradientSafe(context, 0, 0.5 * size, 0, 0.130841 * size, labelColor),
       [
@@ -599,7 +599,7 @@ const drawType15And16 = (
     size * 0.490654,
     size * 0.542056
   )
-  if (pointerType === 'type15') {
+  if (pointerType === 'ornate-ring-base-needle') {
     context.lineTo(size * 0.490654, size * 0.57)
     context.bezierCurveTo(
       size * 0.46,
@@ -673,7 +673,7 @@ const drawType15And16 = (
   )
   closePathSafe(context)
 
-  const endY = pointerType === 'type15' ? size * 0.63 : size * 0.621495
+  const endY = pointerType === 'ornate-ring-base-needle' ? size * 0.63 : size * 0.621495
   const bodyGrad = addColorStops(
     createLinearGradientSafe(context, 0, 0, 0, endY, rgbTupleToCss(color.medium)),
     [
@@ -759,48 +759,48 @@ export const drawGaugePointer = ({
   }
 
   switch (pointerType) {
-    case 'type2':
+    case 'slim-angular-needle':
       drawType2(context, imageWidth, pointerColor, labelColor)
       break
-    case 'type3':
+    case 'thin-bar-needle':
       drawType3(context, imageWidth, pointerColor)
       break
-    case 'type4':
+    case 'diamond-spear-needle':
       drawType4(context, imageWidth, pointerColor)
       break
-    case 'type5':
+    case 'triangular-split-needle':
       drawType5(context, imageWidth, pointerColor)
       break
-    case 'type6':
+    case 'forked-center-needle':
       drawType6(context, imageWidth, pointerColor)
       break
-    case 'type7':
+    case 'simple-triangular-needle':
       drawType7(context, imageWidth, pointerColor)
       break
-    case 'type8':
+    case 'curved-classic-needle':
       drawType8(context, imageWidth, pointerColor)
       break
-    case 'type9':
+    case 'heavy-metallic-needle':
       drawType9(context, imageWidth, pointerColor)
       break
-    case 'type10':
+    case 'teardrop-bulb-needle':
       drawType10(context, imageWidth, pointerColor)
       break
-    case 'type11':
+    case 'curved-tail-needle':
       drawType11(context, imageWidth, pointerColor)
       break
-    case 'type12':
+    case 'narrow-spike-needle':
       drawType12(context, imageWidth, pointerColor)
       break
-    case 'type13':
-    case 'type14':
+    case 'label-tip-marker-needle':
+    case 'metallic-marker-needle':
       drawType13And14(context, imageWidth, pointerColor, labelColor, pointerType)
       break
-    case 'type15':
-    case 'type16':
+    case 'ornate-ring-base-needle':
+    case 'ring-base-bar-tail-needle':
       drawType15And16(context, imageWidth, pointerColor, pointerType)
       break
-    case 'type1':
+    case 'classic-compass-needle':
     default:
       drawType1(context, imageWidth, pointerColor)
       break

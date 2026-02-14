@@ -13,7 +13,7 @@ export type RadialLcdPalette = {
 }
 
 const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
-  STANDARD: {
+  standard: {
     gradientStart: 'rgb(131, 133, 119)',
     gradientFraction1: 'rgb(176, 183, 167)',
     gradientFraction2: 'rgb(165, 174, 153)',
@@ -21,7 +21,7 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
     gradientStop: 'rgb(175, 184, 165)',
     text: 'rgb(35, 42, 52)'
   },
-  STANDARD_GREEN: {
+  'standard-green': {
     gradientStart: '#ffffff',
     gradientFraction1: 'rgb(219, 230, 220)',
     gradientFraction2: 'rgb(179, 194, 178)',
@@ -29,7 +29,7 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
     gradientStop: 'rgb(114, 138, 109)',
     text: '#080C06'
   },
-  BLUE: {
+  blue: {
     gradientStart: '#ffffff',
     gradientFraction1: 'rgb(231, 246, 255)',
     gradientFraction2: 'rgb(170, 224, 255)',
@@ -37,7 +37,7 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
     gradientStop: 'rgb(192, 232, 255)',
     text: '#124564'
   },
-  ORANGE: {
+  orange: {
     gradientStart: '#ffffff',
     gradientFraction1: 'rgb(255, 245, 225)',
     gradientFraction2: 'rgb(255, 217, 147)',
@@ -45,7 +45,7 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
     gradientStop: 'rgb(255, 227, 173)',
     text: '#503700'
   },
-  RED: {
+  red: {
     gradientStart: '#ffffff',
     gradientFraction1: 'rgb(255, 225, 225)',
     gradientFraction2: 'rgb(253, 152, 152)',
@@ -53,7 +53,7 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
     gradientStop: 'rgb(254, 178, 178)',
     text: '#4f0c0e'
   },
-  YELLOW: {
+  yellow: {
     gradientStart: '#ffffff',
     gradientFraction1: 'rgb(245, 255, 186)',
     gradientFraction2: 'rgb(210, 255, 0)',
@@ -61,7 +61,7 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
     gradientStop: 'rgb(210, 255, 0)',
     text: '#405300'
   },
-  WHITE: {
+  white: {
     gradientStart: '#ffffff',
     gradientFraction1: '#ffffff',
     gradientFraction2: 'rgb(241, 246, 242)',
@@ -69,7 +69,7 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
     gradientStop: '#ffffff',
     text: '#000000'
   },
-  GRAY: {
+  gray: {
     gradientStart: '#414141',
     gradientFraction1: 'rgb(117, 117, 117)',
     gradientFraction2: 'rgb(87, 87, 87)',
@@ -77,7 +77,7 @@ const LCD_COLORS: Record<RadialBargraphLcdColorName, RadialLcdPalette> = {
     gradientStop: 'rgb(81, 81, 81)',
     text: '#ffffff'
   },
-  BLACK: {
+  black: {
     gradientStart: '#414141',
     gradientFraction1: '#666666',
     gradientFraction2: '#333333',
@@ -237,7 +237,7 @@ export const drawRadialLcd = (
   drawRadialLcdBox(context, lcdX, lcdY, lcdWidth, lcdHeight, lcdPalette)
 
   const valueShadow =
-    lcdColor === 'STANDARD' || lcdColor === 'STANDARD_GREEN'
+    lcdColor === 'standard' || lcdColor === 'standard-green'
       ? {
           color: 'gray',
           offsetX: size * 0.007,

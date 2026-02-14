@@ -89,58 +89,63 @@ export class WxBargraphElement extends WeatherGaugeElement {
 
   @property({ type: String, attribute: false })
   backgroundColor:
-    | 'DARK_GRAY'
-    | 'SATIN_GRAY'
-    | 'LIGHT_GRAY'
-    | 'WHITE'
-    | 'BLACK'
-    | 'BEIGE'
-    | 'BROWN'
-    | 'RED'
-    | 'GREEN'
-    | 'BLUE'
-    | 'ANTHRACITE'
-    | 'MUD'
-    | 'PUNCHED_SHEET'
-    | 'CARBON'
-    | 'STAINLESS'
-    | 'BRUSHED_METAL'
-    | 'BRUSHED_STAINLESS'
-    | 'TURNED' = 'DARK_GRAY'
+    | 'dark-gray'
+    | 'satin-gray'
+    | 'light-gray'
+    | 'white'
+    | 'black'
+    | 'beige'
+    | 'brown'
+    | 'red'
+    | 'green'
+    | 'blue'
+    | 'anthracite'
+    | 'mud'
+    | 'punched-sheet'
+    | 'carbon'
+    | 'stainless'
+    | 'brushed-metal'
+    | 'brushed-stainless'
+    | 'turned' = 'dark-gray'
 
   @property({ type: String, attribute: false })
-  foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
+  foregroundType:
+    | 'top-arc-glass'
+    | 'side-reflection-glass'
+    | 'dome-glass'
+    | 'center-glow-glass'
+    | 'sweep-glass' = 'top-arc-glass'
 
   @property({ type: String, attribute: false })
-  gaugeType: 'type1' | 'type2' | 'type3' | 'type4' = 'type4'
+  gaugeType: 'quarter' | 'half' | 'three-quarter' | 'full-gap' = 'full-gap'
 
   @property({ type: String, attribute: false })
   valueColor:
-    | 'RED'
-    | 'GREEN'
-    | 'BLUE'
-    | 'ORANGE'
-    | 'YELLOW'
-    | 'CYAN'
-    | 'MAGENTA'
-    | 'WHITE'
-    | 'GRAY'
-    | 'BLACK'
-    | 'RAITH'
-    | 'GREEN_LCD'
-    | 'JUG_GREEN' = 'RED'
+    | 'red'
+    | 'green'
+    | 'blue'
+    | 'orange'
+    | 'yellow'
+    | 'cyan'
+    | 'magenta'
+    | 'white'
+    | 'gray'
+    | 'black'
+    | 'raith'
+    | 'green-lcd'
+    | 'jug-green' = 'red'
 
   @property({ type: String, attribute: false })
   lcdColor:
-    | 'STANDARD'
-    | 'STANDARD_GREEN'
-    | 'BLUE'
-    | 'ORANGE'
-    | 'RED'
-    | 'YELLOW'
-    | 'WHITE'
-    | 'GRAY'
-    | 'BLACK' = 'STANDARD'
+    | 'standard'
+    | 'standard-green'
+    | 'blue'
+    | 'orange'
+    | 'red'
+    | 'yellow'
+    | 'white'
+    | 'gray'
+    | 'black' = 'standard'
 
   @property({ type: String, attribute: false })
   labelNumberFormat: 'standard' | 'fractional' | 'scientific' = 'standard'
@@ -332,7 +337,7 @@ export class WxBargraphElement extends WeatherGaugeElement {
     const valueGradientStops =
       this.valueGradientStops.length > 0 ? this.valueGradientStops : fallbackValueGradientStops
 
-    const defaultTickLabelOrientation = this.gaugeType === 'type1' ? 'tangent' : 'normal'
+    const defaultTickLabelOrientation = this.gaugeType === 'quarter' ? 'tangent' : 'normal'
     const warningAlertValue = this.normalizeInRange(
       this.warningAlertValue,
       range.min,

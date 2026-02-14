@@ -51,43 +51,43 @@ export class WxCompassElement extends WeatherGaugeElement {
 
   @property({ type: String, attribute: false })
   backgroundColor:
-    | 'DARK_GRAY'
-    | 'SATIN_GRAY'
-    | 'LIGHT_GRAY'
-    | 'WHITE'
-    | 'BLACK'
-    | 'BEIGE'
-    | 'BROWN'
-    | 'RED'
-    | 'GREEN'
-    | 'BLUE'
-    | 'ANTHRACITE'
-    | 'MUD'
-    | 'PUNCHED_SHEET'
-    | 'CARBON'
-    | 'STAINLESS'
-    | 'BRUSHED_METAL'
-    | 'BRUSHED_STAINLESS'
-    | 'TURNED' = 'DARK_GRAY'
+    | 'dark-gray'
+    | 'satin-gray'
+    | 'light-gray'
+    | 'white'
+    | 'black'
+    | 'beige'
+    | 'brown'
+    | 'red'
+    | 'green'
+    | 'blue'
+    | 'anthracite'
+    | 'mud'
+    | 'punched-sheet'
+    | 'carbon'
+    | 'stainless'
+    | 'brushed-metal'
+    | 'brushed-stainless'
+    | 'turned' = 'dark-gray'
 
   @property({ type: String, attribute: false })
-  pointerType = 'type2'
+  pointerType = 'slim-angular-needle'
 
   @property({ type: String, attribute: false })
   pointerColor:
-    | 'RED'
-    | 'GREEN'
-    | 'BLUE'
-    | 'ORANGE'
-    | 'YELLOW'
-    | 'CYAN'
-    | 'MAGENTA'
-    | 'WHITE'
-    | 'GRAY'
-    | 'BLACK'
-    | 'RAITH'
-    | 'GREEN_LCD'
-    | 'JUG_GREEN' = 'RED'
+    | 'red'
+    | 'green'
+    | 'blue'
+    | 'orange'
+    | 'yellow'
+    | 'cyan'
+    | 'magenta'
+    | 'white'
+    | 'gray'
+    | 'black'
+    | 'raith'
+    | 'green-lcd'
+    | 'jug-green' = 'red'
 
   @property({ type: String, attribute: false })
   knobType: 'standardKnob' | 'metalKnob' = 'standardKnob'
@@ -96,7 +96,12 @@ export class WxCompassElement extends WeatherGaugeElement {
   knobStyle: 'black' | 'brass' | 'silver' = 'silver'
 
   @property({ type: String, attribute: false })
-  foregroundType: 'type1' | 'type2' | 'type3' | 'type4' | 'type5' = 'type1'
+  foregroundType:
+    | 'top-arc-glass'
+    | 'side-reflection-glass'
+    | 'dome-glass'
+    | 'center-glow-glass'
+    | 'sweep-glass' = 'top-arc-glass'
 
   @property({ type: Boolean, attribute: 'show-degrees' })
   degreeScale = false

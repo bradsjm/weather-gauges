@@ -22,7 +22,7 @@ export const drawCompassForeground = (
   context.beginPath()
 
   switch (foregroundType) {
-    case 'type2':
+    case 'side-reflection-glass':
       context.moveTo(0.135514 * imageWidth, 0.696261 * imageHeight)
       context.bezierCurveTo(
         0.214953 * imageWidth,
@@ -81,7 +81,7 @@ export const drawCompassForeground = (
       )
       context.fill()
       break
-    case 'type3':
+    case 'dome-glass':
       context.moveTo(0.084112 * imageWidth, 0.5 * imageHeight)
       context.bezierCurveTo(
         0.084112 * imageWidth,
@@ -140,7 +140,7 @@ export const drawCompassForeground = (
       )
       context.fill()
       break
-    case 'type4': {
+    case 'center-glow-glass': {
       context.moveTo(0.67757 * imageWidth, 0.24299 * imageHeight)
       context.bezierCurveTo(
         0.570093 * imageWidth,
@@ -255,7 +255,7 @@ export const drawCompassForeground = (
       context.fill()
       break
     }
-    case 'type5':
+    case 'sweep-glass':
       context.moveTo(0.084112 * imageWidth, 0.5 * imageHeight)
       context.bezierCurveTo(
         0.084112 * imageWidth,
@@ -322,7 +322,7 @@ export const drawCompassForeground = (
       )
       context.fill()
       break
-    case 'type1':
+    case 'top-arc-glass':
     default:
       context.moveTo(0.084112 * imageWidth, 0.5 * imageHeight)
       context.bezierCurveTo(

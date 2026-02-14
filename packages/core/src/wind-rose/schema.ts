@@ -108,8 +108,8 @@ export const windRoseCustomLayerSchema = gaugeOverlaySchema
 export const windRoseStyleSchema = z
   .object({
     frameDesign: gaugeFrameDesignSchema.default('metal'),
-    backgroundColor: gaugeBackgroundColorSchema.default('DARK_GRAY'),
-    foregroundType: gaugeForegroundTypeSchema.default('type1'),
+    backgroundColor: gaugeBackgroundColorSchema.default('dark-gray'),
+    foregroundType: gaugeForegroundTypeSchema.default('top-arc-glass'),
     knobType: gaugeKnobTypeSchema.default('standardKnob'),
     knobStyle: gaugeKnobStyleSchema.default('silver'),
     pointSymbols: z
@@ -145,8 +145,8 @@ export const windRoseGaugeConfigSchema = sharedGaugeConfigSchema
     value: windRoseValueSchema,
     style: windRoseStyleSchema.default({
       frameDesign: 'metal',
-      backgroundColor: 'DARK_GRAY',
-      foregroundType: 'type1',
+      backgroundColor: 'dark-gray',
+      foregroundType: 'top-arc-glass',
       knobType: 'standardKnob',
       knobStyle: 'silver',
       pointSymbols: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],

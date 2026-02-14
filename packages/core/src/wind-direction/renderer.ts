@@ -246,7 +246,7 @@ const drawWindDirectionStaticLayer = (
       width / 2
     )
 
-    const showKnob = !['type15', 'type16'].includes(config.style.pointerLatest.type)
+    const showKnob = !['ornate-ring-base-needle', 'ring-base-bar-tail-needle'].includes(config.style.pointerLatest.type)
     if (showKnob) {
       drawGaugeCenterKnob(context, width, config.style.knobType, config.style.knobStyle)
     }
