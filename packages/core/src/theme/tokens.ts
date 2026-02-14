@@ -1,3 +1,19 @@
+/**
+ * @module
+ *
+ * Theme token resolution utilities.
+ *
+ * This module provides functions for resolving CSS custom property values
+ * to theme tokens used throughout the gauge rendering system.
+ */
+
+/**
+ * Default CSS custom property names for theme tokens.
+ *
+ * @remarks
+ * These are the CSS custom properties that can be set on a host element
+ * to customize gauge appearance.
+ */
 export const themeTokenDefaults = {
   '--wx-font-family': 'system-ui, sans-serif',
   '--wx-font-family-lcd':
@@ -26,10 +42,29 @@ export const themeTokenDefaults = {
   '--wx-trend-highlight': 'rgba(255, 255, 255, 0.3)'
 } as const
 
+/**
+ * Names of available theme token CSS custom properties.
+ *
+ * @remarks
+ * All theme tokens start with '--wx-' prefix and can be customized via CSS.
+ */
 export type ThemeTokenName = keyof typeof themeTokenDefaults
 
+/**
+ * Map of theme token names to their CSS values.
+ *
+ * @remarks
+ * Used internally to store resolved token values.
+ */
 export type ThemeTokenMap = Record<ThemeTokenName, string>
 
+/**
+ * Resolved theme paint colors and styles for gauge rendering.
+ *
+ * @remarks
+ * Contains all colors and font families used when rendering gauges.
+ * These values are resolved from CSS custom properties or defaults.
+ */
 export type ThemePaint = {
   fontFamily: string
   fontFamilyLcd: string
@@ -57,6 +92,15 @@ export type ThemePaint = {
   trendHighlight: string
 }
 
+/**
+ * Function that returns a CSS custom property value for a given token.
+ *
+ * @param token - The theme token name to look up
+ * @returns The CSS value, or null/undefined if not set
+ *
+ * @remarks
+ * Typically wraps getComputedStyle().getPropertyValue() for convenience.
+ */
 export type ThemeTokenSource = (token: ThemeTokenName) => string | null | undefined
 
 const normalizeTokenValue = (value: string | null | undefined): string | undefined => {
@@ -72,6 +116,17 @@ const normalizeTokenValue = (value: string | null | undefined): string | undefin
   return trimmed
 }
 
+/**
+ * Merges a single token value into a theme token map.
+ *
+ * @param base - The base theme token map
+ * @param token - The token name to merge
+ * @param value - The CSS value to set (or null/undefined to skip)
+ * @returns New theme token map with merged value
+ *
+ * @remarks
+ * Internal utility for updating individual theme tokens.
+ */
 const mergeToken = (
   base: ThemeTokenMap,
   token: ThemeTokenName,
@@ -88,6 +143,33 @@ const mergeToken = (
   }
 }
 
+/**
+ * Resolves theme tokens from CSS custom properties and/or overrides.
+ *
+ * @param options - Configuration options for token resolution
+ * @param options.source - Optional function to read CSS custom properties
+ * @param options.overrides - Optional override values for specific tokens
+ * @returns Complete theme token map
+ *
+ * @remarks
+ * Tokens are resolved in priority order:
+ * 1. Overrides (if provided)
+ * 2. CSS custom properties (if source provided)
+ * 3. Default values
+ *
+ * @example
+ * ```typescript
+ * import { resolveThemeTokens, createStyleTokenSource } from '@bradsjm/weather-gauges-core'
+ *
+ * const computedStyle = getComputedStyle(element)
+ * const tokens = resolveThemeTokens({
+ *   source: createStyleTokenSource(computedStyle),
+ *   overrides: {
+ *     '--wx-accent-color': '#ff0000'
+ *   }
+ * })
+ * ```
+ */
 export const resolveThemeTokens = (
   options: {
     source?: ThemeTokenSource
@@ -114,6 +196,31 @@ export const resolveThemeTokens = (
   )
 }
 
+/**
+ * Resolves theme paint object from CSS custom properties and/or overrides.
+ *
+ * @param options - Configuration options for paint resolution
+ * @param options.source - Optional function to read CSS custom properties
+ * @param options.overrides - Optional override values for specific tokens
+ * @returns Complete theme paint object with all colors and fonts
+ *
+ * @remarks
+ * Convenience function that resolves tokens and maps them to a ThemePaint object
+ * with named properties for easier consumption by renderers.
+ *
+ * @example
+ * ```typescript
+ * import { resolveThemePaint, createStyleTokenSource } from '@bradsjm/weather-gauges-core'
+ *
+ * const computedStyle = getComputedStyle(element)
+ * const paint = resolveThemePaint({
+ *   source: createStyleTokenSource(computedStyle)
+ * })
+ *
+ * console.log(paint.textColor) // '#1f2937' (or custom value)
+ * console.log(paint.accentColor) // '#0f766e' (or custom value)
+ * ```
+ */
 export const resolveThemePaint = (
   options: {
     source?: ThemeTokenSource
@@ -150,6 +257,24 @@ export const resolveThemePaint = (
   }
 }
 
+/**
+ * Creates a theme token source from a CSS style object.
+ *
+ * @param style - An object with a getPropertyValue method (like CSSStyleDeclaration)
+ * @returns A function that reads CSS custom properties for theme tokens
+ *
+ * @remarks
+ * Convenience factory for creating token sources from getComputedStyle results.
+ *
+ * @example
+ * ```typescript
+ * import { createStyleTokenSource } from '@bradsjm/weather-gauges-core'
+ *
+ * const computedStyle = getComputedStyle(element)
+ * const tokenSource = createStyleTokenSource(computedStyle)
+ * const accentColor = tokenSource('--wx-accent-color')
+ * ```
+ */
 export const createStyleTokenSource = (style: {
   getPropertyValue: (token: string) => string
 }): ThemeTokenSource => {

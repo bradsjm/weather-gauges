@@ -1,3 +1,12 @@
+/**
+ * @module
+ *
+ * Radial bargraph gauge configuration schemas and types.
+ *
+ * This module provides Zod schemas for validating and typing
+ * radial bargraph gauge configurations, including gauge types,
+ * label formats, tick orientations, and value gradients.
+ */
 import { z } from 'zod'
 
 import { gaugeBackgroundColorSchema } from '../schemas/background.js'
@@ -7,6 +16,22 @@ import { gaugeValueSectionSchema } from '../schemas/sections.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 import { gaugeThresholdSchema } from '../schemas/threshold.js'
 
+/**
+ * Schema for validating radial bargraph gauge type.
+ *
+ * @remarks
+ * Defines the arc coverage of the radial bargraph:
+ * - half: 180-degree arc (semicircle)
+ * - three-quarter: 270-degree arc
+ * - full-gap: Full circle with a small gap at the bottom
+ *
+ * @example
+ * ```typescript
+ * import { radialBargraphGaugeTypeSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const type = radialBargraphGaugeTypeSchema.parse('full-gap')
+ * ```
+ */
 export const radialBargraphGaugeTypeSchema = z.enum(['half', 'three-quarter', 'full-gap'])
 
 export const radialBargraphLabelNumberFormatSchema = z.enum([
@@ -31,6 +56,25 @@ export const radialBargraphLcdColorSchema = z.enum([
 
 export const radialBargraphSectionSchema = gaugeValueSectionSchema
 
+/**
+ * Schema for validating a value gradient stop.
+ *
+ * @remarks
+ * Defines a color at a specific position in a value gradient.
+ *
+ * - fraction: Position in range [0, 1] where 0 is start and 1 is end
+ * - color: Color to use at this position
+ *
+ * @example
+ * ```typescript
+ * import { radialBargraphValueGradientStopSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const stop = radialBargraphValueGradientStopSchema.parse({
+ *   fraction: 0.5,
+ *   color: '#ff0000'
+ * })
+ * ```
+ */
 export const radialBargraphValueGradientStopSchema = z
   .object({
     fraction: z.number().min(0).max(1),
@@ -170,4 +214,27 @@ export type RadialBargraphAlert = z.infer<typeof radialBargraphAlertSchema>
 export type RadialBargraphIndicators = z.infer<typeof radialBargraphIndicatorsSchema>
 export type RadialBargraphScale = z.infer<typeof radialBargraphScaleSchema>
 export type RadialBargraphStyle = z.infer<typeof radialBargraphStyleSchema>
+/**
+ * Complete radial bargraph gauge configuration.
+ *
+ * @remarks
+ * Extends {@link SharedGaugeConfig} with radial bargraph-specific options:
+ * - scale: Nice scale settings for automatic tick calculation
+ * - style: Visual style (gauge type, colors, label formats)
+ * - sections: Colored segments for value ranges
+ * - valueGradientStops: Color gradient stops for value bar
+ * - lcdDecimals: Number of decimal places in LCD display
+ * - indicators: Thresholds, alerts, LEDs, and trends
+ *
+ * @example
+ * ```typescript
+ * import { radialBargraphGaugeConfigSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const config = radialBargraphGaugeConfigSchema.parse({
+ *   value: { current: 75, min: 0, max: 100 },
+ *   size: { width: 400, height: 400 },
+ *   style: { gaugeType: 'full-gap', valueColor: 'red' }
+ * })
+ * ```
+ */
 export type RadialBargraphGaugeConfig = z.infer<typeof radialBargraphGaugeConfigSchema>

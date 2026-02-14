@@ -1,3 +1,12 @@
+/**
+ * @module
+ *
+ * Radial gauge configuration schemas and types.
+ *
+ * This module provides Zod schemas for validating and typing
+ * radial gauge configurations, including gauge types, orientations,
+ * scale settings, and indicator configurations.
+ */
 import { z } from 'zod'
 
 import { gaugeBackgroundColorSchema } from '../schemas/background.js'
@@ -15,8 +24,41 @@ export const radialForegroundTypeSchema = gaugeForegroundTypeSchema
 
 export const radialPointerTypeSchema = gaugePointerTypeSchema
 
+/**
+ * Schema for validating radial gauge type.
+ *
+ * @remarks
+ * Defines the visual style and arc coverage of the radial gauge:
+ * - half: 180-degree arc (semicircle)
+ * - three-quarter: 270-degree arc
+ * - full-gap: Full circle with a small gap at the bottom
+ * - quarter-offset: 270-degree arc offset from vertical
+ *
+ * @example
+ * ```typescript
+ * import { radialGaugeTypeSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const type = radialGaugeTypeSchema.parse('full-gap')
+ * ```
+ */
 export const radialGaugeTypeSchema = z.enum(['half', 'three-quarter', 'full-gap', 'quarter-offset'])
 
+/**
+ * Schema for validating radial gauge orientation.
+ *
+ * @remarks
+ * Defines which direction the gauge arc points:
+ * - north: Points upward (12 o'clock position)
+ * - east: Points to the right (3 o'clock position)
+ * - west: Points to the left (9 o'clock position)
+ *
+ * @example
+ * ```typescript
+ * import { radialOrientationSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const orientation = radialOrientationSchema.parse('north')
+ * ```
+ */
 export const radialOrientationSchema = z.enum(['north', 'east', 'west'])
 
 export const radialPointerColorSchema = gaugePointerColorSchema
@@ -63,6 +105,34 @@ export const radialAlertSchema = z
   })
   .strict()
 
+/**
+ * Schema for validating radial gauge indicator settings.
+ *
+ * @remarks
+ * Configures various indicators displayed on the gauge:
+ * - threshold: Optional threshold line marker
+ * - alerts: Array of value-based alerts
+ * - ledVisible: Whether to show LED indicator (default: false)
+ * - userLedVisible: Whether to show user LED indicator (default: false)
+ * - trendVisible: Whether to show trend indicator (default: false)
+ * - trendState: Trend direction to display (default: 'down')
+ * - minMeasuredValueVisible: Whether to show min measured value (default: false)
+ * - maxMeasuredValueVisible: Whether to show max measured value (default: false)
+ * - minMeasuredValue: Minimum measured value (required when visible)
+ * - maxMeasuredValue: Maximum measured value (required when visible)
+ *
+ * @example
+ * ```typescript
+ * import { radialIndicatorsSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const indicators = radialIndicatorsSchema.parse({
+ *   threshold: { value: 80, show: true },
+ *   ledVisible: true,
+ *   trendVisible: true,
+ *   trendState: 'up'
+ * })
+ * ```
+ */
 export const radialIndicatorsSchema = z
   .object({
     threshold: radialThresholdSchema.optional(),
@@ -116,6 +186,29 @@ export const radialIndicatorsSchema = z
     maxMeasuredValueVisible: false
   })
 
+/**
+ * Complete radial gauge configuration.
+ *
+ * @remarks
+ * Extends {@link SharedGaugeConfig} with radial-specific options:
+ * - scale: Scale settings (start/end angles, tick counts)
+ * - style: Visual style (gauge type, orientation, pointer, colors)
+ * - segments: Colored segments for value ranges
+ * - areas: Filled areas for value ranges
+ * - indicators: Thresholds, alerts, LEDs, trends, measured values
+ *
+ * @example
+ * ```typescript
+ * import { radialGaugeConfigSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const config = radialGaugeConfigSchema.parse({
+ *   value: { current: 75, min: 0, max: 100 },
+ *   size: { width: 400, height: 400 },
+ *   scale: { startAngle: -Math.PI * 0.75, endAngle: Math.PI * 0.75 },
+ *   style: { gaugeType: 'full-gap', orientation: 'north' }
+ * })
+ * ```
+ */
 export const radialGaugeConfigSchema = sharedGaugeConfigSchema
   .extend({
     scale: radialScaleSchema.default(() => ({

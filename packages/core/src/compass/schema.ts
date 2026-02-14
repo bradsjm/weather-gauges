@@ -1,3 +1,11 @@
+/**
+ * @module
+ *
+ * Compass gauge configuration schemas and types.
+ *
+ * This module provides Zod schemas for validating and typing
+ * compass gauge configurations, including heading, style, and alert settings.
+ */
 import { z } from 'zod'
 
 import { gaugeBackgroundColorSchema } from '../schemas/background.js'
@@ -12,6 +20,27 @@ import {
   gaugeOverlaySchema
 } from '../schemas/shared.js'
 
+/**
+ * Schema for validating compass heading configuration.
+ *
+ * @remarks
+ * - current: The current heading value in degrees (0-360)
+ * - min: Minimum heading (default: 0)
+ * - max: Maximum heading (default: 360)
+ *
+ * Validates that max > min and current is within range.
+ *
+ * @example
+ * ```typescript
+ * import { compassHeadingSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const heading = compassHeadingSchema.parse({
+ *   current: 45,
+ *   min: 0,
+ *   max: 360
+ * })
+ * ```
+ */
 export const compassHeadingSchema = z
   .object({
     current: z.number().finite(),
@@ -37,6 +66,23 @@ export const compassHeadingSchema = z
     }
   })
 
+/**
+ * Schema for validating compass rose settings.
+ *
+ * @remarks
+ * - showDegreeLabels: Whether to show numeric degree labels (default: false)
+ * - showOrdinalMarkers: Whether to show N, NE, E, SE, S, SW, W, NW markers (default: true)
+ *
+ * @example
+ * ```typescript
+ * import { compassRoseSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const rose = compassRoseSchema.parse({
+ *   showDegreeLabels: true,
+ *   showOrdinalMarkers: true
+ * })
+ * ```
+ */
 export const compassRoseSchema = z
   .object({
     showDegreeLabels: z.boolean().default(false),
@@ -44,6 +90,21 @@ export const compassRoseSchema = z
   })
   .strict()
 
+/**
+ * Schema for validating compass scale settings.
+ *
+ * @remarks
+ * - degreeScaleHalf: Whether to use half-degree scale instead of full 0-360 (default: false)
+ *
+ * @example
+ * ```typescript
+ * import { compassScaleSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const scale = compassScaleSchema.parse({
+ *   degreeScaleHalf: true
+ * })
+ * ```
+ */
 export const compassScaleSchema = z
   .object({
     degreeScaleHalf: z.boolean().default(false)
@@ -76,6 +137,22 @@ export const compassLcdColorSchema = z.enum([
   'black'
 ])
 
+/**
+ * Schema for validating compass point symbol labels.
+ *
+ * @remarks
+ * Must contain exactly 8 strings in order: N, NE, E, SE, S, SW, W, NW.
+ * Defaults to standard cardinal and intercardinal directions.
+ *
+ * @example
+ * ```typescript
+ * import { compassPointSymbolsSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const symbols = compassPointSymbolsSchema.parse([
+ *   'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'
+ * ])
+ * ```
+ */
 export const compassPointSymbolsSchema = z
   .tuple([
     z.string().trim().min(1),
@@ -110,6 +187,27 @@ export const compassStyleSchema = z
   })
   .strict()
 
+/**
+ * Schema for validating compass alert configuration.
+ *
+ * @remarks
+ * - id: Unique alert identifier
+ * - heading: The heading that triggers this alert (0-360 degrees)
+ * - message: Human-readable alert message
+ * - severity: Alert severity level (default: 'warning')
+ *
+ * @example
+ * ```typescript
+ * import { compassAlertSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const alert = compassAlertSchema.parse({
+ *   id: 'north-warning',
+ *   heading: 90,
+ *   message: 'Warning when heading North',
+ *   severity: 'warning'
+ * })
+ * ```
+ */
 export const compassAlertSchema = z
   .object({
     id: z.string().trim().min(1),
@@ -200,4 +298,26 @@ export type CompassKnobStyle = z.infer<typeof compassKnobStyleSchema>
 export type CompassPointerColorName = z.infer<typeof compassPointerColorSchema>
 export type CompassLcdColorName = z.infer<typeof compassLcdColorSchema>
 export type CompassStyle = z.infer<typeof compassStyleSchema>
+/**
+ * Complete compass gauge configuration.
+ *
+ * @remarks
+ * Extends {@link SharedGaugeConfig} with compass-specific options:
+ * - heading: Current heading value and range (0-360)
+ * - rose: Compass rose display settings
+ * - scale: Scale display options
+ * - style: Pointer, frame, knob, and LCD styling
+ * - indicators: Alert configuration
+ *
+ * @example
+ * ```typescript
+ * import { compassGaugeConfigSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const config = compassGaugeConfigSchema.parse({
+ *   heading: { current: 45, min: 0, max: 360 },
+ *   size: { width: 300, height: 300 },
+ *   style: { pointerType: 'slim-angular-needle' }
+ * })
+ * ```
+ */
 export type CompassGaugeConfig = z.infer<typeof compassGaugeConfigSchema>

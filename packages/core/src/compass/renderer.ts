@@ -1,3 +1,12 @@
+/**
+ * @module
+ *
+ * Compass gauge rendering module.
+ *
+ * Provides rendering and animation functions for compass gauges with heading display,
+ * including configurable pointer types, frame designs, and alert indicators.
+ */
+
 import { createAnimationScheduler, type AnimationRunHandle } from '../animation/scheduler.js'
 import { clamp } from '../math/range.js'
 import {
@@ -25,8 +34,26 @@ import {
   compassShadowRatios
 } from './constants.js'
 
+/**
+ * Canvas 2D rendering context type for compass gauges.
+ *
+ * @remarks
+ * This is a type alias for the standard CanvasRenderingContext2D interface.
+ * All compass rendering functions require this context type.
+ */
 export type CompassDrawContext = CanvasRenderingContext2D
 
+/**
+ * Result of rendering a compass gauge.
+ *
+ * @remarks
+ * Contains the rendered heading, tone based on alerts, and any active alerts.
+ *
+ * @property reading - The rendered heading value (in degrees)
+ * @property heading - The heading value (same as reading, in degrees)
+ * @property tone - The gauge tone based on active alerts ('accent', 'warning', or 'danger')
+ * @property activeAlerts - Array of alerts triggered by current heading
+ */
 export type CompassRenderResult = {
   reading: number
   heading: number
@@ -34,12 +61,37 @@ export type CompassRenderResult = {
   activeAlerts: CompassAlert[]
 }
 
+/**
+ * Options for rendering a compass gauge.
+ *
+ * @remarks
+ * All fields are optional. If not provided, values from config are used.
+ *
+ * @property heading - The heading to render (in degrees). If not provided, uses config.heading.current
+ * @property paint - Optional theme paint overrides for this render
+ * @property showHeadingReadout - Whether to show the heading value as text (default: false)
+ */
 export type CompassRenderOptions = {
   heading?: number
   paint?: Partial<ThemePaint>
   showHeadingReadout?: boolean
 }
 
+/**
+ * Options for animating a compass gauge transition.
+ *
+ * @remarks
+ * Animates the compass pointer from one heading to another over a specified duration.
+ *
+ * @property context - The canvas rendering context
+ * @property config - The compass gauge configuration
+ * @property from - The starting heading (in degrees)
+ * @property to - The target heading (in degrees)
+ * @property paint - Optional theme paint overrides for this animation
+ * @property showHeadingReadout - Whether to show the heading value as text (default: false)
+ * @property onFrame - Optional callback called each animation frame with current render result
+ * @property onComplete - Optional callback called when animation completes with final render result
+ */
 export type CompassAnimationOptions = {
   context: CompassDrawContext
   config: CompassGaugeConfig
@@ -264,6 +316,35 @@ const drawCompassDynamicLayer = (
   drawCompassLabels(context, config, paint, heading, showHeadingReadout, centerX, imageWidth)
 }
 
+/**
+ * Renders a compass gauge to the canvas.
+ *
+ * @param context - The canvas 2D rendering context
+ * @param config - The compass gauge configuration
+ * @param options - Optional rendering options
+ * @returns Render result with heading, tone, and active alerts
+ *
+ * @remarks
+ * Renders the compass gauge with the specified heading. Uses static layer
+ * caching for performance when rendering the same configuration repeatedly.
+ *
+ * @example
+ * ```typescript
+ * import { renderCompassGauge, compassGaugeConfigSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const config = compassGaugeConfigSchema.parse({
+ *   heading: { current: 45, min: 0, max: 360 },
+ *   size: { width: 300, height: 300 }
+ * })
+ *
+ * const canvas = document.querySelector('canvas')
+ * const ctx = canvas.getContext('2d')
+ * const result = renderCompassGauge(ctx, config, { heading: 45 })
+ *
+ * console.log('Heading:', result.heading)
+ * console.log('Active alerts:', result.activeAlerts)
+ * ```
+ */
 export const renderCompassGauge = (
   context: CompassDrawContext,
   config: CompassGaugeConfig,
@@ -340,6 +421,42 @@ export const renderCompassGauge = (
   }
 }
 
+/**
+ * Animates a compass gauge transition between two headings.
+ *
+ * @param options - Animation configuration options
+ * @returns Animation handle that can be used to cancel the animation
+ *
+ * @remarks
+ * Creates a smooth animated transition from one heading to another using the
+ * configured easing function and duration. Can be cancelled mid-animation
+ * via the returned handle.
+ *
+ * @example
+ * ```typescript
+ * import { animateCompassGauge, compassGaugeConfigSchema } from '@bradsjm/weather-gauges-core'
+ *
+ * const config = compassGaugeConfigSchema.parse({
+ *   heading: { current: 0, min: 0, max: 360 },
+ *   animation: { enabled: true, durationMs: 1000 }
+ * })
+ *
+ * const canvas = document.querySelector('canvas')
+ * const ctx = canvas.getContext('2d')
+ *
+ * const animation = animateCompassGauge({
+ *   context: ctx,
+ *   config,
+ *   from: 0,
+ *   to: 90,
+ *   onFrame: (result) => console.log('Current heading:', result.heading),
+ *   onComplete: (result) => console.log('Animation complete:', result.heading)
+ * })
+ *
+ * // To cancel:
+ * // animation.cancel()
+ * ```
+ */
 export const animateCompassGauge = (options: CompassAnimationOptions): AnimationRunHandle => {
   const scheduler = createAnimationScheduler()
 
