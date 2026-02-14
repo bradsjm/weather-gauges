@@ -255,8 +255,7 @@ export class WxWindDirectionElement extends WeatherGaugeElement {
     }
 
     const valueChanged = changedProperties.has('value') || changedProperties.has('average')
-    const onlyValueChanged = valueChanged && changedProperties.size <= 2
-    this.renderGauge(onlyValueChanged && this.animated)
+    this.renderGauge(valueChanged && this.animated)
   }
 
   private getDrawContext(): WindDirectionDrawContext | undefined {

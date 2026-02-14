@@ -232,8 +232,7 @@ export class WxGaugeElement extends WeatherGaugeElement {
     }
 
     const valueChanged = changedProperties.has('value')
-    const onlyValueChanged = valueChanged && changedProperties.size === 1
-    this.renderGauge(onlyValueChanged && this.animated)
+    this.renderGauge(valueChanged && this.animated)
   }
 
   private getDrawContext(): RadialDrawContext | undefined {

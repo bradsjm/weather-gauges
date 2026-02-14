@@ -56,8 +56,7 @@ export abstract class WeatherGaugeElement extends LitElement {
   @property({ type: String, reflect: true })
   theme: GaugeTheme = 'classic'
 
-  @property({ attribute: false })
-  readingText = ''
+  protected readingText = ''
 
   protected animationHandle: AnimationRunHandle | undefined
 

@@ -159,8 +159,7 @@ export class WxWindRoseElement extends WeatherGaugeElement {
     }
 
     const valueChanged = changedProperties.has('petals') || changedProperties.has('maxValue')
-    const onlyValueChanged = valueChanged && changedProperties.size <= 2
-    this.renderGauge(onlyValueChanged && this.animated)
+    this.renderGauge(valueChanged && this.animated)
   }
 
   private getDrawContext(): WindRoseDrawContext | undefined {

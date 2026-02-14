@@ -177,7 +177,7 @@ export const renderRadialPage = (root: HTMLElement): void => {
     showBackground: true,
     showForeground: true,
     showLcd: true,
-    animateValue: false,
+    animateValue: true,
     ledVisible: false,
     userLedVisible: true,
     trendVisible: true,
