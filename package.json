@@ -1,8 +1,17 @@
 {
-  "name": "weather-gauges-monorepo",
+  "name": "weather-gauges",
   "private": true,
   "version": "0.0.0",
   "description": "Monorepo for @bradsjm weather gauges packages",
+  "author": "Jonathan Bradshaw",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bradsjm/weather-gauges.git"
+  },
+  "homepage": "https://github.com/bradsjm/weather-gauges#readme",
+  "bugs": {
+    "url": "https://github.com/bradsjm/weather-gauges/issues"
+  },
   "packageManager": "pnpm@10.29.3",
   "engines": {
     "node": ">=20.0.0"

@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Framework-agnostic core rendering engine for Weather Gauges",
+  "author": "Jonathan Bradshaw",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bradsjm/weather-gauges.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/bradsjm/weather-gauges/tree/main/packages/core",
+  "bugs": {
+    "url": "https://github.com/bradsjm/weather-gauges/issues"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

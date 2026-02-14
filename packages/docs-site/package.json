@@ -4,6 +4,16 @@
   "private": true,
   "type": "module",
   "description": "Documentation and playground site for Weather Gauges",
+  "author": "Jonathan Bradshaw",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bradsjm/weather-gauges.git",
+    "directory": "packages/docs-site"
+  },
+  "homepage": "https://github.com/bradsjm/weather-gauges/tree/main/packages/docs-site",
+  "bugs": {
+    "url": "https://github.com/bradsjm/weather-gauges/issues"
+  },
   "scripts": {
     "predev": "pnpm --filter @bradsjm/weather-gauges-core build && pnpm --filter @bradsjm/weather-gauges-elements build",
     "build": "vite build",

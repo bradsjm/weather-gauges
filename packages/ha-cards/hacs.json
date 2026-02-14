@@ -1,5 +1,5 @@
 {
-  "name": "SteelSeries v3 Cards",
+  "name": "Weather Gauges Cards",
   "content_in_root": false,
   "filename": "dist/index.js",
   "homeassistant": ">=2024.1.0",

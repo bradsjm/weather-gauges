@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Home Assistant cards for Weather Gauges",
+  "author": "Jonathan Bradshaw",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bradsjm/weather-gauges.git",
+    "directory": "packages/ha-cards"
+  },
+  "homepage": "https://github.com/bradsjm/weather-gauges/tree/main/packages/ha-cards",
+  "bugs": {
+    "url": "https://github.com/bradsjm/weather-gauges/issues"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

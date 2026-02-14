@@ -8,13 +8,13 @@
  * card system and provide standard card configuration options.
  *
  * @remarks
- * This package exports a `SteelseriesCardConfig` type for defining card configuration.
+ * This package exports a `WeatherGaugesCardConfig` type for defining card configuration.
  * The cards are registered with Home Assistant's custom card system automatically.
  *
  * @example
  * ```typescript
- * const cardConfig: SteelseriesCardConfig = {
- *   type: 'custom:steelseries-card',
+ * const cardConfig: WeatherGaugesCardConfig = {
+ *   type: 'custom:weather-gauges-card',
  *   entity: 'sensor.temperature',
  *   title: 'Temperature'
  * }
@@ -29,12 +29,14 @@ import '@bradsjm/weather-gauges-elements'
  * Defines the interface for configuring weather gauge cards within Home Assistant's
  * Lovelace UI. Cards support entity binding, custom titles, and type specification.
  */
-export type SteelseriesCardConfig = {
+export const WEATHER_GAUGES_CARD_TYPE = 'custom:weather-gauges-card'
+
+export type WeatherGaugesCardConfig = {
   /**
    * Card type identifier.
    *
    * @remarks
-   * Typically `custom:steelseries-card` for weather gauge cards.
+   * Typically `custom:weather-gauges-card` for weather gauge cards.
    */
   type: string
 
@@ -66,3 +68,12 @@ declare global {
 }
 
 window.customCards = window.customCards || []
+
+if (!window.customCards.some((card) => card.type === WEATHER_GAUGES_CARD_TYPE)) {
+  window.customCards.push({
+    type: WEATHER_GAUGES_CARD_TYPE,
+    name: 'Weather Gauges Card',
+    description: 'Weather Gauges card wrapper for weather gauge web components',
+    preview: true
+  })
+}
