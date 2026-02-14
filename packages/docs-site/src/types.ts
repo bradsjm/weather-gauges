@@ -1,5 +1,10 @@
 export type Route =
   | '/'
+  | '/start-here'
+  | '/concepts'
+  | '/theming'
+  | '/integrations'
+  | '/troubleshooting'
   | '/radial'
   | '/radial-bargraph'
   | '/compass'

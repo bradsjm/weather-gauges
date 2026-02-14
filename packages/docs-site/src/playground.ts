@@ -1,5 +1,8 @@
 import { applyGaugeProps } from './gauge-utils'
+import { buildFullJsSnippet, buildMinimalHtmlSnippet } from './snippets'
+import { showToast } from './toast'
 import type { ControlDef, NormalizeState, PlaygroundState } from './types'
+import { decodeStateFromParam, encodeStateToParam } from './url-state'
 
 const renderControls = (
   container: HTMLElement,
@@ -122,13 +125,42 @@ export const renderPlaygroundPage = (
   defaults: PlaygroundState,
   normalizeState?: NormalizeState
 ): void => {
+  const params = new URLSearchParams(window.location.search)
+  const shared = params.get('s')
+  const sharedState = shared ? decodeStateFromParam(shared) : null
+
   root.innerHTML = `
-    <h1 class="page-title">${title}</h1>
-    <p class="page-subtitle">${subtitle}</p>
+    <header class="page-head">
+      <h1 class="page-title">${title}</h1>
+      <p class="page-subtitle">${subtitle}</p>
+      <div class="console-actions" role="group" aria-label="Playground actions">
+        <button class="btn" type="button" data-action="copy-html">Copy HTML</button>
+        <button class="btn" type="button" data-action="copy-js">Copy JS</button>
+        <button class="btn" type="button" data-action="copy-json">Copy JSON</button>
+        <button class="btn" type="button" data-action="share">Share Link</button>
+        <button class="btn btn-ghost" type="button" data-action="reset">Reset</button>
+      </div>
+    </header>
     <div class="page-layout">
       <section class="gauge-panel">
         <div id="gauge-stage"></div>
-        <pre class="state-preview" id="state-preview"></pre>
+        <div class="state-wrap">
+          <button
+            class="state-copy"
+            type="button"
+            data-action="copy-json-inline"
+            aria-label="Copy JSON state"
+            title="Copy JSON"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H10V7h9v14z"
+              />
+            </svg>
+          </button>
+          <pre class="state-preview" id="state-preview"></pre>
+        </div>
       </section>
       <section class="control-panel">
         <div class="control-grid" id="control-grid"></div>
@@ -136,12 +168,34 @@ export const renderPlaygroundPage = (
     </div>
   `
 
-  const state: PlaygroundState = { ...defaults }
+  const state: PlaygroundState = { ...defaults, ...(sharedState ?? {}) }
   const stage = root.querySelector('#gauge-stage') as HTMLDivElement
   const preview = root.querySelector('#state-preview') as HTMLPreElement
   const controlGrid = root.querySelector('#control-grid') as HTMLDivElement
   const gauge = document.createElement(gaugeTag)
   stage.append(gauge)
+
+  const writeClipboard = async (text: string): Promise<boolean> => {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  const setSharedParam = (): void => {
+    const encoded = encodeStateToParam(state)
+    const next = new URL(window.location.href)
+    next.searchParams.set('s', encoded)
+    window.history.replaceState({}, '', next)
+  }
+
+  const clearSharedParam = (): void => {
+    const next = new URL(window.location.href)
+    next.searchParams.delete('s')
+    window.history.replaceState({}, '', next)
+  }
 
   const apply = () => {
     normalizeState?.(state, controls)
@@ -150,6 +204,75 @@ export const renderPlaygroundPage = (
     preview.textContent = JSON.stringify(state, null, 2)
   }
 
+  const bindActions = (): void => {
+    root.querySelectorAll<HTMLButtonElement>('button[data-action]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const action = button.getAttribute('data-action')
+        if (!action) {
+          return
+        }
+
+        if (action === 'copy-html') {
+          const snippet = buildMinimalHtmlSnippet(gaugeTag, state)
+          const ok = await writeClipboard(snippet)
+          showToast(
+            ok ? 'Copied minimal HTML snippet.' : 'Copy failed (clipboard not available).',
+            ok ? 'info' : 'warning'
+          )
+          return
+        }
+
+        if (action === 'copy-js') {
+          const snippet = buildFullJsSnippet(gaugeTag, state)
+          const ok = await writeClipboard(snippet)
+          showToast(
+            ok ? 'Copied JS snippet.' : 'Copy failed (clipboard not available).',
+            ok ? 'info' : 'warning'
+          )
+          return
+        }
+
+        if (action === 'copy-json') {
+          const snippet = JSON.stringify(state, null, 2)
+          const ok = await writeClipboard(snippet)
+          showToast(
+            ok ? 'Copied JSON state.' : 'Copy failed (clipboard not available).',
+            ok ? 'info' : 'warning'
+          )
+          return
+        }
+
+        if (action === 'copy-json-inline') {
+          const snippet = JSON.stringify(state, null, 2)
+          const ok = await writeClipboard(snippet)
+          showToast(
+            ok ? 'Copied JSON state.' : 'Copy failed (clipboard not available).',
+            ok ? 'info' : 'warning'
+          )
+          return
+        }
+
+        if (action === 'share') {
+          setSharedParam()
+          const ok = await writeClipboard(window.location.href)
+          showToast(ok ? 'Copied share link.' : 'Share link set in URL.', 'info')
+          return
+        }
+
+        if (action === 'reset') {
+          Object.keys(state).forEach((key) => {
+            delete state[key]
+          })
+          Object.assign(state, defaults)
+          clearSharedParam()
+          apply()
+          showToast('Reset to defaults.', 'info')
+        }
+      })
+    })
+  }
+
   renderControls(controlGrid, controls, state, defaults, apply)
   apply()
+  bindActions()
 }

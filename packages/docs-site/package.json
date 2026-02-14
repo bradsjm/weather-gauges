@@ -26,6 +26,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@bradsjm/weather-gauges-elements": "workspace:*"
+    "@bradsjm/weather-gauges-elements": "workspace:*",
+    "@fontsource-variable/geologica": "^5.2.7",
+    "@fontsource/ibm-plex-mono": "^5.2.6"
   }
 }
