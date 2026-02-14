@@ -64,9 +64,8 @@ export const drawCompassLabels = (
 
   configureGaugeTextLayout(context, {
     font: buildGaugeFont(
-      Math.max(12, Math.round(imageWidth * 0.055)),
-      config.style.digitalFont ? paint.fontFamilyLcd : paint.fontFamily,
-      700
+      Math.max(12, Math.round(imageWidth * 0.046728)),
+      config.style.digitalFont ? paint.fontFamilyLcd : paint.fontFamily
     )
   })
   drawGaugeText(context, `${headingValue}°`, centerX, imageWidth * 0.625)

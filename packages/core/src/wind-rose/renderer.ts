@@ -394,7 +394,7 @@ const drawWindRoseLabels = (
     color: labelColor,
     align: 'center',
     baseline: 'middle',
-    font: buildGaugeFont(labelFontSize, 'Arial,Verdana,sans-serif', '600')
+    font: buildGaugeFont(labelFontSize, 'Arial,Verdana,sans-serif')
   })
 
   if (config.text.title) {
@@ -403,7 +403,7 @@ const drawWindRoseLabels = (
 
   if (config.text.unit) {
     configureGaugeTextLayout(context, {
-      font: buildGaugeFont(labelFontSize, 'Arial,Verdana,sans-serif', '500')
+      font: buildGaugeFont(labelFontSize, 'Arial,Verdana,sans-serif')
     })
     drawGaugeText(context, config.text.unit, centerX, centerY + imageWidth * 0.28)
   }

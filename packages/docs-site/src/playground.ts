@@ -5,6 +5,7 @@ const renderControls = (
   container: HTMLElement,
   controls: ControlDef[],
   state: PlaygroundState,
+  defaults: PlaygroundState,
   onChange: () => void
 ): void => {
   container.innerHTML = ''
@@ -29,9 +30,28 @@ const renderControls = (
       inputMarkup = `<input id="${inputId}" type="${inputType}" value="${value ?? ''}" ${control.min !== undefined ? `min="${control.min}"` : ''} ${control.max !== undefined ? `max="${control.max}"` : ''} ${control.step !== undefined ? `step="${control.step}"` : ''} />`
     }
 
+    const typeLabel =
+      control.type === 'checkbox'
+        ? 'boolean'
+        : control.type === 'number' || control.type === 'range'
+          ? 'number'
+          : control.type === 'select'
+            ? 'enum'
+            : 'string'
+    const bounds =
+      control.type === 'number' || control.type === 'range'
+        ? ` Range ${control.min ?? '-inf'} to ${control.max ?? 'inf'}${control.step !== undefined ? ` (step ${control.step})` : ''}.`
+        : ''
+    const optionSummary =
+      control.type === 'select'
+        ? ` Options: ${(control.options ?? []).map((option) => option.value).join(', ')}.`
+        : ''
+    const defaultSummary = ` Default: ${String(defaults[control.key])}.`
+    const extraDocs = control.documentation ? ` ${control.documentation}` : ''
+
     item.innerHTML = `
       <label for="${inputId}">${control.label}</label>
-      <p>${control.description}</p>
+      <p>${control.description} Type: ${typeLabel}.${bounds}${optionSummary}${defaultSummary}${extraDocs}</p>
       ${inputMarkup}
     `
 
@@ -93,41 +113,6 @@ const syncControlInputs = (
   })
 }
 
-const renderSettingReference = (
-  container: HTMLElement,
-  controls: ControlDef[],
-  defaults: PlaygroundState
-): void => {
-  const docsForControl = (control: ControlDef): string => {
-    const typeLabel =
-      control.type === 'checkbox'
-        ? 'boolean'
-        : control.type === 'number' || control.type === 'range'
-          ? 'number'
-          : control.type === 'select'
-            ? 'enum'
-            : 'string'
-    const bounds =
-      control.type === 'number' || control.type === 'range'
-        ? ` Range: ${control.min ?? '-inf'} to ${control.max ?? 'inf'}${control.step !== undefined ? ` (step ${control.step})` : ''}.`
-        : ''
-    const optionSummary =
-      control.type === 'select'
-        ? ` Allowed: ${(control.options ?? []).map((option) => option.value).join(', ')}.`
-        : ''
-    const extra = control.documentation ? ` ${control.documentation}` : ''
-    return `Type: ${typeLabel}.${bounds}${optionSummary}${extra}`
-  }
-
-  const list = controls
-    .map(
-      (control) =>
-        `<li><strong>${control.label}</strong> (<code>${control.key}</code>) - ${control.description} ${docsForControl(control)} Default: <code>${String(defaults[control.key])}</code></li>`
-    )
-    .join('')
-  container.innerHTML = `<div class="setting-reference"><h4>Setting Reference</h4><ul>${list}</ul></div>`
-}
-
 export const renderPlaygroundPage = (
   root: HTMLElement,
   title: string,
@@ -147,7 +132,6 @@ export const renderPlaygroundPage = (
       </section>
       <section class="control-panel">
         <div class="control-grid" id="control-grid"></div>
-        <div id="setting-reference"></div>
       </section>
     </div>
   `
@@ -156,7 +140,6 @@ export const renderPlaygroundPage = (
   const stage = root.querySelector('#gauge-stage') as HTMLDivElement
   const preview = root.querySelector('#state-preview') as HTMLPreElement
   const controlGrid = root.querySelector('#control-grid') as HTMLDivElement
-  const settingReference = root.querySelector('#setting-reference') as HTMLDivElement
   const gauge = document.createElement(gaugeTag)
   stage.append(gauge)
 
@@ -167,7 +150,6 @@ export const renderPlaygroundPage = (
     preview.textContent = JSON.stringify(state, null, 2)
   }
 
-  renderControls(controlGrid, controls, state, apply)
-  renderSettingReference(settingReference, controls, defaults)
+  renderControls(controlGrid, controls, state, defaults, apply)
   apply()
 }

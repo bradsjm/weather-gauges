@@ -321,7 +321,7 @@ const drawLcdTitle = (
   context.save()
   configureGaugeTextLayout(context, {
     color,
-    font: buildGaugeFont(Math.max(12, Math.round(size * 0.046728)), 'Arial, sans-serif', 'bold'),
+    font: buildGaugeFont(Math.max(12, Math.round(size * 0.046728)), 'Arial, sans-serif'),
     align: 'center',
     baseline: 'middle'
   })
