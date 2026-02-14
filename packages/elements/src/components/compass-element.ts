@@ -15,6 +15,24 @@ import { WeatherGaugeElement } from '../shared/gauge-base-element.js'
 
 type CompassOverlay = Exclude<CompassGaugeConfig['style']['customLayer'], undefined>
 
+/**
+ * Custom element for rendering compass gauges.
+ *
+ * @remarks
+ * `wx-compass` displays a compass rose with configurable heading, rose visibility,
+ * degree scales, and custom overlays. Supports animation and heading readout.
+ * Extends {@link WeatherGaugeElement} for common gauge functionality.
+ *
+ * @example
+ * ```html
+ * <wx-compass
+ *   value="45"
+ *   label="Wind Direction"
+ *   rose-visible
+ *   show-degrees>
+ * </wx-compass>
+ * ```
+ */
 @customElement('wx-compass')
 export class WxCompassElement extends WeatherGaugeElement {
   @query('canvas')

@@ -25,6 +25,24 @@ const buildDefaultPetals = (binCount: 8 | 16 | 32 = 16): WindRosePetal[] => {
   }))
 }
 
+/**
+ * Custom element for rendering wind rose gauges.
+ *
+ * @remarks
+ * `wx-wind-rose` displays wind direction and frequency data as a polar chart with
+ * petals extending from the center. Each petal represents a compass direction and its
+ * associated value (typically wind speed or frequency). Supports custom coloring,
+ * gradients, and overlays. Extends {@link WeatherGaugeElement} for common gauge functionality.
+ *
+ * @example
+ * ```html
+ * <wx-wind-rose
+ *   label="Wind Rose"
+ *   rose-center-color="#f5a68a"
+ *   rose-edge-color="#d6452f">
+ * </wx-wind-rose>
+ * ```
+ */
 @customElement('wx-wind-rose')
 export class WxWindRoseElement extends WeatherGaugeElement {
   @query('canvas')
@@ -94,7 +112,12 @@ export class WxWindRoseElement extends WeatherGaugeElement {
   knobStyle: 'black' | 'brass' | 'silver' = 'silver'
 
   @property({ type: String, attribute: false })
-  foregroundType: 'top-arc-glass' | 'side-reflection-glass' | 'dome-glass' | 'center-glow-glass' | 'sweep-glass' = 'top-arc-glass'
+  foregroundType:
+    | 'top-arc-glass'
+    | 'side-reflection-glass'
+    | 'dome-glass'
+    | 'center-glow-glass'
+    | 'sweep-glass' = 'top-arc-glass'
 
   @property({ type: String, attribute: false })
   roseCenterColor = '#f5a68a'

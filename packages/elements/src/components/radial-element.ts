@@ -23,6 +23,26 @@ import {
 } from '../shared/measurement-presets.js'
 import { sharedStyles } from '../shared/shared-styles.js'
 
+/**
+ * Custom element for rendering radial gauges.
+ *
+ * @remarks
+ * `wx-gauge` displays a radial gauge with configurable range, thresholds, segments,
+ * areas, and visual styling. Supports animation, trend indicators, and alert thresholds.
+ * Extends {@link WeatherGaugeElement} for common gauge functionality.
+ *
+ * @example
+ * ```html
+ * <wx-gauge
+ *   value="75"
+ *   min="0"
+ *   max="100"
+ *   unit="%"
+ *   label="Humidity"
+ *   show-threshold>
+ * </wx-gauge>
+ * ```
+ */
 @customElement('wx-gauge')
 export class WxGaugeElement extends WeatherGaugeElement {
   @query('canvas')

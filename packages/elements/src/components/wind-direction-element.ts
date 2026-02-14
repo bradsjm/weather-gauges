@@ -19,6 +19,24 @@ import {
   type WindDirectionPreset
 } from '../shared/wind-direction-presets.js'
 
+/**
+ * Custom element for rendering wind direction gauges.
+ *
+ * @remarks
+ * `wx-wind-direction` displays wind direction with dual pointers for latest and
+ * average heading. Supports configurable sections, overlays, point symbols, and
+ * degree scales. Extends {@link WeatherGaugeElement} for common gauge functionality.
+ *
+ * @example
+ * ```html
+ * <wx-wind-direction
+ *   value="45"
+ *   average="60"
+ *   label="Wind Direction"
+ *   show-rose>
+ * </wx-wind-direction>
+ * ```
+ */
 @customElement('wx-wind-direction')
 export class WxWindDirectionElement extends WeatherGaugeElement {
   @query('canvas')

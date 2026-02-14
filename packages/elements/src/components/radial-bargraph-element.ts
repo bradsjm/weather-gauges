@@ -23,6 +23,27 @@ import {
   type MeasurementPreset
 } from '../shared/measurement-presets.js'
 
+/**
+ * Custom element for rendering radial bar graph gauges.
+ *
+ * @remarks
+ * `wx-bargraph` displays a radial bar graph with configurable range, sections,
+ * value gradients, and visual styling. Supports animation, trend indicators, and
+ * alert thresholds. The bar fills from the minimum value to the current value.
+ * Extends {@link WeatherGaugeElement} for common gauge functionality.
+ *
+ * @example
+ * ```html
+ * <wx-bargraph
+ *   value="75"
+ *   min="0"
+ *   max="100"
+ *   unit="%"
+ *   label="Humidity"
+ *   show-threshold>
+ * </wx-bargraph>
+ * ```
+ */
 @customElement('wx-bargraph')
 export class WxBargraphElement extends WeatherGaugeElement {
   @query('canvas')

@@ -24,6 +24,12 @@ type ErrorWithIssues = {
   }>
 }
 
+/**
+ * Formats a Zod issue path into a readable string.
+ *
+ * @param path - The path array from a Zod validation issue
+ * @returns A dot-notation string representation of the path
+ */
 const formatIssuePath = (path: PropertyKey[] | undefined): string => {
   if (!path || path.length === 0) {
     return 'root'
@@ -40,6 +46,12 @@ const formatIssuePath = (path: PropertyKey[] | undefined): string => {
     .join('.')
 }
 
+/**
+ * Type guard for Zod error objects with issues.
+ *
+ * @param value - Value to check
+ * @returns `true` if the value is a Zod error with issues array
+ */
 const hasIssues = (value: unknown): value is ErrorWithIssues => {
   if (!value || typeof value !== 'object' || !('issues' in value)) {
     return false
@@ -49,6 +61,29 @@ const hasIssues = (value: unknown): value is ErrorWithIssues => {
   return Array.isArray(issues)
 }
 
+/**
+ * Abstract base class for all weather gauge custom elements.
+ *
+ * @remarks
+ * Provides common functionality for gauge rendering including:
+ * - Canvas context management
+ * - Theme resolution through CSS custom properties
+ * - Value normalization and validation
+ * - Accessibility features (ARIA attributes)
+ * - Error event dispatching
+ * - Animation lifecycle management
+ *
+ * Extends LitElement for reactive updates and lifecycle hooks.
+ *
+ * @example
+ * ```typescript
+ * class MyGauge extends WeatherGaugeElement {
+ *   protected override render() {
+ *     return html`<canvas></canvas>`
+ *   }
+ * }
+ * ```
+ */
 export abstract class WeatherGaugeElement extends LitElement {
   @property({ type: String })
   validation: GaugeValidationMode = 'clamp'

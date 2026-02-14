@@ -1,7 +1,26 @@
 /**
  * Weather Gauges Elements
  *
- * Lit Web Components for weather gauges
+ * @packageDocumentation
+ *
+ * Lit Web Components for weather gauges. This package provides ready-to-use custom elements
+ * for rendering various weather gauge types including radial gauges, compasses, bar graphs,
+ * and wind roses.
+ *
+ * @remarks
+ * All elements extend {@link WeatherGaugeElement} which provides common functionality for
+ * gauge rendering, animations, and theming through CSS custom properties.
+ *
+ * @example
+ * ```html
+ * <wx-gauge
+ *   value="75"
+ *   min="0"
+ *   max="100"
+ *   unit="%"
+ *   --wx-frame-color="var(--primary-color)">
+ * </wx-gauge>
+ * ```
  */
 
 import type { WxBargraphElement as BargraphElement } from './components/radial-bargraph-element.js'
