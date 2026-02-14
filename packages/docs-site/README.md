@@ -14,7 +14,7 @@ Documentation and interactive playground site for Weather Gauges.
 - **Multiple Gauge Examples**: Compass, radial, radial-bargraph, wind-direction, wind-rose
 - **Code Examples**: Copy-paste ready HTML examples for each gauge type
 - **Responsive Design**: Works on desktop and mobile devices
-- **Client-Side Routing**: Simple hash-based navigation between pages
+- **Client-Side Routing**: History API navigation between pages
 
 ## Installation
 
@@ -41,6 +41,11 @@ The docs site includes the following pages:
 | Route              | Page            | Description                                 |
 | ------------------ | --------------- | ------------------------------------------- |
 | `/`                | Index           | Overview and quick links to all gauge types |
+| `/start-here`      | Start Here      | Installation and quick start guide          |
+| `/concepts`        | Concepts        | Core concepts and terminology               |
+| `/theming`         | Theming         | CSS custom properties and theming           |
+| `/integrations`    | Integrations    | Framework integrations                      |
+| `/troubleshooting` | Troubleshooting | Common issues and solutions                 |
 | `/radial`          | Radial Gauge    | Interactive radial gauge demo               |
 | `/radial-bargraph` | Radial Bargraph | Interactive radial bargraph demo            |
 | `/compass`         | Compass         | Interactive compass demo                    |
@@ -49,9 +54,33 @@ The docs site includes the following pages:
 
 ## Page Structure
 
-Each gauge page follows a consistent layout:
+Each page follows a consistent layout using a sidebar navigation:
 
-### Gauge Panel
+### Top Bar
+
+- Sticky header with brand title
+- GitHub link
+- Mobile: hamburger menu toggle
+
+### Sidebar (Desktop)
+
+- Search filter for finding pages
+- Navigation grouped by section
+- Active page highlighted
+- Keywords for searchability
+
+### Main Content
+
+- Page title and subtitle
+- Documentation sections with hero elements
+- Interactive playground for gauge demos (on playground pages)
+- Code examples with copy functionality
+
+### Playground Pages
+
+Gauge playground pages use a two-column layout:
+
+#### Gauge Panel
 
 Left side (desktop) or top (mobile):
 
@@ -59,7 +88,7 @@ Left side (desktop) or top (mobile):
 - Responsive sizing
 - Real-time updates
 
-### Control Panel
+#### Control Panel
 
 Right side (desktop) or bottom (mobile):
 
@@ -67,28 +96,6 @@ Right side (desktop) or bottom (mobile):
 - Input fields and checkboxes
 - Select dropdowns for options
 - State preview showing current configuration
-
-### Setting Reference
-
-Bottom of control panel:
-
-- Links to documentation for each setting
-- Attribute names and valid values
-- Property names for advanced options
-
-### State Preview
-
-Displays the current gauge state and contract events:
-
-```json
-{
-  "kind": "radial",
-  "reading": 75,
-  "tone": "accent",
-  "alerts": [],
-  "timestampMs": 1700000000000
-}
-```
 
 ## Development
 
@@ -220,9 +227,10 @@ The docs site uses a custom styling system defined in `src/shell.ts`. Key styles
 ### Layout
 
 - **`.docs-shell`**: Main container with gradient background
-- **`.docs-nav`**: Sticky navigation bar
-- **`.docs-main`**: Main content area with max-width
-- **`.page-layout`**: Two-column grid layout (gauge panel + control panel)
+- **`.topbar`**: Sticky header bar
+- **`.sidebar`**: Navigation sidebar (sticky on desktop)
+- **`.docs-main`**: Main content area
+- **`.page-layout`**: Two-column grid layout for playground pages (gauge panel + control panel)
 
 ### Components
 
@@ -232,12 +240,12 @@ The docs site uses a custom styling system defined in `src/shell.ts`. Key styles
 - **`.demo-card`**: Card component for index page demos
 - **`.state-preview`**: JSON state preview with dark background
 
-### Colors
+### Colors (CSS Custom Properties)
 
-- Primary: `#284766` (deep blue)
-- Background gradient: `#f6f3ec` → `#e8eef6` → `#f7f9fc`
-- Accent: `#3a5e80` (lighter blue)
-- Text: `#10243a` (dark navy)
+- **Paper/Background**: `#f3efe6` (light warm beige)
+- **Ink/Text**: `#0c1520` (dark navy)
+- **Accent**: `#ff5a2f` (coral orange)
+- **Sea**: `#2aa7a1` (teal)
 
 ### Responsive
 
@@ -258,6 +266,11 @@ Custom types are defined in `src/types.ts`:
 ```typescript
 export type Route =
   | '/'
+  | '/start-here'
+  | '/concepts'
+  | '/theming'
+  | '/integrations'
+  | '/troubleshooting'
   | '/radial'
   | '/radial-bargraph'
   | '/compass'
@@ -416,7 +429,6 @@ When contributing to the docs site:
 
 Potential improvements to the docs site:
 
-- [ ] Search functionality for documentation
 - [ ] Dark mode toggle
 - [ ] Export configuration as code snippets
 - [ ] Side-by-side comparison of gauges

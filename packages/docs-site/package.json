@@ -22,7 +22,6 @@
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
-    "test:visual": "vitest run --passWithNoTests",
     "clean": "rm -rf dist"
   },
   "dependencies": {

@@ -581,6 +581,43 @@ const rootStyles = `
     font-size: 0.84rem;
   }
 
+  .doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+    font-size: 0.86rem;
+  }
+  .doc-table th,
+  .doc-table td {
+    border: 1px solid var(--line);
+    padding: 0.5rem 0.65rem;
+    text-align: left;
+  }
+  .doc-table th {
+    background: rgba(12, 21, 32, 0.06);
+    font-weight: 600;
+  }
+  .doc-table tr:nth-child(even) {
+    background: rgba(12, 21, 32, 0.03);
+  }
+
+  .doc-list {
+    margin: 0.55rem 0;
+    padding-left: 1.25rem;
+    color: var(--ink-2);
+    display: grid;
+    gap: 0.45rem;
+  }
+  .doc-list li {
+    line-height: 1.5;
+  }
+
+  .doc-h3 {
+    margin: 1rem 0 0.4rem;
+    font-size: 1.05rem;
+    font-weight: 680;
+  }
+
   .toast-host {
     position: fixed;
     right: 1rem;
