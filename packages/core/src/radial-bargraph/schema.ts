@@ -4,9 +4,10 @@ import { gaugeBackgroundColorSchema } from '../schemas/background.js'
 import { gaugeForegroundTypeSchema, gaugeFrameDesignSchema } from '../schemas/frame.js'
 import { gaugePointerColorSchema } from '../schemas/pointer.js'
 import { gaugeValueSectionSchema } from '../schemas/sections.js'
-import { radialGaugeTypeSchema } from '../radial/schema.js'
 import { sharedGaugeConfigSchema } from '../schemas/shared.js'
 import { gaugeThresholdSchema } from '../schemas/threshold.js'
+
+export const radialBargraphGaugeTypeSchema = z.enum(['half', 'three-quarter', 'full-gap'])
 
 export const radialBargraphLabelNumberFormatSchema = z.enum([
   'standard',
@@ -80,7 +81,7 @@ export const radialBargraphStyleSchema = z
     frameDesign: gaugeFrameDesignSchema.default('metal'),
     backgroundColor: gaugeBackgroundColorSchema.default('dark-gray'),
     foregroundType: gaugeForegroundTypeSchema.default('top-arc-glass'),
-    gaugeType: radialGaugeTypeSchema.default('full-gap'),
+    gaugeType: radialBargraphGaugeTypeSchema.default('full-gap'),
     valueColor: gaugePointerColorSchema.default('red'),
     lcdColor: radialBargraphLcdColorSchema.default('standard'),
     digitalFont: z.boolean().default(false),

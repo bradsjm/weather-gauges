@@ -155,7 +155,7 @@ const resolveLayout = (size: number, gaugeType: RadialGaugeType): RadialLayout =
       ledY: size * 0.51,
       userLedY: size * 0.51,
       trendX: size * 0.3,
-      trendY: size * 0.73364,
+      trendY: size * 0.45 - TREND_Y_NUDGE_PX,
       knobCenterY: size * 0.733644,
       pointerImageSize: size,
       pointerShadow: true
@@ -230,10 +230,6 @@ const resolveGeometry = (config: RadialGaugeConfig): RadialGeometry => {
 
   if (!hasCustomScale) {
     switch (config.style.gaugeType) {
-      case 'quarter':
-        startAngle = PI
-        endAngle = PI + HALF_PI
-        break
       case 'half':
         startAngle = PI
         endAngle = TWO_PI

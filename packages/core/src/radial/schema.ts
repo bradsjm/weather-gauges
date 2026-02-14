@@ -15,13 +15,7 @@ export const radialForegroundTypeSchema = gaugeForegroundTypeSchema
 
 export const radialPointerTypeSchema = gaugePointerTypeSchema
 
-export const radialGaugeTypeSchema = z.enum([
-  'quarter',
-  'half',
-  'three-quarter',
-  'full-gap',
-  'quarter-offset'
-])
+export const radialGaugeTypeSchema = z.enum(['half', 'three-quarter', 'full-gap', 'quarter-offset'])
 
 export const radialOrientationSchema = z.enum(['north', 'east', 'west'])
 

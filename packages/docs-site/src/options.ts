@@ -79,7 +79,6 @@ export const foregroundTypeOptions: SelectOption[] = [
 ]
 
 export const gaugeTypeOptions: SelectOption[] = [
-  { value: 'quarter', label: 'Quarter arc (90 deg)' },
   { value: 'half', label: 'Half arc (180 deg)' },
   { value: 'three-quarter', label: 'Three-quarter arc (270 deg)' },
   { value: 'full-gap', label: 'Full arc with free area' }

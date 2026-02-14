@@ -237,11 +237,7 @@ const resolveGeometry = (
   let angleRange = TWO_PI - freeAreaAngle
   let bargraphOffset = -TWO_PI / 6
 
-  if (gaugeType === 'quarter') {
-    rotationOffset = PI
-    angleRange = HALF_PI
-    bargraphOffset = 0
-  } else if (gaugeType === 'half') {
+  if (gaugeType === 'half') {
     rotationOffset = PI
     angleRange = PI
     bargraphOffset = 0
@@ -441,7 +437,7 @@ const drawTickMarks = (
   let valueCounter = scale.minValue
   let textWidth = 0.1 * size
 
-  if (config.style.gaugeType === 'quarter' || config.style.gaugeType === 'half') {
+  if (config.style.gaugeType === 'half') {
     textWidth = 0.0375 * size
   }
 

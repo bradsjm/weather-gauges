@@ -126,7 +126,7 @@ export class WxGaugeElement extends WeatherGaugeElement {
     | 'sweep-glass' = 'top-arc-glass'
 
   @property({ type: String, attribute: false })
-  gaugeType: 'quarter' | 'half' | 'three-quarter' | 'full-gap' | 'quarter-offset' = 'full-gap'
+  gaugeType: 'half' | 'three-quarter' | 'full-gap' | 'quarter-offset' = 'full-gap'
 
   @property({ type: String, attribute: false })
   orientation: 'north' | 'east' | 'west' = 'north'
@@ -190,8 +190,21 @@ export class WxGaugeElement extends WeatherGaugeElement {
   @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   userLedVisible = false
 
+  private _trendVisible = false
+
+  private _hasExplicitTrendVisible = false
+
   @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
-  trendVisible = false
+  get trendVisible(): boolean {
+    return this._trendVisible
+  }
+
+  set trendVisible(value: boolean) {
+    const previous = this._trendVisible
+    this._trendVisible = value
+    this._hasExplicitTrendVisible = true
+    this.requestUpdate('trendVisible', previous)
+  }
 
   @property({ type: String, attribute: false })
   trendState: 'up' | 'steady' | 'down' = 'down'
@@ -382,7 +395,7 @@ export class WxGaugeElement extends WeatherGaugeElement {
         return { ...area, from, to }
       })
       .filter((area): area is RadialArea => area !== undefined)
-    const trendVisible = this.hasAttribute('trend-visible')
+    const trendVisible = this._hasExplicitTrendVisible
       ? this.trendVisible
       : isPresetTrendEnabled(preset)
     const title =

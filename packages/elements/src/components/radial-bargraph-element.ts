@@ -117,7 +117,7 @@ export class WxBargraphElement extends WeatherGaugeElement {
     | 'sweep-glass' = 'top-arc-glass'
 
   @property({ type: String, attribute: false })
-  gaugeType: 'quarter' | 'half' | 'three-quarter' | 'full-gap' = 'full-gap'
+  gaugeType: 'half' | 'three-quarter' | 'full-gap' = 'full-gap'
 
   @property({ type: String, attribute: false })
   valueColor:
@@ -180,8 +180,21 @@ export class WxBargraphElement extends WeatherGaugeElement {
   @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
   userLedVisible = false
 
+  private _trendVisible = false
+
+  private _hasExplicitTrendVisible = false
+
   @property({ type: Boolean, attribute: false, converter: booleanAttributeConverter })
-  trendVisible = false
+  get trendVisible(): boolean {
+    return this._trendVisible
+  }
+
+  set trendVisible(value: boolean) {
+    const previous = this._trendVisible
+    this._trendVisible = value
+    this._hasExplicitTrendVisible = true
+    this.requestUpdate('trendVisible', previous)
+  }
 
   @property({ type: String, attribute: false })
   trendState: 'up' | 'steady' | 'down' | 'off' = 'off'
@@ -348,7 +361,7 @@ export class WxBargraphElement extends WeatherGaugeElement {
     const valueGradientStops =
       this.valueGradientStops.length > 0 ? this.valueGradientStops : fallbackValueGradientStops
 
-    const defaultTickLabelOrientation = this.gaugeType === 'quarter' ? 'tangent' : 'normal'
+    const defaultTickLabelOrientation = this.gaugeType === 'half' ? 'tangent' : 'normal'
     const warningAlertValue = this.normalizeInRange(
       this.warningAlertValue,
       range.min,
@@ -380,7 +393,7 @@ export class WxBargraphElement extends WeatherGaugeElement {
           }
         ]
       : childAlerts
-    const trendVisible = this.hasAttribute('trend-visible')
+    const trendVisible = this._hasExplicitTrendVisible
       ? this.trendVisible
       : isPresetTrendEnabled(preset)
     const title =
