@@ -702,20 +702,22 @@ const rootStyles = `
 `
 
 export const currentRoute = (): Route => {
-  const path = window.location.pathname
+  const hash = window.location.hash
+  const path = hash.startsWith('#') ? hash.slice(1) : hash
+  const route = path === '' ? '/' : path
   if (
-    path === '/start-here' ||
-    path === '/concepts' ||
-    path === '/theming' ||
-    path === '/integrations' ||
-    path === '/troubleshooting' ||
-    path === '/radial' ||
-    path === '/radial-bargraph' ||
-    path === '/compass' ||
-    path === '/wind-direction' ||
-    path === '/wind-rose'
+    route === '/start-here' ||
+    route === '/concepts' ||
+    route === '/theming' ||
+    route === '/integrations' ||
+    route === '/troubleshooting' ||
+    route === '/radial' ||
+    route === '/radial-bargraph' ||
+    route === '/compass' ||
+    route === '/wind-direction' ||
+    route === '/wind-rose'
   ) {
-    return path
+    return route
   }
 
   return '/'
@@ -729,7 +731,7 @@ export const renderShell = (route: Route): string => {
     const items = links
       .map((link) => {
         const active = route === link.path ? 'active' : ''
-        return `<a href="${link.path}" data-nav="true" data-title="${link.label}" data-keywords="${link.keywords}" class="${active}"><span class="nav-label">${link.label}</span><span class="nav-meta">${link.meta}</span></a>`
+        return `<a href="#${link.path}" data-nav="true" data-title="${link.label}" data-keywords="${link.keywords}" class="${active}"><span class="nav-label">${link.label}</span><span class="nav-meta">${link.meta}</span></a>`
       })
       .join('')
     return `<div class="nav-section"><div class="nav-section-title">${title}</div>${items}</div>`

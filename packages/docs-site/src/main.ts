@@ -85,16 +85,22 @@ const setupShell = (): void => {
           return
         }
 
+        const routeTarget = target.startsWith('#') ? target.slice(1) : target
+        if (!routeTarget.startsWith('/')) {
+          return
+        }
+
         event.preventDefault()
 
         // Close sidebar overlay on mobile.
         setSidebar(false)
 
-        if (window.location.pathname !== target) {
-          window.history.pushState({}, '', target)
+        if (currentRoute() !== routeTarget) {
+          window.location.hash = routeTarget
+        } else {
+          renderPage()
         }
 
-        renderPage()
         // Ensure focus lands in main content after navigation.
         window.setTimeout(() => {
           const main = document.querySelector<HTMLElement>('#page-root')
@@ -177,5 +183,5 @@ const renderPage = (): void => {
   }
 }
 
-window.addEventListener('popstate', renderPage)
+window.addEventListener('hashchange', renderPage)
 renderPage()
