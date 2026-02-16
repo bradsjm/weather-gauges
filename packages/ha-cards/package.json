@@ -26,12 +26,13 @@
     "hacs.json"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch",
+    "build": "pnpm run build:bundle && pnpm run build:types",
+    "build:bundle": "vite build",
+    "build:types": "tsc -p tsconfig.json --emitDeclarationOnly",
+    "dev": "vite build --watch",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
-    "test:visual": "vitest run --passWithNoTests",
     "clean": "rm -rf dist"
   },
   "dependencies": {
