@@ -10,6 +10,7 @@ This package provides single-gauge Lovelace cards:
 - `custom:weather-gauges-radial-bargraph-card`
 - `custom:weather-gauges-compass-card`
 - `custom:weather-gauges-wind-direction-card`
+- `custom:weather-gauges-wind-rose-card`
 - Backed by `@bradsjm/weather-gauges-elements`
 - Works with Home Assistant entity state updates in real time
 - Includes a visual card editor (`getConfigForm`) and sensible defaults
@@ -20,6 +21,7 @@ This package provides single-gauge Lovelace cards:
 - `radial-bargraph` (`wx-bargraph`)
 - `compass` (`wx-compass`)
 - `wind-direction` (`wx-wind-direction`)
+- `wind-rose` (`wx-wind-rose`)
 
 ## Installation
 
@@ -58,12 +60,13 @@ preset: temperature
 
 ## Card Types
 
-| Card type                                    | Gauge behavior              |
-| -------------------------------------------- | --------------------------- |
-| `custom:weather-gauges-radial-card`          | Fixed radial gauge          |
-| `custom:weather-gauges-radial-bargraph-card` | Fixed radial-bargraph gauge |
-| `custom:weather-gauges-compass-card`         | Fixed compass gauge         |
-| `custom:weather-gauges-wind-direction-card`  | Fixed wind-direction gauge  |
+| Card type                                    | Gauge behavior                 |
+| -------------------------------------------- | ------------------------------ |
+| `custom:weather-gauges-radial-card`          | Fixed radial gauge             |
+| `custom:weather-gauges-radial-bargraph-card` | Fixed radial-bargraph gauge    |
+| `custom:weather-gauges-compass-card`         | Fixed compass gauge            |
+| `custom:weather-gauges-wind-direction-card`  | Fixed wind-direction gauge     |
+| `custom:weather-gauges-wind-rose-card`       | History-driven wind rose gauge |
 
 `gauge_type` is optional and only useful for compatibility; if provided, it must match the selected card type.
 
@@ -79,6 +82,8 @@ preset: temperature
 | `label`      | string | derived  | Gauge label fallback                                           |
 | `gauge_type` | string | inferred | Optional compatibility field; must match the card type         |
 
+`gauge_type` is for scalar cards and is not used by the wind-rose card.
+
 ### Value Source Options
 
 | Option              | Type   | Default | Notes                                                                                                           |
@@ -87,6 +92,15 @@ preset: temperature
 | `average_attribute` | string | unset   | `wind-direction` only; optional average heading                                                                 |
 | `preset`            | string | `""`    | `temperature`, `humidity`, `pressure`, `wind-speed`, `rainfall`, `rain-rate`, `solar`, `uv-index`, `cloud-base` |
 | `unit`              | string | derived | Overrides detected entity unit                                                                                  |
+
+### Wind Rose History Options
+
+| Option                     | Type   | Default | Notes                                    |
+| -------------------------- | ------ | ------- | ---------------------------------------- |
+| `history_hours`            | number | `24`    | Lookback window in hours; max is `24`    |
+| `bin_count`                | number | `16`    | Bucket count; must be `8`, `16`, or `32` |
+| `refresh_interval_seconds` | number | `300`   | Refresh interval; minimum `60`           |
+| `gauge_max`                | number | auto    | Optional fixed max rose value            |
 
 ### Display and Behavior Options
 
@@ -144,6 +158,17 @@ average_attribute: average_heading
 unit: deg
 ```
 
+### Wind Rose (Sample-Count Frequency)
+
+```yaml
+type: custom:weather-gauges-wind-rose-card
+entity: sensor.wind_direction
+title: Wind Rose
+history_hours: 24
+bin_count: 16
+refresh_interval_seconds: 300
+```
+
 ### Attribute-Based Pressure Gauge
 
 ```yaml
@@ -162,7 +187,8 @@ preset: pressure
 
 ## Known Limitations (v1)
 
-- `wind-rose` is not included yet.
+- Wind rose uses sample-count frequency buckets only (no speed weighting yet).
+- Wind rose lookback is capped at 24 hours.
 - Full pass-through for all low-level visual options (for example `frame_design`, `pointer_color`) is not wired in this version.
 - `decimals` currently affects radial-bargraph output; other gauge types ignore it.
 

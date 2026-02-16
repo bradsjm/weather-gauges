@@ -21,6 +21,7 @@ export type HassEntity = {
 
 export type HomeAssistant = {
   states: Record<string, HassEntity | undefined>
+  callWS?(message: Record<string, unknown>): Promise<unknown>
 }
 
 type PresetRange = {
