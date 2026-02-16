@@ -1,6 +1,36 @@
+/**
+ * Mode for validating gauge values against min/max bounds.
+ *
+ * - `clamp`: Clamp values to fall within [min, max]
+ * - `coerce`: Map values from [minOld, maxOld] to [min, max]
+ * - `strict`: Reject values outside [min, max] with an error
+ */
 export type ValidationMode = 'clamp' | 'coerce' | 'strict'
+/**
+ * Type of gauge visualization to use for displaying values.
+ *
+ * - `radial`: Circular gauge with needle indicator
+ * - `radial-bargraph`: Circular gauge with integrated bar graph
+ * - `compass`: Compass-style directional gauge
+ * - `wind-direction`: Wind direction display with compass orientation
+ */
 export type GaugeType = 'radial' | 'radial-bargraph' | 'compass' | 'wind-direction'
 
+/**
+ * Pre-configured measurement types with appropriate defaults.
+ *
+ * Each preset provides sensible defaults for units, labels, and gauge ranges:
+ * - `temperature`: Temperature measurements (degC)
+ * - `humidity`: Humidity percentage (%)
+ * - `pressure`: Barometric pressure (hPa)
+ * - `wind-speed`: Wind speed (km/h)
+ * - `rainfall`: Cumulative rainfall (mm)
+ * - `rain-rate`: Rainfall rate (mm/h)
+ * - `solar`: Solar irradiance (W/m2)
+ * - `uv-index`: UV Index (dimensionless)
+ * - `cloud-base`: Cloud base altitude (m)
+ * - `''`: Custom/no preset
+ */
 export type MeasurementPreset =
   | ''
   | 'temperature'
@@ -13,12 +43,27 @@ export type MeasurementPreset =
   | 'uv-index'
   | 'cloud-base'
 
+/**
+ * Home Assistant entity state representation.
+ *
+ * @property entity_id - Unique entity identifier (e.g., 'sensor.temperature')
+ * @property state - Current entity state as a string
+ * @property attributes - Entity attributes including metadata
+ */
 export type HassEntity = {
   entity_id: string
   state: string
   attributes: Record<string, unknown>
 }
 
+/**
+ * Home Assistant connection interface.
+ *
+ * Provides access to Home Assistant states and optional WebSocket API.
+ *
+ * @property states - Map of all available entities keyed by entity_id
+ * @property callWS - Optional WebSocket client for fetching historical data
+ */
 export type HomeAssistant = {
   states: Record<string, HassEntity | undefined>
   callWS?(message: Record<string, unknown>): Promise<unknown>
@@ -29,6 +74,20 @@ type PresetRange = {
   max: number
 }
 
+/**
+ * Input parameters for resolving gauge data from a Home Assistant entity.
+ *
+ * @property entity - Entity ID to read value from
+ * @property gaugeType - Type of gauge visualization
+ * @property attribute - Optional attribute name to read instead of entity state
+ * @property averageAttribute - Optional attribute for average value (used for wind-direction gauges)
+ * @property preset - Measurement preset for unit/range defaults
+ * @property title - Optional title override (unused in current implementation)
+ * @property label - Optional label override for the gauge
+ * @property unitOverride - Optional unit string to use instead of entity's unit
+ * @property minOverride - Optional minimum value override
+ * @property maxOverride - Optional maximum value override
+ */
 export type ResolveGaugeDataInput = {
   entity: string
   gaugeType: GaugeType
@@ -42,6 +101,19 @@ export type ResolveGaugeDataInput = {
   maxOverride: number | undefined
 }
 
+/**
+ * Successfully resolved gauge data.
+ *
+ * @property ok - Always true for successful resolution
+ * @property entityId - The entity ID that provided the data
+ * @property value - The resolved numeric value
+ * @property average - Optional average value (for wind-direction gauges)
+ * @property min - Optional minimum gauge bound
+ * @property max - Optional maximum gauge bound
+ * @property unit - Unit of measurement for the value
+ * @property label - Display label for the gauge
+ * @property preset - Measurement preset used (if any)
+ */
 export type ResolvedGaugeData = {
   ok: true
   entityId: string
@@ -59,6 +131,11 @@ type FailedGaugeData = {
   message: string
 }
 
+/**
+ * Result of resolving gauge data from a Home Assistant entity.
+ *
+ * Either {@link ResolvedGaugeData} on success or a failure object with an error message.
+ */
 export type ResolveGaugeDataResult = ResolvedGaugeData | FailedGaugeData
 
 const toFiniteNumber = (value: unknown): number | undefined => {
@@ -245,6 +322,23 @@ const resolveRawUnit = (
   return readAttributeString(entity.attributes, 'unit_of_measurement') ?? ''
 }
 
+/**
+ * Resolves gauge data from a Home Assistant entity.
+ *
+ * Performs the following steps:
+ * 1. Validates Home Assistant connection
+ * 2. Checks entity availability
+ * 3. Resolves value from entity state or attribute
+ * 4. Determines unit from entity attributes or preset
+ * 5. Applies measurement preset defaults for ranges
+ * 6. Validates min/max bounds
+ * 7. Resolves optional average value for wind-direction gauges
+ * 8. Determines display label
+ *
+ * @param hass - Home Assistant connection (may be undefined if not connected)
+ * @param input - Input parameters for resolution
+ * @returns Resolved gauge data on success, or failure object with error message
+ */
 export const resolveGaugeData = (
   hass: HomeAssistant | undefined,
   input: ResolveGaugeDataInput

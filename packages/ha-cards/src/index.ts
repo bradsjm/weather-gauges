@@ -16,56 +16,151 @@ import {
   type WindRoseHistoryData
 } from './wind-rose-history.js'
 
+/**
+ * Custom element tag for the radial gauge card.
+ */
 export const WEATHER_GAUGES_RADIAL_CARD_TAG = 'weather-gauges-radial-card'
+
+/**
+ * Home Assistant card type identifier for the radial gauge card.
+ */
 export const WEATHER_GAUGES_RADIAL_CARD_TYPE = `custom:${WEATHER_GAUGES_RADIAL_CARD_TAG}`
+
+/**
+ * Custom element tag for the radial bargraph card.
+ */
 export const WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TAG = 'weather-gauges-radial-bargraph-card'
+
+/**
+ * Home Assistant card type identifier for the radial bargraph card.
+ */
 export const WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TYPE = `custom:${WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TAG}`
+
+/**
+ * Custom element tag for the compass card.
+ */
 export const WEATHER_GAUGES_COMPASS_CARD_TAG = 'weather-gauges-compass-card'
+
+/**
+ * Home Assistant card type identifier for the compass card.
+ */
 export const WEATHER_GAUGES_COMPASS_CARD_TYPE = `custom:${WEATHER_GAUGES_COMPASS_CARD_TAG}`
+
+/**
+ * Custom element tag for the wind direction card.
+ */
 export const WEATHER_GAUGES_WIND_DIRECTION_CARD_TAG = 'weather-gauges-wind-direction-card'
+
+/**
+ * Home Assistant card type identifier for the wind direction card.
+ */
 export const WEATHER_GAUGES_WIND_DIRECTION_CARD_TYPE = `custom:${WEATHER_GAUGES_WIND_DIRECTION_CARD_TAG}`
+
+/**
+ * Custom element tag for the wind rose card.
+ */
 export const WEATHER_GAUGES_WIND_ROSE_CARD_TAG = 'weather-gauges-wind-rose-card'
+
+/**
+ * Home Assistant card type identifier for the wind rose card.
+ */
 export const WEATHER_GAUGES_WIND_ROSE_CARD_TYPE = `custom:${WEATHER_GAUGES_WIND_ROSE_CARD_TAG}`
 
 type WeatherGaugeTheme = 'classic' | 'flat' | 'high-contrast'
 
+/**
+ * Configuration for weather gauge cards (radial, radial-bargraph, compass, wind-direction).
+ *
+ * @example
+ * ```yaml
+ * type: custom:weather-gauges-radial-card
+ * entity: sensor.temperature
+ * title: Temperature
+ * preset: temperature
+ * ```
+ */
 export type WeatherGaugesCardConfig = {
+  /** Card type identifier */
   type: string
+  /** Home Assistant entity ID to display */
   entity?: string
+  /** Card title */
   title?: string
+  /** Gauge value label */
   label?: string
+  /** Type of gauge to render */
   gauge_type?: GaugeType
+  /** Entity attribute to display */
   attribute?: string
+  /** Entity attribute for averaging multiple values */
   average_attribute?: string
+  /** Measurement preset for unit/scale defaults */
   preset?: MeasurementPreset
+  /** Override unit display */
   unit?: string
+  /** Override gauge minimum value */
   gauge_min?: number
+  /** Override gauge maximum value */
   gauge_max?: number
+  /** Threshold value for warning indication */
   threshold?: number
+  /** Label for threshold */
   threshold_label?: string
+  /** Show threshold indicator */
   show_threshold?: boolean
+  /** Number of decimal places to display */
   decimals?: number
+  /** Size in pixels */
   size?: number
+  /** Enable value animation */
   animated?: boolean
+  /** Animation duration in milliseconds */
   duration?: number
+  /** Validation mode for values */
   validation?: ValidationMode
+  /** Visual theme */
   theme?: WeatherGaugeTheme
 }
 
+/**
+ * Configuration for the wind rose history card.
+ *
+ * @example
+ * ```yaml
+ * type: custom:weather-gauges-wind-rose-card
+ * entity: sensor.wind_direction
+ * title: Wind Rose
+ * history_hours: 24
+ * ```
+ */
 export type WeatherGaugesWindRoseCardConfig = {
+  /** Card type identifier */
   type: string
+  /** Home Assistant entity ID for wind direction */
   entity?: string
+  /** Card title */
   title?: string
+  /** Gauge value label */
   label?: string
+  /** Hours of history to fetch */
   history_hours?: number
+  /** Number of direction bins (8, 16, or 32) */
   bin_count?: WindRoseBinCount
+  /** Refresh interval in seconds */
   refresh_interval_seconds?: number
+  /** Maximum gauge value */
   gauge_max?: number
+  /** Override unit display */
   unit?: string
+  /** Size in pixels */
   size?: number
+  /** Enable value animation */
   animated?: boolean
+  /** Animation duration in milliseconds */
   duration?: number
+  /** Validation mode for values */
   validation?: ValidationMode
+  /** Visual theme */
   theme?: WeatherGaugeTheme
 }
 
@@ -257,6 +352,17 @@ const normalizeWindRoseConfig = (
   }
 }
 
+/**
+ * Base card class for weather gauges in Home Assistant.
+ *
+ * Provides common functionality for all weather gauge card types including:
+ * - Entity value resolution with validation
+ * - Configuration management
+ * - Home Assistant integration
+ * - Card sizing and grid support
+ *
+ * @internal
+ */
 export class WeatherGaugesCard extends LitElement {
   static cardType = WEATHER_GAUGES_RADIAL_CARD_TYPE
   static defaultGaugeType: GaugeType = 'radial'
@@ -607,26 +713,61 @@ export class WeatherGaugesCard extends LitElement {
   }
 }
 
+/**
+ * Weather gauge card using radial display type.
+ *
+ * Displays values in a circular/radial gauge format.
+ *
+ * @internal
+ */
 export class WeatherGaugesRadialCard extends WeatherGaugesCard {
   static override cardType = WEATHER_GAUGES_RADIAL_CARD_TYPE
   static override defaultGaugeType: GaugeType = 'radial'
 }
 
+/**
+ * Weather gauge card using radial-bargraph display type.
+ *
+ * Displays values in a circular gauge with an integrated bar graph.
+ *
+ * @internal
+ */
 export class WeatherGaugesRadialBargraphCard extends WeatherGaugesCard {
   static override cardType = WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TYPE
   static override defaultGaugeType: GaugeType = 'radial-bargraph'
 }
 
+/**
+ * Weather gauge card using compass display type.
+ *
+ * Displays directional values in a compass-style gauge.
+ *
+ * @internal
+ */
 export class WeatherGaugesCompassCard extends WeatherGaugesCard {
   static override cardType = WEATHER_GAUGES_COMPASS_CARD_TYPE
   static override defaultGaugeType: GaugeType = 'compass'
 }
 
+/**
+ * Weather gauge card using wind-direction display type.
+ *
+ * Displays wind direction with compass orientation.
+ *
+ * @internal
+ */
 export class WeatherGaugesWindDirectionCard extends WeatherGaugesCard {
   static override cardType = WEATHER_GAUGES_WIND_DIRECTION_CARD_TYPE
   static override defaultGaugeType: GaugeType = 'wind-direction'
 }
 
+/**
+ * Wind rose card for displaying historical wind direction data.
+ *
+ * Shows wind direction distribution over time as a radial bar graph.
+ *
+ * @internal
+ */
 export class WeatherGaugesWindRoseCard extends LitElement {
   static cardType = WEATHER_GAUGES_WIND_ROSE_CARD_TYPE
 

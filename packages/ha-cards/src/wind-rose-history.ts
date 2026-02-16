@@ -1,13 +1,33 @@
 import type { HomeAssistant } from './value-resolution.js'
 
+/**
+ * Represents a single petal/sector of a wind rose.
+ *
+ * @property direction - Direction angle in degrees (0-360)
+ * @property value - Count or magnitude value for this direction
+ * @property color - Optional color override for rendering
+ */
 export type WindRosePetal = {
   direction: number
   value: number
   color?: string
 }
 
+/**
+ * Number of directional bins for wind rose grouping.
+ *
+ * Controls the granularity of direction buckets: 8 (45°), 16 (22.5°), or 32 (11.25°).
+ */
 export type WindRoseBinCount = 8 | 16 | 32
 
+/**
+ * Request parameters for fetching wind rose history data.
+ *
+ * @property entityId - Home Assistant entity ID for the wind direction sensor
+ * @property historyHours - Number of hours of history to fetch (1-24)
+ * @property binCount - Number of directional bins to group samples into (8 | 16 | 32)
+ * @property maxValueOverride - Optional fixed maximum value for the wind rose scale
+ */
 export type WindRoseHistoryRequest = {
   entityId: string
   historyHours: number
@@ -15,6 +35,15 @@ export type WindRoseHistoryRequest = {
   maxValueOverride?: number
 }
 
+/**
+ * Fetched and processed wind rose history data.
+ *
+ * @property petals - Array of directional petals with counts
+ * @property maxValue - Maximum value across all petals (for scaling)
+ * @property sampleCount - Total number of direction samples in the period
+ * @property from - ISO 8601 timestamp of the period start
+ * @property to - ISO 8601 timestamp of the period end
+ */
 export type WindRoseHistoryData = {
   petals: WindRosePetal[]
   maxValue: number
@@ -91,6 +120,14 @@ const resolveEntriesForEntity = (response: unknown, entityId: string): HistorySt
   return []
 }
 
+/**
+ * Bins direction samples into directional groups for wind rose rendering.
+ *
+ * @param directions - Array of direction values in degrees
+ * @param binCount - Number of bins to use for grouping (8 | 16 | 32)
+ *
+ * @returns Array of petals with direction centers and sample counts
+ */
 export const countDirectionSamplesByBin = (
   directions: number[],
   binCount: WindRoseBinCount
@@ -111,6 +148,18 @@ export const countDirectionSamplesByBin = (
   }))
 }
 
+/**
+ * Fetches wind direction history from Home Assistant and processes it for wind rose display.
+ *
+ * Queries the Home Assistant history API for the specified entity over the requested time period,
+ * bins the direction samples, and returns processed data ready for rendering.
+ *
+ * @param hass - Home Assistant connection instance
+ * @param request - Request parameters for history fetch and binning
+ * @param now - Reference time for the history window (defaults to current time)
+ *
+ * @returns Resolved wind rose data or error message if fetch fails
+ */
 export const fetchWindRoseHistoryData = async (
   hass: HomeAssistant | undefined,
   request: WindRoseHistoryRequest,
