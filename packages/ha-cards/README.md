@@ -4,9 +4,12 @@ Home Assistant Lovelace custom cards for Weather Gauges.
 
 ## Overview
 
-This package provides a single-gauge Lovelace card:
+This package provides single-gauge Lovelace cards:
 
-- Card type: `custom:weather-gauges-card`
+- `custom:weather-gauges-radial-card`
+- `custom:weather-gauges-radial-bargraph-card`
+- `custom:weather-gauges-compass-card`
+- `custom:weather-gauges-wind-direction-card`
 - Backed by `@bradsjm/weather-gauges-elements`
 - Works with Home Assistant entity state updates in real time
 - Includes a visual card editor (`getConfigForm`) and sensible defaults
@@ -47,23 +50,34 @@ resources:
 ## Quick Start
 
 ```yaml
-type: custom:weather-gauges-card
+type: custom:weather-gauges-radial-card
 entity: sensor.outdoor_temperature
 title: Outdoor Temperature
 preset: temperature
 ```
 
+## Card Types
+
+| Card type                                    | Gauge behavior              |
+| -------------------------------------------- | --------------------------- |
+| `custom:weather-gauges-radial-card`          | Fixed radial gauge          |
+| `custom:weather-gauges-radial-bargraph-card` | Fixed radial-bargraph gauge |
+| `custom:weather-gauges-compass-card`         | Fixed compass gauge         |
+| `custom:weather-gauges-wind-direction-card`  | Fixed wind-direction gauge  |
+
+`gauge_type` is optional and only useful for compatibility; if provided, it must match the selected card type.
+
 ## Card Configuration
 
 ### Core Options
 
-| Option       | Type   | Default  | Notes                                                    |
-| ------------ | ------ | -------- | -------------------------------------------------------- |
-| `type`       | string | required | Must be `custom:weather-gauges-card`                     |
-| `entity`     | string | required | Entity id to read from                                   |
-| `title`      | string | unset    | Optional card header                                     |
-| `label`      | string | derived  | Gauge label fallback                                     |
-| `gauge_type` | string | `radial` | `radial`, `radial-bargraph`, `compass`, `wind-direction` |
+| Option       | Type   | Default  | Notes                                                          |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `type`       | string | required | Any supported weather-gauges card type from Card Types section |
+| `entity`     | string | required | Entity id to read from                                         |
+| `title`      | string | unset    | Optional card header                                           |
+| `label`      | string | derived  | Gauge label fallback                                           |
+| `gauge_type` | string | inferred | Optional compatibility field; must match the card type         |
 
 ### Value Source Options
 
@@ -95,20 +109,18 @@ preset: temperature
 ### Radial Temperature Gauge
 
 ```yaml
-type: custom:weather-gauges-card
+type: custom:weather-gauges-radial-card
 entity: sensor.outdoor_temperature
 title: Temperature
-gauge_type: radial
 preset: temperature
 ```
 
 ### Radial Bargraph Humidity Gauge
 
 ```yaml
-type: custom:weather-gauges-card
+type: custom:weather-gauges-radial-bargraph-card
 entity: sensor.outdoor_humidity
 title: Humidity
-gauge_type: radial-bargraph
 preset: humidity
 decimals: 0
 ```
@@ -116,20 +128,18 @@ decimals: 0
 ### Compass Wind Heading
 
 ```yaml
-type: custom:weather-gauges-card
+type: custom:weather-gauges-compass-card
 entity: sensor.wind_direction
 title: Wind Heading
-gauge_type: compass
 unit: deg
 ```
 
 ### Wind Direction with Average Attribute
 
 ```yaml
-type: custom:weather-gauges-card
+type: custom:weather-gauges-wind-direction-card
 entity: sensor.wind_direction
 title: Wind Direction
-gauge_type: wind-direction
 average_attribute: average_heading
 unit: deg
 ```
@@ -137,11 +147,10 @@ unit: deg
 ### Attribute-Based Pressure Gauge
 
 ```yaml
-type: custom:weather-gauges-card
+type: custom:weather-gauges-radial-card
 entity: weather.home
 attribute: pressure
 title: Pressure
-gauge_type: radial
 preset: pressure
 ```
 

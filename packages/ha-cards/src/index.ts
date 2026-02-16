@@ -11,8 +11,14 @@ import {
   type ValidationMode
 } from './value-resolution.js'
 
-export const WEATHER_GAUGES_CARD_TAG = 'weather-gauges-card'
-export const WEATHER_GAUGES_CARD_TYPE = `custom:${WEATHER_GAUGES_CARD_TAG}`
+export const WEATHER_GAUGES_RADIAL_CARD_TAG = 'weather-gauges-radial-card'
+export const WEATHER_GAUGES_RADIAL_CARD_TYPE = `custom:${WEATHER_GAUGES_RADIAL_CARD_TAG}`
+export const WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TAG = 'weather-gauges-radial-bargraph-card'
+export const WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TYPE = `custom:${WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TAG}`
+export const WEATHER_GAUGES_COMPASS_CARD_TAG = 'weather-gauges-compass-card'
+export const WEATHER_GAUGES_COMPASS_CARD_TYPE = `custom:${WEATHER_GAUGES_COMPASS_CARD_TAG}`
+export const WEATHER_GAUGES_WIND_DIRECTION_CARD_TAG = 'weather-gauges-wind-direction-card'
+export const WEATHER_GAUGES_WIND_DIRECTION_CARD_TYPE = `custom:${WEATHER_GAUGES_WIND_DIRECTION_CARD_TAG}`
 
 type WeatherGaugeTheme = 'classic' | 'flat' | 'high-contrast'
 
@@ -69,6 +75,13 @@ const CARD_PADDING = 24
 
 const GAUGE_TYPES: GaugeType[] = ['radial', 'radial-bargraph', 'compass', 'wind-direction']
 
+const CARD_TYPE_TO_GAUGE_TYPE: Record<string, GaugeType> = {
+  [WEATHER_GAUGES_RADIAL_CARD_TYPE]: 'radial',
+  [WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TYPE]: 'radial-bargraph',
+  [WEATHER_GAUGES_COMPASS_CARD_TYPE]: 'compass',
+  [WEATHER_GAUGES_WIND_DIRECTION_CARD_TYPE]: 'wind-direction'
+}
+
 const isGaugeType = (value: string): value is GaugeType => GAUGE_TYPES.includes(value as GaugeType)
 
 const isFiniteNumber = (value: unknown): value is number =>
@@ -77,13 +90,25 @@ const isFiniteNumber = (value: unknown): value is number =>
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value))
 
-const normalizeConfig = (config: WeatherGaugesCardConfig): NormalizedCardConfig => {
+const normalizeConfig = (
+  config: WeatherGaugesCardConfig,
+  defaultGaugeType: GaugeType
+): NormalizedCardConfig => {
   const entity = config.entity?.trim()
   if (!entity) {
-    throw new Error('weather-gauges-card requires an `entity` field.')
+    throw new Error('Weather gauge cards require an `entity` field.')
   }
 
-  const gaugeType = config.gauge_type ?? 'radial'
+  const inferredGaugeType = CARD_TYPE_TO_GAUGE_TYPE[config.type] ?? defaultGaugeType
+  if (
+    config.type in CARD_TYPE_TO_GAUGE_TYPE &&
+    config.gauge_type &&
+    config.gauge_type !== inferredGaugeType
+  ) {
+    throw new Error(`Card type "${config.type}" only supports gauge_type "${inferredGaugeType}".`)
+  }
+
+  const gaugeType = config.gauge_type ?? inferredGaugeType
   if (!isGaugeType(gaugeType)) {
     throw new Error(
       `Unsupported gauge_type "${String(config.gauge_type)}". Use one of: ${GAUGE_TYPES.join(', ')}.`
@@ -125,6 +150,9 @@ const normalizeConfig = (config: WeatherGaugesCardConfig): NormalizedCardConfig 
 }
 
 export class WeatherGaugesCard extends LitElement {
+  static cardType = WEATHER_GAUGES_RADIAL_CARD_TYPE
+  static defaultGaugeType: GaugeType = 'radial'
+
   static override styles = css`
     :host {
       display: block;
@@ -163,11 +191,12 @@ export class WeatherGaugesCard extends LitElement {
   private _resizeObserver: ResizeObserver | undefined
 
   static getStubConfig(): WeatherGaugesCardConfig {
+    const cardClass = this as typeof WeatherGaugesCard
     return {
-      type: WEATHER_GAUGES_CARD_TYPE,
+      type: cardClass.cardType,
       entity: 'sensor.outdoor_temperature',
       title: 'Outdoor Temperature',
-      gauge_type: 'radial',
+      gauge_type: cardClass.defaultGaugeType,
       preset: 'temperature'
     }
   }
@@ -183,20 +212,6 @@ export class WeatherGaugesCard extends LitElement {
         {
           name: 'title',
           selector: { text: {} }
-        },
-        {
-          name: 'gauge_type',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'radial', label: 'Radial' },
-                { value: 'radial-bargraph', label: 'Radial Bargraph' },
-                { value: 'compass', label: 'Compass' },
-                { value: 'wind-direction', label: 'Wind Direction' }
-              ]
-            }
-          }
         },
         {
           type: 'expandable',
@@ -308,7 +323,8 @@ export class WeatherGaugesCard extends LitElement {
   }
 
   setConfig(config: WeatherGaugesCardConfig): void {
-    this._config = normalizeConfig(config)
+    const cardClass = this.constructor as typeof WeatherGaugesCard
+    this._config = normalizeConfig(config, cardClass.defaultGaugeType)
   }
 
   getCardSize(): number {
@@ -483,8 +499,57 @@ export class WeatherGaugesCard extends LitElement {
   }
 }
 
-if (!customElements.get(WEATHER_GAUGES_CARD_TAG)) {
-  customElements.define(WEATHER_GAUGES_CARD_TAG, WeatherGaugesCard)
+export class WeatherGaugesRadialCard extends WeatherGaugesCard {
+  static override cardType = WEATHER_GAUGES_RADIAL_CARD_TYPE
+  static override defaultGaugeType: GaugeType = 'radial'
+}
+
+export class WeatherGaugesRadialBargraphCard extends WeatherGaugesCard {
+  static override cardType = WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TYPE
+  static override defaultGaugeType: GaugeType = 'radial-bargraph'
+}
+
+export class WeatherGaugesCompassCard extends WeatherGaugesCard {
+  static override cardType = WEATHER_GAUGES_COMPASS_CARD_TYPE
+  static override defaultGaugeType: GaugeType = 'compass'
+}
+
+export class WeatherGaugesWindDirectionCard extends WeatherGaugesCard {
+  static override cardType = WEATHER_GAUGES_WIND_DIRECTION_CARD_TYPE
+  static override defaultGaugeType: GaugeType = 'wind-direction'
+}
+
+const CARD_DEFINITIONS = [
+  {
+    tag: WEATHER_GAUGES_RADIAL_CARD_TAG,
+    name: 'Weather Gauge - Radial',
+    description: 'Single weather gauge card specialized for radial gauge',
+    elementClass: WeatherGaugesRadialCard
+  },
+  {
+    tag: WEATHER_GAUGES_RADIAL_BARGRAPH_CARD_TAG,
+    name: 'Weather Gauge - Radial Bargraph',
+    description: 'Single weather gauge card specialized for radial bargraph',
+    elementClass: WeatherGaugesRadialBargraphCard
+  },
+  {
+    tag: WEATHER_GAUGES_COMPASS_CARD_TAG,
+    name: 'Weather Gauge - Compass',
+    description: 'Single weather gauge card specialized for compass heading',
+    elementClass: WeatherGaugesCompassCard
+  },
+  {
+    tag: WEATHER_GAUGES_WIND_DIRECTION_CARD_TAG,
+    name: 'Weather Gauge - Wind Direction',
+    description: 'Single weather gauge card specialized for wind direction with optional average',
+    elementClass: WeatherGaugesWindDirectionCard
+  }
+] as const
+
+for (const cardDefinition of CARD_DEFINITIONS) {
+  if (!customElements.get(cardDefinition.tag)) {
+    customElements.define(cardDefinition.tag, cardDefinition.elementClass)
+  }
 }
 
 declare global {
@@ -499,22 +564,23 @@ declare global {
   }
 
   interface HTMLElementTagNameMap {
-    'weather-gauges-card': WeatherGaugesCard
+    'weather-gauges-radial-card': WeatherGaugesRadialCard
+    'weather-gauges-radial-bargraph-card': WeatherGaugesRadialBargraphCard
+    'weather-gauges-compass-card': WeatherGaugesCompassCard
+    'weather-gauges-wind-direction-card': WeatherGaugesWindDirectionCard
   }
 }
 
 window.customCards = window.customCards || []
 
-if (
-  !window.customCards.some(
-    (card) => card.type === WEATHER_GAUGES_CARD_TAG || card.type === WEATHER_GAUGES_CARD_TYPE
-  )
-) {
-  window.customCards.push({
-    type: WEATHER_GAUGES_CARD_TAG,
-    name: 'Weather Gauges Card',
-    description: 'Single-gauge Home Assistant card for weather-gauges web components',
-    preview: true,
-    documentationURL: 'https://github.com/bradsjm/weather-gauges/tree/main/packages/ha-cards'
-  })
+for (const cardDefinition of CARD_DEFINITIONS) {
+  if (!window.customCards.some((card) => card.type === cardDefinition.tag)) {
+    window.customCards.push({
+      type: cardDefinition.tag,
+      name: cardDefinition.name,
+      description: cardDefinition.description,
+      preview: true,
+      documentationURL: 'https://github.com/bradsjm/weather-gauges/tree/main/packages/ha-cards'
+    })
+  }
 }
