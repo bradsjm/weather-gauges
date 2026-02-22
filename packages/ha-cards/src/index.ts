@@ -166,7 +166,7 @@ export type WeatherGaugesWindRoseCardConfig = {
 
 type NormalizedCardConfig = {
   type: string
-  entity: string
+  entity: string | undefined
   title: string | undefined
   label: string | undefined
   gaugeType: GaugeType
@@ -189,7 +189,7 @@ type NormalizedCardConfig = {
 
 type NormalizedWindRoseCardConfig = {
   type: string
-  entity: string
+  entity: string | undefined
   title: string | undefined
   label: string | undefined
   historyHours: number
@@ -231,14 +231,152 @@ const isFiniteNumber = (value: unknown): value is number =>
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value))
 
+const isNumericState = (value: string): boolean => Number.isFinite(Number(value))
+
+const formatEntityTitle = (entityId: string): string => {
+  const objectId = entityId.split('.')[1] ?? entityId
+  const words = objectId.split('_').filter((word) => word.length > 0)
+
+  if (words.length === 0) {
+    return entityId
+  }
+
+  return words.map((word) => `${word[0]?.toUpperCase() ?? ''}${word.slice(1)}`).join(' ')
+}
+
+const getStubTitleForEntity = (
+  hass: HomeAssistant | undefined,
+  entityId: string | undefined,
+  fallbackTitle: string
+): string => {
+  if (!entityId) {
+    return fallbackTitle
+  }
+
+  const friendlyName = hass?.states[entityId]?.attributes?.friendly_name
+  if (typeof friendlyName === 'string' && friendlyName.trim().length > 0) {
+    return friendlyName.trim()
+  }
+
+  return formatEntityTitle(entityId)
+}
+
+const toDisplayLabel = (value: string): string => {
+  const labelOverrides: Record<string, string> = {
+    average_attribute: 'Average Source',
+    refresh_interval_seconds: 'Refresh Interval (s)',
+    history_hours: 'History Window (h)',
+    gauge_min: 'Min Value',
+    gauge_max: 'Max Value',
+    bin_count: 'Direction Bins'
+  }
+
+  const override = labelOverrides[value]
+  if (override) {
+    return override
+  }
+
+  return value
+    .split('_')
+    .filter((part) => part.length > 0)
+    .map((part) => `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`)
+    .join(' ')
+}
+
+const selectEntityId = (
+  hass: HomeAssistant | undefined,
+  predicate: (
+    entityId: string,
+    entity: { state: string; attributes: Record<string, unknown> }
+  ) => boolean
+): string | undefined => {
+  if (!hass) {
+    return undefined
+  }
+
+  for (const [entityId, entity] of Object.entries(hass.states)) {
+    if (!entity) {
+      continue
+    }
+
+    if (predicate(entityId, entity)) {
+      return entityId
+    }
+  }
+
+  return undefined
+}
+
+const getStubEntityForGauge = (
+  hass: HomeAssistant | undefined,
+  gaugeType: GaugeType
+): string | undefined => {
+  const windLikeEntity =
+    selectEntityId(
+      hass,
+      (entityId, entity) =>
+        entityId.startsWith('sensor.') &&
+        isNumericState(entity.state) &&
+        entity.attributes.device_class === 'wind_direction'
+    ) ??
+    selectEntityId(
+      hass,
+      (entityId, entity) =>
+        entityId.startsWith('sensor.') &&
+        entityId.includes('wind') &&
+        isNumericState(entity.state) &&
+        typeof entity.attributes.unit_of_measurement === 'string' &&
+        (entity.attributes.unit_of_measurement.toLowerCase() === 'deg' ||
+          entity.attributes.unit_of_measurement === '°')
+    )
+
+  if (gaugeType === 'compass' || gaugeType === 'wind-direction') {
+    return windLikeEntity
+  }
+
+  return (
+    selectEntityId(
+      hass,
+      (entityId, entity) =>
+        entityId.startsWith('sensor.') &&
+        entity.attributes.device_class === 'temperature' &&
+        isNumericState(entity.state)
+    ) ??
+    selectEntityId(
+      hass,
+      (entityId, entity) => entityId.startsWith('sensor.') && isNumericState(entity.state)
+    ) ??
+    windLikeEntity
+  )
+}
+
+const getStubEntityForWindRose = (hass: HomeAssistant | undefined): string | undefined => {
+  return (
+    selectEntityId(
+      hass,
+      (entityId, entity) =>
+        entityId.startsWith('sensor.') &&
+        isNumericState(entity.state) &&
+        entity.attributes.device_class === 'wind_direction'
+    ) ??
+    selectEntityId(
+      hass,
+      (entityId, entity) =>
+        entityId.startsWith('sensor.') &&
+        entityId.includes('wind') &&
+        isNumericState(entity.state) &&
+        typeof entity.attributes.unit_of_measurement === 'string' &&
+        (entity.attributes.unit_of_measurement.toLowerCase() === 'deg' ||
+          entity.attributes.unit_of_measurement === '°')
+    )
+  )
+}
+
 const normalizeConfig = (
   config: WeatherGaugesCardConfig,
   defaultGaugeType: GaugeType
 ): NormalizedCardConfig => {
-  const entity = config.entity?.trim()
-  if (!entity) {
-    throw new Error('Weather gauge cards require an `entity` field.')
-  }
+  const entity = config.entity?.trim() || undefined
 
   const inferredGaugeType = CARD_TYPE_TO_GAUGE_TYPE[config.type] ?? defaultGaugeType
   if (
@@ -296,10 +434,7 @@ const isWindRoseBinCount = (value: number): value is WindRoseBinCount =>
 const normalizeWindRoseConfig = (
   config: WeatherGaugesWindRoseCardConfig
 ): NormalizedWindRoseCardConfig => {
-  const entity = config.entity?.trim()
-  if (!entity) {
-    throw new Error('Weather wind rose cards require an `entity` field.')
-  }
+  const entity = config.entity?.trim() || undefined
 
   const historyHours = config.history_hours ?? DEFAULT_WIND_ROSE_HISTORY_HOURS
   if (!isFiniteNumber(historyHours) || historyHours <= 0) {
@@ -404,14 +539,26 @@ export class WeatherGaugesCard extends LitElement {
   private _autoSize = DEFAULT_SIZE
   private _resizeObserver: ResizeObserver | undefined
 
-  static getStubConfig(): WeatherGaugesCardConfig {
+  static getStubConfig(hass?: HomeAssistant): WeatherGaugesCardConfig {
     const cardClass = this as typeof WeatherGaugesCard
+    const stubEntity = getStubEntityForGauge(hass, cardClass.defaultGaugeType)
+    const fallbackTitle =
+      cardClass.defaultGaugeType === 'compass'
+        ? 'Compass'
+        : cardClass.defaultGaugeType === 'wind-direction'
+          ? 'Wind Direction'
+          : 'Weather Gauge'
+
     return {
       type: cardClass.cardType,
-      entity: 'sensor.outdoor_temperature',
-      title: 'Outdoor Temperature',
+      ...(stubEntity ? { entity: stubEntity } : {}),
+      title: getStubTitleForEntity(hass, stubEntity, fallbackTitle),
+      animated: true,
       gauge_type: cardClass.defaultGaugeType,
-      preset: 'temperature'
+      preset:
+        cardClass.defaultGaugeType === 'compass' || cardClass.defaultGaugeType === 'wind-direction'
+          ? ''
+          : 'temperature'
     }
   }
 
@@ -420,11 +567,15 @@ export class WeatherGaugesCard extends LitElement {
       schema: [
         {
           name: 'entity',
+          type: 'entity',
           required: true,
+          description: 'Entity that provides the primary gauge value.',
           selector: { entity: {} }
         },
         {
           name: 'title',
+          type: 'string',
+          description: 'Card header text.',
           selector: { text: {} }
         },
         {
@@ -433,14 +584,20 @@ export class WeatherGaugesCard extends LitElement {
           schema: [
             {
               name: 'attribute',
+              type: 'string',
+              description: 'Optional attribute used as the primary value source.',
               selector: { text: {} }
             },
             {
               name: 'average_attribute',
+              type: 'string',
+              description: 'Optional attribute used for average or secondary value.',
               selector: { text: {} }
             },
             {
               name: 'preset',
+              type: 'select',
+              description: 'Applies weather-specific defaults for units and ranges.',
               selector: {
                 select: {
                   mode: 'dropdown',
@@ -461,6 +618,8 @@ export class WeatherGaugesCard extends LitElement {
             },
             {
               name: 'unit',
+              type: 'string',
+              description: 'Override the displayed unit label.',
               selector: { text: {} }
             }
           ]
@@ -471,18 +630,26 @@ export class WeatherGaugesCard extends LitElement {
           schema: [
             {
               name: 'gauge_min',
+              type: 'number',
+              description: 'Minimum gauge value.',
               selector: { number: { mode: 'box' } }
             },
             {
               name: 'gauge_max',
+              type: 'number',
+              description: 'Maximum gauge value.',
               selector: { number: { mode: 'box' } }
             },
             {
               name: 'decimals',
+              type: 'integer',
+              description: 'Number of decimal places to display.',
               selector: { number: { mode: 'box', min: 0, max: 4, step: 1 } }
             },
             {
               name: 'size',
+              type: 'integer',
+              description: 'Gauge diameter in pixels.',
               selector: { number: { mode: 'box', min: 120, max: 420, step: 2 } }
             }
           ]
@@ -493,14 +660,20 @@ export class WeatherGaugesCard extends LitElement {
           schema: [
             {
               name: 'animated',
+              type: 'boolean',
+              description: 'Animate gauge transitions when values change.',
               selector: { boolean: {} }
             },
             {
               name: 'duration',
+              type: 'integer',
+              description: 'Animation duration in milliseconds.',
               selector: { number: { mode: 'box', min: 0, max: 5000, step: 50 } }
             },
             {
               name: 'theme',
+              type: 'select',
+              description: 'Visual theme used for the gauge.',
               selector: {
                 select: {
                   mode: 'dropdown',
@@ -514,6 +687,8 @@ export class WeatherGaugesCard extends LitElement {
             },
             {
               name: 'validation',
+              type: 'select',
+              description: 'How out-of-range and invalid values are handled.',
               selector: {
                 select: {
                   mode: 'dropdown',
@@ -527,7 +702,18 @@ export class WeatherGaugesCard extends LitElement {
             }
           ]
         }
-      ]
+      ],
+      computeLabel: (schema: { name?: string; title?: string }) => {
+        if (typeof schema.name === 'string' && schema.name.length > 0) {
+          return toDisplayLabel(schema.name)
+        }
+
+        if (typeof schema.title === 'string' && schema.title.length > 0) {
+          return schema.title
+        }
+
+        return ''
+      }
     }
   }
 
@@ -542,7 +728,7 @@ export class WeatherGaugesCard extends LitElement {
   }
 
   getCardSize(): number {
-    return 4
+    return 6
   }
 
   getGridOptions() {
@@ -550,9 +736,9 @@ export class WeatherGaugesCard extends LitElement {
       columns: 6,
       min_columns: 4,
       max_columns: 8,
-      rows: 4,
-      min_rows: 3,
-      max_rows: 6
+      rows: 6,
+      min_rows: 5,
+      max_rows: 8
     }
   }
 
@@ -583,6 +769,10 @@ export class WeatherGaugesCard extends LitElement {
   override render(): TemplateResult {
     if (!this._config) {
       return this.renderMessage('Card is not configured yet.')
+    }
+
+    if (!this._config.entity) {
+      return this.renderMessage('Select an entity in card configuration.', this._config.title)
     }
 
     const data = resolveGaugeData(this._hass, {
@@ -663,10 +853,12 @@ export class WeatherGaugesCard extends LitElement {
     }
 
     if (this._config?.gaugeType === 'wind-direction') {
+      const average = data.average ?? data.value
+
       return html`
         <wx-wind-direction
           .value=${data.value}
-          .average=${data.average}
+          .average=${average}
           .size=${size}
           .label=${data.label}
           .unit=${data.unit}
@@ -821,11 +1013,14 @@ export class WeatherGaugesWindRoseCard extends LitElement {
   private _refreshHandle: number | undefined
   private _requestVersion = 0
 
-  static getStubConfig(): WeatherGaugesWindRoseCardConfig {
+  static getStubConfig(hass?: HomeAssistant): WeatherGaugesWindRoseCardConfig {
+    const stubEntity = getStubEntityForWindRose(hass)
+
     return {
       type: WEATHER_GAUGES_WIND_ROSE_CARD_TYPE,
-      entity: 'sensor.wind_direction',
-      title: 'Wind Rose',
+      ...(stubEntity ? { entity: stubEntity } : {}),
+      title: getStubTitleForEntity(hass, stubEntity, 'Wind Rose'),
+      animated: true,
       history_hours: DEFAULT_WIND_ROSE_HISTORY_HOURS,
       bin_count: DEFAULT_WIND_ROSE_BIN_COUNT
     }
@@ -836,15 +1031,21 @@ export class WeatherGaugesWindRoseCard extends LitElement {
       schema: [
         {
           name: 'entity',
+          type: 'entity',
           required: true,
+          description: 'Entity that provides wind direction history.',
           selector: { entity: {} }
         },
         {
           name: 'title',
+          type: 'string',
+          description: 'Card header text.',
           selector: { text: {} }
         },
         {
           name: 'label',
+          type: 'string',
+          description: 'Gauge label shown inside the wind rose.',
           selector: { text: {} }
         },
         {
@@ -853,6 +1054,8 @@ export class WeatherGaugesWindRoseCard extends LitElement {
           schema: [
             {
               name: 'history_hours',
+              type: 'integer',
+              description: 'Hours of history to include in the rose.',
               selector: {
                 number: {
                   mode: 'box',
@@ -864,6 +1067,8 @@ export class WeatherGaugesWindRoseCard extends LitElement {
             },
             {
               name: 'bin_count',
+              type: 'select',
+              description: 'Number of directional bins used in the rose.',
               selector: {
                 select: {
                   mode: 'dropdown',
@@ -877,6 +1082,8 @@ export class WeatherGaugesWindRoseCard extends LitElement {
             },
             {
               name: 'refresh_interval_seconds',
+              type: 'integer',
+              description: 'How often history data is refreshed.',
               selector: {
                 number: {
                   mode: 'box',
@@ -894,14 +1101,20 @@ export class WeatherGaugesWindRoseCard extends LitElement {
           schema: [
             {
               name: 'gauge_max',
+              type: 'number',
+              description: 'Maximum radial scale value.',
               selector: { number: { mode: 'box', min: 1 } }
             },
             {
               name: 'unit',
+              type: 'string',
+              description: 'Override the displayed unit label.',
               selector: { text: {} }
             },
             {
               name: 'size',
+              type: 'integer',
+              description: 'Gauge diameter in pixels.',
               selector: { number: { mode: 'box', min: 120, max: 420, step: 2 } }
             }
           ]
@@ -912,14 +1125,20 @@ export class WeatherGaugesWindRoseCard extends LitElement {
           schema: [
             {
               name: 'animated',
+              type: 'boolean',
+              description: 'Animate petal transitions when data updates.',
               selector: { boolean: {} }
             },
             {
               name: 'duration',
+              type: 'integer',
+              description: 'Animation duration in milliseconds.',
               selector: { number: { mode: 'box', min: 0, max: 5000, step: 50 } }
             },
             {
               name: 'theme',
+              type: 'select',
+              description: 'Visual theme used for the gauge.',
               selector: {
                 select: {
                   mode: 'dropdown',
@@ -933,6 +1152,8 @@ export class WeatherGaugesWindRoseCard extends LitElement {
             },
             {
               name: 'validation',
+              type: 'select',
+              description: 'How invalid values are handled.',
               selector: {
                 select: {
                   mode: 'dropdown',
@@ -946,7 +1167,18 @@ export class WeatherGaugesWindRoseCard extends LitElement {
             }
           ]
         }
-      ]
+      ],
+      computeLabel: (schema: { name?: string; title?: string }) => {
+        if (typeof schema.name === 'string' && schema.name.length > 0) {
+          return toDisplayLabel(schema.name)
+        }
+
+        if (typeof schema.title === 'string' && schema.title.length > 0) {
+          return schema.title
+        }
+
+        return ''
+      }
     }
   }
 
@@ -972,7 +1204,7 @@ export class WeatherGaugesWindRoseCard extends LitElement {
   }
 
   getCardSize(): number {
-    return 4
+    return 6
   }
 
   getGridOptions() {
@@ -980,9 +1212,9 @@ export class WeatherGaugesWindRoseCard extends LitElement {
       columns: 6,
       min_columns: 4,
       max_columns: 8,
-      rows: 4,
-      min_rows: 3,
-      max_rows: 6
+      rows: 6,
+      min_rows: 5,
+      max_rows: 8
     }
   }
 
@@ -1019,6 +1251,10 @@ export class WeatherGaugesWindRoseCard extends LitElement {
   override render(): TemplateResult {
     if (!this._config) {
       return this.renderMessage('Card is not configured yet.')
+    }
+
+    if (!this._config.entity) {
+      return this.renderMessage('Select an entity in card configuration.', this._config.title)
     }
 
     if (this._errorMessage && !this._historyData) {
@@ -1092,7 +1328,7 @@ export class WeatherGaugesWindRoseCard extends LitElement {
   }
 
   private async requestHistoryUpdate(): Promise<void> {
-    if (!this._config || !this._hass) {
+    if (!this._config || !this._config.entity || !this._hass) {
       return
     }
 
